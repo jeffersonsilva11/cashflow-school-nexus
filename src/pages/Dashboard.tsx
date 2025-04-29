@@ -6,9 +6,20 @@ import {
   CreditCard, 
   Users, 
   School, 
-  DollarSign 
+  DollarSign,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { 
   LineChart, 
   Line, 
@@ -60,23 +71,23 @@ const StatCard = ({
   
   return (
     <Card>
-      <CardContent className="stats-card">
-        <div className="flex justify-between">
-          <div>
-            <p className="stats-label">{title}</p>
-            <p className="stats-value">{value}</p>
-            <div className={`stats-change ${isPositive ? 'stats-change-positive' : 'stats-change-negative'}`}>
-              {isPositive ? (
-                <TrendingUp size={16} className="mr-1" />
-              ) : (
-                <TrendingDown size={16} className="mr-1" />
-              )}
-              <span>{Math.abs(changeValue)}% {changeLabel}</span>
-            </div>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start mb-2">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold">{value}</p>
           </div>
           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             {icon}
           </div>
+        </div>
+        <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          {isPositive ? (
+            <ArrowUp size={16} className="mr-1" />
+          ) : (
+            <ArrowDown size={16} className="mr-1" />
+          )}
+          <span>{Math.abs(changeValue)}% {changeLabel}</span>
         </div>
       </CardContent>
     </Card>
@@ -90,6 +101,17 @@ const transactionTypeData = [
 ];
 
 const COLORS = ['#0c9ceb', '#0365a1'];
+
+// Status badge component
+const StatusBadge = ({ status }: { status: string }) => {
+  if (status === 'active') {
+    return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Ativo</Badge>;
+  } else if (status === 'pending') {
+    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Pendente</Badge>;
+  } else {
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Inativo</Badge>;
+  }
+};
 
 export default function Dashboard() {
   return (
@@ -133,8 +155,13 @@ export default function Dashboard() {
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 mt-6">
         {/* Transaction Trend Chart */}
         <Card className="lg:col-span-2">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Tendência de Transações (Abr/2025)</h3>
+          <CardHeader>
+            <CardTitle>Tendência de Transações (Abr/2025)</CardTitle>
+            <CardDescription>
+              Volume financeiro diário do mês corrente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
@@ -166,8 +193,13 @@ export default function Dashboard() {
         
         {/* Transaction Type Distribution */}
         <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Distribuição de Transações</h3>
+          <CardHeader>
+            <CardTitle>Distribuição de Transações</CardTitle>
+            <CardDescription>
+              Proporção entre compras e recargas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="h-[300px] flex flex-col justify-center">
               <ResponsiveContainer width="100%" height="80%">
                 <PieChart>
@@ -208,81 +240,79 @@ export default function Dashboard() {
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mt-6">
         {/* Top Schools Table */}
         <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Escolas Mais Ativas</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 font-medium text-muted-foreground">Escola</th>
-                    <th className="pb-2 font-medium text-muted-foreground text-right">Alunos</th>
-                    <th className="pb-2 font-medium text-muted-foreground text-right">Transações</th>
-                    <th className="pb-2 font-medium text-muted-foreground text-right">Volume</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {schools.slice(0, 5).map((school) => (
-                    <tr key={school.id} className="border-b border-border last:border-0">
-                      <td className="py-3">
-                        <div>
-                          <p className="font-medium">{school.name}</p>
-                          <p className="text-sm text-muted-foreground">{school.city}, {school.state}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">{school.students}</td>
-                      <td className="py-3 text-right">{school.transactions}</td>
-                      <td className="py-3 text-right">{formatCurrency(school.volume)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <CardHeader>
+            <CardTitle>Escolas Mais Ativas</CardTitle>
+            <CardDescription>
+              Ranking das escolas com maior volume de transações
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Escola</TableHead>
+                  <TableHead className="text-right">Alunos</TableHead>
+                  <TableHead className="text-right">Transações</TableHead>
+                  <TableHead className="text-right">Volume</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {schools.slice(0, 5).map((school) => (
+                  <TableRow key={school.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{school.name}</p>
+                        <p className="text-sm text-muted-foreground">{school.city}, {school.state}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{school.students}</TableCell>
+                    <TableCell className="text-right">{school.transactions}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(school.volume)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
         
         {/* Recent Transactions Table */}
         <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Transações Recentes</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 font-medium text-muted-foreground">ID</th>
-                    <th className="pb-2 font-medium text-muted-foreground">Data</th>
-                    <th className="pb-2 font-medium text-muted-foreground">Aluno</th>
-                    <th className="pb-2 font-medium text-muted-foreground text-right">Valor</th>
-                    <th className="pb-2 font-medium text-muted-foreground">Tipo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTransactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-border last:border-0">
-                      <td className="py-3 text-sm font-mono">{transaction.id}</td>
-                      <td className="py-3 text-sm">{formatDate(transaction.date)}</td>
-                      <td className="py-3">
-                        <div>
-                          <p className="font-medium">{transaction.student}</p>
-                          <p className="text-sm text-muted-foreground">{transaction.school}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right">{formatCurrency(transaction.amount)}</td>
-                      <td className="py-3">
-                        <span 
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.type === 'purchase' 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {transaction.type === 'purchase' ? 'Compra' : 'Recarga'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <CardHeader>
+            <CardTitle>Transações Recentes</CardTitle>
+            <CardDescription>
+              Últimas transações realizadas no sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Tipo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentTransactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell className="text-sm">{formatDate(transaction.date)}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{transaction.student}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.school}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
+                    <TableCell>
+                      <Badge variant={transaction.type === 'purchase' ? 'secondary' : 'default'}>
+                        {transaction.type === 'purchase' ? 'Compra' : 'Recarga'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
