@@ -148,7 +148,7 @@ export default function Dashboard() {
                     domain={['auto', 'auto']}
                   />
                   <Tooltip 
-                    formatter={(value) => [`R$ ${value.toFixed(2)}`, 'Volume']}
+                    formatter={(value) => [`R$ ${typeof value === 'number' ? value.toFixed(2) : value}`, 'Volume']}
                   />
                   <Line 
                     type="monotone" 
