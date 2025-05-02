@@ -12,6 +12,7 @@ import Parents from "./pages/Parents";
 import ParentDetails from "./pages/ParentDetails";
 import Students from "./pages/Students";
 import StudentDetails from "./pages/StudentDetails";
+import StudentForm from "./pages/StudentForm";
 import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
@@ -66,7 +67,7 @@ const App = () => (
             
             <Route path="students" element={<Students />} />
             <Route path="students/:studentId" element={<StudentDetails />} />
-            <Route path="students/new" element={<ComingSoonPage title="Novo Aluno" description="Cadastro de novo aluno" />} />
+            <Route path="students/new" element={<StudentForm />} />
             <Route path="students/:studentId/edit" element={<ComingSoonPage title="Editar Aluno" description="Edição de dados do aluno" />} />
             
             {/* Financeiro */}

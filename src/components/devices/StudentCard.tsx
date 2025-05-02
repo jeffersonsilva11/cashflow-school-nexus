@@ -11,10 +11,14 @@ interface StudentCardProps {
     name: string;
     grade: string;
     photo: string;
+    status?: 'active' | 'inactive' | 'pending';
+    deviceStatus?: 'active' | 'inactive' | 'pending';
   };
 }
 
 export const StudentCard = ({ student }: StudentCardProps) => {
+  const deviceActive = student?.deviceStatus === 'active';
+  
   return (
     <Card>
       <CardHeader>
@@ -36,18 +40,27 @@ export const StudentCard = ({ student }: StudentCardProps) => {
               <p className="text-sm text-muted-foreground mb-1">{student.grade}</p>
               <p className="text-sm text-muted-foreground mb-2">ID: {student.id}</p>
               
-              <Badge className="bg-green-500 mb-4 flex items-center gap-1">
-                <CreditCard className="h-3 w-3" /> 
-                Pulseira Ativa
+              {deviceActive ? (
+                <Badge className="bg-green-500 mb-4 flex items-center gap-1">
+                  <CreditCard className="h-3 w-3" /> 
+                  Pulseira Ativa
                 </Badge>
+              ) : (
+                <Badge variant="outline" className="mb-4 flex items-center gap-1">
+                  <CreditCard className="h-3 w-3" /> 
+                  Sem Pulseira Ativa
+                </Badge>
+              )}
               
-              <div className="w-full bg-blue-50 p-3 rounded-md mb-4 text-xs text-blue-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold">Dispositivo ativo</p>
-                  <p>Este aluno está sendo contabilizado na cobrança mensal por ter pulseira ativa.</p>
+              {deviceActive && (
+                <div className="w-full bg-blue-50 p-3 rounded-md mb-4 text-xs text-blue-700 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Dispositivo ativo</p>
+                    <p>Este aluno está sendo contabilizado na cobrança mensal por ter pulseira ativa.</p>
+                  </div>
                 </div>
-              </div>
+              )}
               
               <Button variant="outline" className="w-full">Ver Perfil do Estudante</Button>
             </>
