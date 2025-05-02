@@ -31,10 +31,9 @@ export type SystemConfigStepProps = {
 };
 
 export const plans = [
-  { value: 'Básico', label: 'Plano Básico' },
-  { value: 'Standard', label: 'Plano Standard' },
-  { value: 'Premium', label: 'Plano Premium' },
-  { value: 'Enterprise', label: 'Plano Enterprise' },
+  { value: 'Basic', label: 'Plano Básico (até 800 alunos)' },
+  { value: 'Standard', label: 'Plano Standard (até 1000 alunos)' },
+  { value: 'Premium', label: 'Plano Premium (alunos ilimitados)' },
 ];
 
 export const durations = [

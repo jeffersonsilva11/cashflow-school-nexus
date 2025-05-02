@@ -1,3 +1,4 @@
+
 // Dados financeiros para o módulo administrativo
 
 // Dados das escolas para visão financeira
@@ -212,12 +213,17 @@ export const subscriptions = [
   },
 ];
 
-// Planos disponíveis
+// Planos disponíveis - Atualizados para modelo de preço por aluno, com faixas
 export const plans = [
   {
     id: "plan-basic",
     name: "Basic",
-    price: 1200.00,
+    pricePerStudent: 10.00,
+    studentRange: "Até 800 alunos",
+    deviceLimit: 20,
+    minStudents: 1,
+    maxStudents: 800,
+    discount: null,
     features: [
       "Até 800 alunos",
       "Até 20 dispositivos",
@@ -229,7 +235,15 @@ export const plans = [
   {
     id: "plan-standard",
     name: "Standard",
-    price: 1800.00,
+    pricePerStudent: 12.00,
+    studentRange: "Até 1000 alunos",
+    deviceLimit: 30,
+    minStudents: 801,
+    maxStudents: 1000,
+    discount: {
+      threshold: 900,
+      percentage: 5
+    },
     features: [
       "Até 1000 alunos",
       "Até 30 dispositivos",
@@ -242,7 +256,15 @@ export const plans = [
   {
     id: "plan-premium",
     name: "Premium",
-    price: 2500.00,
+    pricePerStudent: 15.00,
+    studentRange: "Alunos ilimitados",
+    deviceLimit: 50,
+    minStudents: 1001,
+    maxStudents: null,
+    discount: {
+      threshold: 1500,
+      percentage: 10
+    },
     features: [
       "Alunos ilimitados",
       "Até 50 dispositivos",
@@ -256,7 +278,7 @@ export const plans = [
   }
 ];
 
-// Adicionar modelo de preços por aluno para cada plano
+// Preços por aluno para cada plano
 export const studentPricing = {
   Basic: 10.00,
   Standard: 12.00,

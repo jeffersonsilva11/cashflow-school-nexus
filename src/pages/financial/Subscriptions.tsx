@@ -12,9 +12,13 @@ import {
   AlertCircle,
   Clock,
   RefreshCcw,
-  Ban
+  Ban,
+  Users,
+  Smartphone,
+  BadgeDollarSign,
+  BadgePercent
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -157,18 +161,39 @@ export default function Subscriptions() {
       {/* Plans */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map(plan => (
-          <Card key={plan.id}>
+          <Card key={plan.id} className="relative overflow-hidden">
+            {plan.discount && (
+              <div className="absolute top-0 right-0">
+                <Badge variant="destructive" className="rounded-bl-md rounded-tr-md px-3 py-1">
+                  <BadgePercent className="h-4 w-4 mr-1" />
+                  {plan.discount.percentage}% off acima de {plan.discount.threshold} alunos
+                </Badge>
+              </div>
+            )}
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
+              <CardDescription className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                {plan.studentRange}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold mb-4">
-                {formatCurrency(plan.price)} <span className="text-sm font-normal text-muted-foreground">/mês</span>
-              </p>
+              <div className="mb-4">
+                <div className="flex items-center gap-1 mb-2">
+                  <BadgeDollarSign className="h-5 w-5 text-primary" />
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(plan.pricePerStudent)} <span className="text-sm font-normal text-muted-foreground">/aluno/mês</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                  <Smartphone className="h-4 w-4" />
+                  Até {plan.deviceLimit} dispositivos
+                </div>
+              </div>
               <ul className="space-y-2">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 shrink-0" />
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}
