@@ -31,6 +31,9 @@ const studentSchema = z.object({
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
+// Define valid status types to match the StudentCard component's props
+type StatusType = 'active' | 'inactive' | 'pending';
+
 export default function StudentEdit() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -71,8 +74,8 @@ export default function StudentEdit() {
       documentId: '123.456.789-00',
       notes: 'Alergia a amendoim',
       photo: 'https://i.pravatar.cc/150?img=5',
-      status: 'active',
-      deviceStatus: 'active'
+      status: 'active' as StatusType,
+      deviceStatus: 'active' as StatusType
     },
     'STD00512': {
       id: 'STD00512',
@@ -84,8 +87,8 @@ export default function StudentEdit() {
       documentId: '987.654.321-00',
       notes: '',
       photo: 'https://i.pravatar.cc/150?img=3',
-      status: 'active',
-      deviceStatus: 'inactive'
+      status: 'active' as StatusType,
+      deviceStatus: 'inactive' as StatusType
     }
   };
   
@@ -107,8 +110,8 @@ export default function StudentEdit() {
     name: string;
     grade: string;
     photo: string;
-    status?: 'active' | 'inactive' | 'pending';
-    deviceStatus?: 'active' | 'inactive' | 'pending';
+    status?: StatusType;
+    deviceStatus?: StatusType;
   } | undefined>(undefined);
   
   // Carrega os dados do estudante quando o componente é montado
