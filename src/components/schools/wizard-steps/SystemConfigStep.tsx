@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -46,6 +45,8 @@ const systemConfigSchema = z.object({
   monthlyClosingDay: z.number().min(1).max(31),
 });
 
+type SystemConfigFormValues = z.infer<typeof systemConfigSchema>;
+
 type SystemConfigStepProps = {
   formData: SchoolFormData;
   updateFormData: (data: Partial<SchoolFormData>) => void;
@@ -66,7 +67,7 @@ const durations = [
 ];
 
 export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepProps) => {
-  const form = useForm<z.infer<typeof systemConfigSchema>>({
+  const form = useForm<SystemConfigFormValues>({
     resolver: zodResolver(systemConfigSchema),
     defaultValues: {
       plan: formData.plan || 'Básico',
@@ -88,12 +89,8 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
   });
 
   // Atualiza o formData sempre que houver mudanças no formulário
-  const handleChange = <T extends keyof z.infer<typeof systemConfigSchema>>(
-    field: T, 
-    value: z.infer<typeof systemConfigSchema>[T]
-  ) => {
+  const handleChange = (field: keyof SystemConfigFormValues, value: any) => {
     updateFormData({ [field]: value });
-    form.setValue(field, value);
   };
 
   // Handler específico para os módulos
@@ -104,7 +101,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
     };
     
     updateFormData({ enabledModules: updatedModules });
-    form.setValue(`enabledModules.${String(module)}` as any, checked);
+    
+    // Using form.setValue with the correct path syntax
+    form.setValue(`enabledModules.${module}`, checked);
   };
 
   return (
@@ -122,7 +121,10 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                   <FormItem>
                     <FormLabel>Plano *</FormLabel>
                     <Select
-                      onValueChange={(value) => handleChange('plan', value)}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleChange('plan', value);
+                      }}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -150,7 +152,10 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                   <FormItem>
                     <FormLabel>Vigência do contrato *</FormLabel>
                     <Select
-                      onValueChange={(value) => handleChange('contractDuration', value)}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleChange('contractDuration', value);
+                      }}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -183,7 +188,11 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => handleChange('estimatedStudents', parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          field.onChange(value);
+                          handleChange('estimatedStudents', value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -207,9 +216,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => 
-                          handleModuleChange('cashless', Boolean(checked))
-                        }
+                        onCheckedChange={(checked) => {
+                          handleModuleChange('cashless', Boolean(checked));
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none pt-0.5">
@@ -230,9 +239,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => 
-                          handleModuleChange('accessControl', Boolean(checked))
-                        }
+                        onCheckedChange={(checked) => {
+                          handleModuleChange('accessControl', Boolean(checked));
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none pt-0.5">
@@ -253,9 +262,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => 
-                          handleModuleChange('attendance', Boolean(checked))
-                        }
+                        onCheckedChange={(checked) => {
+                          handleModuleChange('attendance', Boolean(checked));
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none pt-0.5">
@@ -276,9 +285,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => 
-                          handleModuleChange('parentComm', Boolean(checked))
-                        }
+                        onCheckedChange={(checked) => {
+                          handleModuleChange('parentComm', Boolean(checked));
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none pt-0.5">
@@ -299,9 +308,9 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={(checked) => 
-                          handleModuleChange('advancedReports', Boolean(checked))
-                        }
+                        onCheckedChange={(checked) => {
+                          handleModuleChange('advancedReports', Boolean(checked));
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none pt-0.5">
@@ -333,7 +342,10 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                         defaultValue={[field.value]}
                         max={10}
                         step={0.1}
-                        onValueChange={([value]) => handleChange('transactionFee', value)}
+                        onValueChange={([value]) => {
+                          field.onChange(value);
+                          handleChange('transactionFee', value);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -355,7 +367,10 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                         defaultValue={[field.value]}
                         max={10}
                         step={0.1}
-                        onValueChange={([value]) => handleChange('cashbackRate', value)}
+                        onValueChange={([value]) => {
+                          field.onChange(value);
+                          handleChange('cashbackRate', value);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -378,7 +393,11 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
                         min={1}
                         max={31}
                         {...field}
-                        onChange={(e) => handleChange('monthlyClosingDay', parseInt(e.target.value) || 25)}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 25;
+                          field.onChange(value);
+                          handleChange('monthlyClosingDay', value);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
