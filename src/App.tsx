@@ -10,9 +10,11 @@ import Schools from "./pages/Schools";
 import Users from "./pages/Users";
 import Parents from "./pages/Parents";
 import ParentDetails from "./pages/ParentDetails";
+import ParentForm from "./pages/ParentForm";
 import Students from "./pages/Students";
 import StudentDetails from "./pages/StudentDetails";
 import StudentForm from "./pages/StudentForm";
+import StudentEdit from "./pages/StudentEdit";
 import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
@@ -62,13 +64,13 @@ const App = () => (
             <Route path="users" element={<Users />} />
             <Route path="parents" element={<Parents />} />
             <Route path="parents/:parentId" element={<ParentDetails />} />
-            <Route path="parents/new" element={<ComingSoonPage title="Novo Responsável" description="Cadastro de novo responsável" />} />
+            <Route path="parents/new" element={<ParentForm />} />
             <Route path="parents/:parentId/edit" element={<ComingSoonPage title="Editar Responsável" description="Edição de dados do responsável" />} />
             
             <Route path="students" element={<Students />} />
             <Route path="students/:studentId" element={<StudentDetails />} />
             <Route path="students/new" element={<StudentForm />} />
-            <Route path="students/:studentId/edit" element={<ComingSoonPage title="Editar Aluno" description="Edição de dados do aluno" />} />
+            <Route path="students/:studentId/edit" element={<StudentEdit />} />
             
             {/* Financeiro */}
             <Route path="transactions" element={<Transactions />} />
