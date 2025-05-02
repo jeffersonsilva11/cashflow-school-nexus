@@ -10,6 +10,8 @@ import Schools from "./pages/Schools";
 import Users from "./pages/Users";
 import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
+import DeviceDetails from "./pages/DeviceDetails";
+import DeviceBatches from "./pages/DeviceBatches";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="users" element={<Users />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="devices" element={<Devices />} />
+            <Route path="devices/:deviceId" element={<DeviceDetails />} />
+            <Route path="device-batches" element={<DeviceBatches />} />
             
             {/* Placeholder routes that will show "Coming Soon" */}
             <Route path="financial" element={<ComingSoonPage title="Financeiro" />} />
