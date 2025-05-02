@@ -39,6 +39,9 @@ import Subscriptions from "./pages/financial/Subscriptions";
 import SubscriptionDetails from "./pages/financial/SubscriptionDetails";
 import Billing from "./pages/financial/Billing";
 import BillingDetails from "./pages/financial/BillingDetails";
+import PaymentManager from "./pages/payment/PaymentManager";
+import NewPayment from "./pages/payment/NewPayment";
+import PaymentDetail from "./pages/payment/PaymentDetail";
 
 const queryClient = new QueryClient();
 
@@ -181,6 +184,23 @@ const App = () => (
               <Route path="financial/billing/:billingId" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <BillingDetails />
+                </ProtectedRoute>
+              } />
+              
+              {/* Sistema de Pagamentos */}
+              <Route path="payment" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'parent']}>
+                  <PaymentManager />
+                </ProtectedRoute>
+              } />
+              <Route path="payment/new" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <NewPayment />
+                </ProtectedRoute>
+              } />
+              <Route path="payment/:paymentId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'parent']}>
+                  <PaymentDetail />
                 </ProtectedRoute>
               } />
               

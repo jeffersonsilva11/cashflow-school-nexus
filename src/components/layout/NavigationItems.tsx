@@ -42,6 +42,7 @@ export const userItems = [
 
 // Transações/Financeiro
 export const financeItems = [
+  { to: "/payment", icon: <CreditCard size={20} />, label: "Pagamentos" },
   { to: "/transactions", icon: <ReceiptText size={20} />, label: "Transações Cantina" },
   { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro Admin" },
   { to: "/financial/invoices", icon: <FileText size={20} />, label: "Faturas" },
