@@ -7,9 +7,9 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 export default function NewSchool() {
   return (
-    <TooltipProvider>
-      <div className="animate-fade-in space-y-6">
-        {/* Breadcrumbs */}
+    <div className="animate-fade-in space-y-6">
+      {/* Breadcrumbs with tooltip provider only wrapping the tooltips */}
+      <TooltipProvider>
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -31,14 +31,14 @@ export default function NewSchool() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Nova Escola</h1>
-          <p className="text-muted-foreground">Complete o formulário abaixo para cadastrar uma nova escola.</p>
-        </div>
-
-        <SchoolWizard />
+      </TooltipProvider>
+      
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Nova Escola</h1>
+        <p className="text-muted-foreground">Complete o formulário abaixo para cadastrar uma nova escola.</p>
       </div>
-    </TooltipProvider>
+
+      <SchoolWizard />
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { EnabledModules, SchoolFormData } from '../../SchoolWizard';
+import { SchoolFormData, EnabledModules } from '../../types/school-wizard-types';
 
 // Schema de validação
 export const systemConfigSchema = z.object({

@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { SchoolFormData, EnabledModules } from '../SchoolWizard';
+import { EnabledModules } from '../types/school-wizard-types';
 import { 
   SystemConfigFormValues, 
   systemConfigSchema, 
