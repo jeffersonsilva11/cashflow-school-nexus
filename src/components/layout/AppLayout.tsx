@@ -14,7 +14,13 @@ import {
   Menu,
   X,
   ChevronDown,
-  LogOut
+  LogOut,
+  BookOpen,
+  UserRound,
+  FileBarChart,
+  ShieldCheck,
+  Layers,
+  GraduationCap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -52,18 +58,71 @@ const NavItem = ({ to, icon, label, active }: NavItemProps) => {
   );
 };
 
+type NavGroupProps = {
+  title: string;
+  children: React.ReactNode;
+  sidebarOpen: boolean;
+};
+
+const NavGroup = ({ title, children, sidebarOpen }: NavGroupProps) => {
+  return (
+    <div className="mb-4">
+      {sidebarOpen && (
+        <div className="px-3 mb-2">
+          <h3 className="text-xs font-medium text-sidebar-foreground/60 uppercase tracking-wider">{title}</h3>
+        </div>
+      )}
+      <div className="space-y-1">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   
-  const navItems = [
+  // Dashboard
+  const dashboardItems = [
     { to: "/dashboard", icon: <Home size={20} />, label: "Dashboard" },
+  ];
+  
+  // Escolas
+  const schoolItems = [
     { to: "/schools", icon: <School size={20} />, label: "Escolas" },
+    { to: "/schools/map", icon: <Layers size={20} />, label: "Mapa de Escolas" },
+    { to: "/schools/invites", icon: <ShieldCheck size={20} />, label: "Convites" },
+  ];
+  
+  // Usuários
+  const userItems = [
     { to: "/users", icon: <Users size={20} />, label: "Usuários" },
+    { to: "/parents", icon: <UserRound size={20} />, label: "Pais/Responsáveis" },
+    { to: "/students", icon: <GraduationCap size={20} />, label: "Alunos" },
+  ];
+  
+  // Transações/Financeiro
+  const financeItems = [
     { to: "/transactions", icon: <CreditCard size={20} />, label: "Transações" },
     { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro" },
+  ];
+  
+  // Dispositivos
+  const deviceItems = [
     { to: "/devices", icon: <Database size={20} />, label: "Dispositivos" },
+    { to: "/device-batches", icon: <Layers size={20} />, label: "Lotes" },
+  ];
+  
+  // Relatórios
+  const reportItems = [
     { to: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
+    { to: "/reports/financial", icon: <FileBarChart size={20} />, label: "Financeiros" },
+    { to: "/reports/students", icon: <BookOpen size={20} />, label: "Alunos" },
+  ];
+  
+  // Configurações e Suporte
+  const settingsItems = [
     { to: "/settings", icon: <Settings size={20} />, label: "Configurações" },
     { to: "/support", icon: <HelpCircle size={20} />, label: "Suporte" },
   ];
@@ -99,16 +158,90 @@ export default function AppLayout() {
         </div>
         
         <div className="mt-2 px-3 flex-1 overflow-y-auto">
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
-              />
-            ))}
+          <nav className="space-y-2">
+            <NavGroup title="Principal" sidebarOpen={sidebarOpen}>
+              {dashboardItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname === item.to}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Gestão Escolar" sidebarOpen={sidebarOpen}>
+              {schoolItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Usuários" sidebarOpen={sidebarOpen}>
+              {userItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Financeiro" sidebarOpen={sidebarOpen}>
+              {financeItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Dispositivos" sidebarOpen={sidebarOpen}>
+              {deviceItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Relatórios" sidebarOpen={sidebarOpen}>
+              {reportItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Sistema" sidebarOpen={sidebarOpen}>
+              {settingsItems.map((item) => (
+                <NavItem 
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </NavGroup>
           </nav>
         </div>
         
@@ -158,7 +291,19 @@ export default function AppLayout() {
       >
         <header className="h-16 border-b bg-background sticky top-0 z-30 flex items-center justify-between px-6">
           <h2 className="text-lg font-medium">
-            {navItems.find(item => location.pathname.startsWith(item.to))?.label || "Dashboard"}
+            {location.pathname === "/dashboard" && "Dashboard"}
+            {location.pathname.startsWith("/schools") && "Escolas"}
+            {location.pathname === "/users" && "Usuários"}
+            {location.pathname === "/parents" && "Pais/Responsáveis"}
+            {location.pathname === "/students" && "Alunos"}
+            {location.pathname === "/transactions" && "Transações"}
+            {location.pathname === "/financial" && "Financeiro"}
+            {location.pathname.startsWith("/devices") && "Dispositivos"}
+            {location.pathname === "/device-batches" && "Lotes de Dispositivos"}
+            {location.pathname === "/analytics" && "Analytics"}
+            {location.pathname.startsWith("/reports") && "Relatórios"}
+            {location.pathname === "/settings" && "Configurações"}
+            {location.pathname === "/support" && "Suporte"}
           </h2>
           
           <div className="flex items-center gap-4">

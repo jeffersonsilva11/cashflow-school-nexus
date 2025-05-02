@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Schools from "./pages/Schools";
 import Users from "./pages/Users";
+import Parents from "./pages/Parents";
+import Students from "./pages/Students";
 import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
@@ -45,8 +47,14 @@ const App = () => (
             <Route path="schools/invites" element={<ComingSoonPage title="Convites" description="Módulo de envio de convites para responsáveis e colaboradores" />} />
             <Route path="schools/map" element={<ComingSoonPage title="Mapa de Escolas" description="Visualização geográfica das escolas cadastradas" />} />
             
+            {/* Usuários */}
             <Route path="users" element={<Users />} />
+            <Route path="parents" element={<ComingSoonPage title="Pais/Responsáveis" description="Cadastro e gestão de responsáveis pelos alunos" />} />
+            <Route path="students" element={<ComingSoonPage title="Alunos" description="Cadastro e gestão de alunos" />} />
+            
+            {/* Financeiro */}
             <Route path="transactions" element={<Transactions />} />
+            <Route path="financial" element={<ComingSoonPage title="Financeiro" description="Gestão financeira das escolas" />} />
             
             {/* Dispositivos */}
             <Route path="devices" element={<Devices />} />
@@ -60,11 +68,14 @@ const App = () => (
             <Route path="devices/:deviceId/edit" element={<EditDevice />} />
             <Route path="devices/:deviceId/replace" element={<ReplaceDevice />} />
             
-            {/* Placeholder routes that will show "Coming Soon" */}
-            <Route path="financial" element={<ComingSoonPage title="Financeiro" />} />
-            <Route path="analytics" element={<ComingSoonPage title="Analytics" />} />
-            <Route path="settings" element={<ComingSoonPage title="Configurações" />} />
-            <Route path="support" element={<ComingSoonPage title="Suporte" />} />
+            {/* Relatórios */}
+            <Route path="analytics" element={<ComingSoonPage title="Analytics" description="Visão geral de analytics do sistema" />} />
+            <Route path="reports/financial" element={<ComingSoonPage title="Relatórios Financeiros" description="Relatórios detalhados de transações e dados financeiros" />} />
+            <Route path="reports/students" element={<ComingSoonPage title="Relatórios de Alunos" description="Relatórios de atividade e comportamento dos alunos" />} />
+            
+            {/* Configurações e Suporte */}
+            <Route path="settings" element={<ComingSoonPage title="Configurações" description="Configurações gerais do sistema" />} />
+            <Route path="support" element={<ComingSoonPage title="Suporte" description="Central de suporte e ajuda" />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />
