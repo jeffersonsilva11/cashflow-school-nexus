@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentInfo, paymentService } from '@/services/paymentService';
-import { ArrowLeft, Download, Printer, RefreshCcw, User, School, CreditCard } from 'lucide-react';
+import { ArrowLeft, Download, Printer, RefreshCcw, User, School, CreditCard, FileText, Share, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function PaymentDetail() {
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ export default function PaymentDetail() {
   const { toast } = useToast();
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [generatingReceipt, setGeneratingReceipt] = useState(false);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
 
   useEffect(() => {
     if (paymentId) {
@@ -127,6 +132,59 @@ export default function PaymentDetail() {
     }
   };
 
+  const handleGenerateReceipt = async () => {
+    if (!payment || payment.status !== 'paid') return;
+    
+    try {
+      setGeneratingReceipt(true);
+      const receipt = await paymentService.generateReceipt(payment.id);
+      
+      if (receipt && receipt.url) {
+        setReceiptUrl(receipt.url);
+        setShowReceiptDialog(true);
+        
+        toast({
+          title: "Recibo gerado",
+          description: "O recibo foi gerado com sucesso e está pronto para download",
+        });
+      } else {
+        toast({
+          title: "Erro ao gerar recibo",
+          description: "Não foi possível gerar o recibo para este pagamento",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao gerar recibo",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao gerar o recibo",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingReceipt(false);
+    }
+  };
+
+  const handleDownloadReceipt = () => {
+    // Em um cenário real, isso faria o download do arquivo
+    toast({
+      title: "Download iniciado",
+      description: "O recibo está sendo baixado",
+    });
+    
+    setTimeout(() => {
+      setShowReceiptDialog(false);
+    }, 1000);
+  };
+
+  const handleShareReceipt = () => {
+    // Em um cenário real, isto abriria um diálogo de compartilhamento
+    toast({
+      title: "Compartilhar recibo",
+      description: "Opções de compartilhamento de recibo disponíveis",
+    });
+  };
+
   const getStatusBadge = (status: PaymentInfo['status']) => {
     switch (status) {
       case 'pending':
@@ -193,19 +251,30 @@ export default function PaymentDetail() {
           
           {payment.status === 'paid' && (
             <>
-              <Button variant="outline" className="gap-2">
-                <Printer className="h-4 w-4" />
-                Imprimir
+              <Button variant="outline" className="gap-2" onClick={handleGenerateReceipt} disabled={generatingReceipt}>
+                <FileText className="h-4 w-4" />
+                {generatingReceipt ? 'Gerando...' : 'Gerar Recibo'}
               </Button>
               
               <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Baixar Comprovante
+                <Printer className="h-4 w-4" />
+                Imprimir
               </Button>
             </>
           )}
         </div>
       </div>
+      
+      {payment.status === 'paid' && (
+        <Alert className="mb-6 bg-green-50 border-green-200">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-700">Pagamento confirmado</AlertTitle>
+          <AlertDescription className="text-green-600">
+            Este pagamento foi processado com sucesso e está confirmado.
+            {payment.paidAt && ` Data de confirmação: ${formatDate(payment.paidAt)}`}
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Detalhes principais */}
@@ -310,6 +379,15 @@ export default function PaymentDetail() {
                   </div>
                 </div>
               ) : null}
+              
+              {payment.metadata && Object.keys(payment.metadata).length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Informações Adicionais</p>
+                  <div className="bg-gray-50 p-3 rounded-md border text-sm">
+                    <pre className="whitespace-pre-wrap">{JSON.stringify(payment.metadata, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
             </CardContent>
             {(payment.status === 'pending' || payment.status === 'paid') && (
               <CardFooter className="flex justify-between border-t pt-6">
@@ -331,6 +409,40 @@ export default function PaymentDetail() {
               </CardFooter>
             )}
           </Card>
+          
+          {/* Histórico de transações - Em um sistema real, isto mostraria um log de eventos */}
+          {payment.status === 'paid' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Histórico de Transações</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-2 border-l-4 border-green-500 bg-green-50 pl-4">
+                    <div>
+                      <p className="font-medium">Pagamento confirmado</p>
+                      <p className="text-sm text-muted-foreground">Transação processada com sucesso</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">{formatDate(payment.paidAt || '')}</p>
+                      <p className="text-sm font-medium text-green-600">{formatCurrency(payment.amount / 100)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-2 border-l-4 border-blue-500 bg-blue-50 pl-4">
+                    <div>
+                      <p className="font-medium">Pagamento iniciado</p>
+                      <p className="text-sm text-muted-foreground">Transação iniciada via {payment.method === 'credit_card' ? 'cartão de crédito' : payment.method === 'bank_slip' ? 'boleto' : 'PIX'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">{formatDate(payment.createdAt)}</p>
+                      <p className="text-sm font-medium">{formatCurrency(payment.amount / 100)}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Card lateral */}
@@ -406,14 +518,24 @@ export default function PaymentDetail() {
               
               {payment.status === 'paid' && (
                 <>
+                  <Button 
+                    variant="default" 
+                    className="w-full gap-2" 
+                    onClick={handleGenerateReceipt} 
+                    disabled={generatingReceipt}
+                  >
+                    <FileText className="h-4 w-4" />
+                    {generatingReceipt ? 'Gerando recibo...' : 'Gerar Recibo'}
+                  </Button>
                   <Button variant="outline" className="w-full gap-2">
                     <Printer className="h-4 w-4" />
                     Imprimir Comprovante
                   </Button>
                   <Button variant="outline" className="w-full gap-2">
-                    <Download className="h-4 w-4" />
-                    Baixar Comprovante
+                    <Share className="h-4 w-4" />
+                    Compartilhar
                   </Button>
+                  <Separator />
                   <Button variant="outline" onClick={handleRefundPayment} className="w-full">
                     Reembolsar Pagamento
                   </Button>
@@ -429,6 +551,36 @@ export default function PaymentDetail() {
           </Card>
         </div>
       </div>
+      
+      {/* Diálogo de recibo */}
+      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recibo de Pagamento</DialogTitle>
+            <DialogDescription>
+              O recibo do pagamento {payment.id} está disponível para download.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <div className="border-2 border-dashed border-green-300 rounded-lg p-8 bg-green-50 flex flex-col items-center">
+              <FileText className="w-12 h-12 text-green-600 mb-2" />
+              <p className="text-lg font-medium mb-1">Recibo #{payment.id}</p>
+              <p className="text-sm text-muted-foreground mb-3">Gerado em {formatDate(new Date().toISOString())}</p>
+              <p className="text-xl font-bold text-green-700">{formatCurrency(payment.amount / 100)}</p>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button variant="outline" onClick={() => handleShareReceipt()}>
+              <Share className="mr-2 h-4 w-4" />
+              Compartilhar
+            </Button>
+            <Button onClick={() => handleDownloadReceipt()}>
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

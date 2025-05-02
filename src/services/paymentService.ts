@@ -35,6 +35,13 @@ export interface CreatePaymentData {
   metadata?: Record<string, any>;
 }
 
+// Configuração para integração com Stripe (simulada)
+const stripeConfig = {
+  apiKey: process.env.STRIPE_API_KEY || 'sk_test_simulado', // Em produção, usar variável de ambiente
+  apiVersion: '2023-10-16',
+  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_simulado',
+};
+
 // Simula um gateway de pagamentos
 class PaymentService {
   private payments: PaymentInfo[] = [];
@@ -45,6 +52,29 @@ class PaymentService {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const id = `PMT${Math.floor(10000 + Math.random() * 90000)}`;
+    
+    // Em um ambiente real, enviaríamos os dados para o Stripe
+    // Exemplo de como ficaria a integração real comentada abaixo
+    /*
+    const stripe = new Stripe(stripeConfig.apiKey, {
+      apiVersion: stripeConfig.apiVersion as any,
+    });
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: data.amount,
+      currency: 'brl',
+      description: data.description,
+      metadata: {
+        studentId: data.studentId,
+        schoolId: data.schoolId,
+        parentId: data.parentId,
+      },
+      payment_method_types: this.mapPaymentMethodToStripe(data.method),
+    });
+    
+    // Usar o ID do Stripe
+    // id = paymentIntent.id;
+    */
     
     const payment: PaymentInfo = {
       id,
@@ -77,6 +107,20 @@ class PaymentService {
       throw new Error(`Payment with ID ${paymentId} not found`);
     }
     
+    // Em um ambiente real, confirmaríamos o pagamento no Stripe
+    /*
+    const stripe = new Stripe(stripeConfig.apiKey, {
+      apiVersion: stripeConfig.apiVersion as any,
+    });
+    
+    // Confirmar o pagamento
+    const paymentIntent = await stripe.paymentIntents.confirm(paymentId, {
+      payment_method: 'pm_card_visa', // Na prática, viria do frontend
+    });
+    
+    const isSuccess = paymentIntent.status === 'succeeded';
+    */
+    
     // Simula 90% de sucesso e 10% de falha
     const isSuccess = Math.random() > 0.1;
     
@@ -104,6 +148,15 @@ class PaymentService {
       throw new Error(`Cannot cancel payment with status: ${payment.status}`);
     }
     
+    // Em um ambiente real, cancelaríamos o pagamento no Stripe
+    /*
+    const stripe = new Stripe(stripeConfig.apiKey, {
+      apiVersion: stripeConfig.apiVersion as any,
+    });
+    
+    await stripe.paymentIntents.cancel(paymentId);
+    */
+    
     payment.status = 'canceled';
     return payment;
   }
@@ -121,6 +174,17 @@ class PaymentService {
     if (payment.status !== 'paid') {
       throw new Error(`Cannot refund payment with status: ${payment.status}`);
     }
+    
+    // Em um ambiente real, reembolsaríamos o pagamento no Stripe
+    /*
+    const stripe = new Stripe(stripeConfig.apiKey, {
+      apiVersion: stripeConfig.apiVersion as any,
+    });
+    
+    await stripe.refunds.create({
+      payment_intent: paymentId,
+    });
+    */
     
     payment.status = 'refunded';
     return payment;
@@ -156,6 +220,36 @@ class PaymentService {
       if (filters.schoolId && payment.schoolId !== filters.schoolId) return false;
       return true;
     });
+  }
+  
+  // Auxiliar para mapear métodos de pagamento para os tipos do Stripe
+  private mapPaymentMethodToStripe(method: PaymentMethod): string[] {
+    switch (method) {
+      case 'credit_card':
+        return ['card'];
+      case 'bank_slip':
+        return ['boleto'];
+      case 'pix':
+        return ['pix'];
+      default:
+        return ['card'];
+    }
+  }
+  
+  // Gera um recibo para um pagamento concluído
+  async generateReceipt(paymentId: string): Promise<{ url: string } | null> {
+    const payment = await this.getPayment(paymentId);
+    if (!payment || payment.status !== 'paid') {
+      return null;
+    }
+    
+    // Em um cenário real, geraria um PDF ou HTML e retornaria a URL
+    // Aqui estamos apenas simulando
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    return {
+      url: `/receipts/${paymentId}.pdf`
+    };
   }
   
   // Adiciona alguns pagamentos mockados para demonstração
