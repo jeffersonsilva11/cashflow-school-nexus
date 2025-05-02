@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 import { SchoolFormData, EnabledModules } from '../../types/school-wizard-types';
-import { plans } from '@/services/financialMockData';
+import { plans as financialPlans } from '@/services/financialMockData';
 
 // Schema de validação
 export const systemConfigSchema = z.object({
@@ -31,8 +31,8 @@ export type SystemConfigStepProps = {
   updateFormData: (data: Partial<SchoolFormData>) => void;
 };
 
-// Mapear os planos a partir do financialMockData 
-export const plans = [
+// Mapear os planos a partir do financialMockData para formato de opções de select
+export const planOptions = [
   { value: 'Basic', label: 'Plano Básico (até 800 alunos)' },
   { value: 'Standard', label: 'Plano Standard (até 1000 alunos)' },
   { value: 'Premium', label: 'Plano Premium (alunos ilimitados)' },

@@ -18,7 +18,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { SystemConfigFormValues, durations } from './types';
+import { SystemConfigFormValues, durations, planOptions } from './types';
 import { plans } from '@/services/financialMockData';
 
 type PlanContractSectionProps = {
