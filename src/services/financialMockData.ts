@@ -1,4 +1,3 @@
-
 // Dados financeiros para o módulo administrativo
 
 // Dados das escolas para visão financeira
@@ -14,7 +13,8 @@ export const schoolFinancials = [
     status: "active",
     totalRevenue: 42980.75,
     pendingAmount: 0,
-    nextBillingDate: "2025-05-15"
+    nextBillingDate: "2025-05-15",
+    pricePerStudent: 15.00
   },
   {
     id: "2",
@@ -27,7 +27,8 @@ export const schoolFinancials = [
     status: "active",
     totalRevenue: 32640.30,
     pendingAmount: 0,
-    nextBillingDate: "2025-05-10"
+    nextBillingDate: "2025-05-10",
+    pricePerStudent: 12.00
   },
   {
     id: "3",
@@ -40,7 +41,8 @@ export const schoolFinancials = [
     status: "pending",
     totalRevenue: 19750.50,
     pendingAmount: 1200.00,
-    nextBillingDate: "2025-04-28"
+    nextBillingDate: "2025-04-28",
+    pricePerStudent: 10.00
   },
   {
     id: "4",
@@ -53,7 +55,8 @@ export const schoolFinancials = [
     status: "active",
     totalRevenue: 35870.25,
     pendingAmount: 0,
-    nextBillingDate: "2025-05-05"
+    nextBillingDate: "2025-05-05",
+    pricePerStudent: 15.00
   },
   {
     id: "5",
@@ -66,7 +69,8 @@ export const schoolFinancials = [
     status: "overdue",
     totalRevenue: 21980.90,
     pendingAmount: 1800.00,
-    nextBillingDate: "2025-05-01"
+    nextBillingDate: "2025-05-01",
+    pricePerStudent: 12.00
   },
 ];
 
@@ -251,6 +255,13 @@ export const plans = [
     ]
   }
 ];
+
+// Adicionar modelo de preços por aluno para cada plano
+export const studentPricing = {
+  Basic: 10.00,
+  Standard: 12.00,
+  Premium: 15.00
+};
 
 // Relatórios financeiros
 export const financialReports = {

@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, School, CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, School, CalendarIcon, Plus, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -21,6 +21,7 @@ import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/components/ui/use-toast';
 import { schoolFinancials } from '@/services/financialMockData';
 import { useForm } from 'react-hook-form';
+import { Switch } from '@/components/ui/switch';
 
 type InvoiceItem = {
   description: string;
@@ -31,25 +32,63 @@ type FormData = {
   schoolId: string;
   dueDate: Date | undefined;
   items: InvoiceItem[];
+  useActiveStudents: boolean;
 };
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeStudentsCount, setActiveStudentsCount] = useState(0);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       items: [{ description: 'Mensalidade', amount: '' }],
+      useActiveStudents: true
     }
   });
   
   const items = watch('items');
   const selectedSchoolId = watch('schoolId');
   const dueDate = watch('dueDate');
+  const useActiveStudents = watch('useActiveStudents');
   
   const selectedSchool = selectedSchoolId 
     ? schoolFinancials.find(school => school.id === selectedSchoolId) 
     : null;
+
+  // Calcular valor automaticamente com base nos alunos ativos quando a escola ou a opção mudar
+  useEffect(() => {
+    if (selectedSchool && useActiveStudents) {
+      // Obter o número de alunos ativos
+      const activeStudents = selectedSchool.activeStudents;
+      setActiveStudentsCount(activeStudents);
+      
+      // Calcular valor por aluno com base no plano
+      let pricePerStudent = 0;
+      switch (selectedSchool.plan) {
+        case 'Premium':
+          pricePerStudent = 15.00; // R$15 por aluno no plano Premium
+          break;
+        case 'Standard':
+          pricePerStudent = 12.00; // R$12 por aluno no plano Standard
+          break;
+        case 'Basic':
+          pricePerStudent = 10.00; // R$10 por aluno no plano Basic
+          break;
+        default:
+          pricePerStudent = 10.00;
+      }
+      
+      // Atualizar valor do primeiro item (mensalidade)
+      const totalAmount = (activeStudents * pricePerStudent).toFixed(2);
+      setValue('items', [
+        { 
+          description: `Mensalidade ${selectedSchool.plan} - ${activeStudents} alunos ativos`, 
+          amount: totalAmount 
+        }
+      ]);
+    }
+  }, [selectedSchoolId, selectedSchool, useActiveStudents, setValue]);
   
   const addItem = () => {
     const currentItems = watch('items') || [];
@@ -136,18 +175,41 @@ export default function CreateInvoice() {
                         <div>{selectedSchool.plan}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Mensalidade:</div>
+                        <div className="text-muted-foreground">Mensalidade Base:</div>
                         <div>{formatCurrency(selectedSchool.monthlyFee)}</div>
                       </div>
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" />
                         <div className="text-muted-foreground">Alunos Ativos:</div>
-                        <div>{selectedSchool.activeStudents}</div>
+                        <div className="font-medium">{selectedSchool.activeStudents}</div>
                       </div>
                       <div>
                         <div className="text-muted-foreground">Dispositivos Ativos:</div>
                         <div>{selectedSchool.activeDevices}</div>
                       </div>
                     </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="useActiveStudents"
+                    checked={useActiveStudents}
+                    onCheckedChange={(checked) => setValue('useActiveStudents', checked)}
+                  />
+                  <Label htmlFor="useActiveStudents">Calcular valor com base em alunos ativos</Label>
+                </div>
+                
+                {useActiveStudents && selectedSchool && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-green-600" />
+                      <h3 className="font-medium text-green-800">Cálculo por Alunos Ativos</h3>
+                    </div>
+                    <p className="text-sm text-green-700">
+                      A cobrança será calculada com base no número de alunos ativos ({activeStudentsCount}) 
+                      e no plano da escola ({selectedSchool.plan}).
+                    </p>
                   </div>
                 )}
               </div>
@@ -199,6 +261,7 @@ export default function CreateInvoice() {
                     <Input
                       id={`items[${index}].description`}
                       {...register(`items.${index}.description`)}
+                      readOnly={useActiveStudents && index === 0}
                     />
                   </div>
                   <div className="col-span-4">
@@ -208,6 +271,7 @@ export default function CreateInvoice() {
                       type="number"
                       step="0.01"
                       {...register(`items.${index}.amount`)}
+                      readOnly={useActiveStudents && index === 0}
                     />
                   </div>
                   <div className="col-span-1">
@@ -216,7 +280,7 @@ export default function CreateInvoice() {
                       variant="ghost" 
                       size="icon"
                       onClick={() => removeItem(index)}
-                      disabled={items.length === 1}
+                      disabled={(items.length === 1) || (useActiveStudents && index === 0)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -224,7 +288,13 @@ export default function CreateInvoice() {
                 </div>
               ))}
               
-              <Button type="button" variant="outline" className="w-full" onClick={addItem}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={addItem}
+                disabled={useActiveStudents && items.length === 1}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Item
               </Button>

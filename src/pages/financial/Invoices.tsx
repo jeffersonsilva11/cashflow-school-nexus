@@ -12,7 +12,8 @@ import {
   Send, 
   CheckCircle2, 
   Clock, 
-  AlertCircle 
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/components/ui/use-toast';
-import { invoices } from '@/services/financialMockData';
+import { invoices, schoolFinancials } from '@/services/financialMockData';
 
 export default function Invoices() {
   const navigate = useNavigate();
@@ -89,6 +90,18 @@ export default function Invoices() {
     });
   };
 
+  const handleRecalculateInvoice = (invoiceId: string, schoolId: string) => {
+    // Encontrar a escola
+    const school = schoolFinancials.find(s => s.id === schoolId);
+    
+    if (school) {
+      toast({
+        title: "Fatura recalculada",
+        description: `A fatura ${invoiceId} foi recalculada com base em ${school.activeStudents} alunos ativos.`,
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
@@ -121,7 +134,7 @@ export default function Invoices() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Faturas</h1>
           <p className="text-muted-foreground">
-            Gerencie as faturas emitidas para escolas
+            Gerencie as faturas emitidas para escolas com base em alunos ativos
           </p>
         </div>
         <Button onClick={handleCreateInvoice}>
@@ -218,51 +231,64 @@ export default function Invoices() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.id}</TableCell>
-                  <TableCell>{invoice.schoolName}</TableCell>
-                  <TableCell>{new Date(invoice.issuedDate).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{formatCurrency(invoice.amount)}</TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    {getStatusIcon(invoice.status)}
-                    {getStatusBadge(invoice.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewInvoice(invoice.id)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver Detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadInvoice(invoice.id)}>
-                          <Download className="mr-2 h-4 w-4" />
-                          Baixar PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleSendInvoice(invoice.id)}>
-                          <Send className="mr-2 h-4 w-4" />
-                          Enviar por Email
-                        </DropdownMenuItem>
-                        {(invoice.status === 'pending' || invoice.status === 'overdue') && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Marcar como Pago
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {filteredInvoices.length > 0 ? (
+                filteredInvoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.id}</TableCell>
+                    <TableCell>{invoice.schoolName}</TableCell>
+                    <TableCell>{new Date(invoice.issuedDate).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>{new Date(invoice.dueDate).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>{formatCurrency(invoice.amount)}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {getStatusIcon(invoice.status)}
+                      {getStatusBadge(invoice.status)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewInvoice(invoice.id)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownloadInvoice(invoice.id)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Baixar PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendInvoice(invoice.id)}>
+                            <Send className="mr-2 h-4 w-4" />
+                            Enviar por Email
+                          </DropdownMenuItem>
+                          
+                          {(invoice.status === 'pending' || invoice.status === 'overdue') && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleRecalculateInvoice(invoice.id, invoice.schoolId)}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Recalcular por Alunos Ativos
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice.id)}>
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                Marcar como Pago
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    Nenhum resultado encontrado.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
