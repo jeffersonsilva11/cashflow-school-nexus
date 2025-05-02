@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -198,17 +197,23 @@ export default function Devices() {
                     <CardDescription>Dispositivos não alocados a estudantes</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="gap-1">
-                      <Package size={16} />
-                      Cadastrar Individual
+                    <Button variant="outline" className="gap-1" asChild>
+                      <Link to="/devices/register">
+                        <Package size={16} />
+                        Cadastrar Individual
+                      </Link>
                     </Button>
-                    <Button variant="outline" className="gap-1">
-                      <School size={16} />
-                      Alocar para Escola
+                    <Button variant="outline" className="gap-1" asChild>
+                      <Link to="/devices/allocate">
+                        <School size={16} />
+                        Alocar para Escola
+                      </Link>
                     </Button>
-                    <Button variant="outline" className="gap-1">
-                      <Users size={16} />
-                      Vincular a Alunos
+                    <Button variant="outline" className="gap-1" asChild>
+                      <Link to="/devices/bind">
+                        <Users size={16} />
+                        Vincular a Alunos
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -403,4 +408,4 @@ export default function Devices() {
       </Dialog>
     </div>
   );
-};
+}

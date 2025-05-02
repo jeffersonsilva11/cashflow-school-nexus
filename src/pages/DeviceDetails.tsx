@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -66,17 +66,21 @@ export default function DeviceDetails() {
           <p className="text-muted-foreground">Gerenciamento completo do dispositivo {deviceData.serial}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-1">
-            <Edit size={16} />
-            Editar
+          <Button variant="outline" className="gap-1" asChild>
+            <Link to={`/devices/${deviceId}/edit`}>
+              <Edit size={16} />
+              Editar
+            </Link>
           </Button>
           <Button variant="outline" className="gap-1">
             <Lock size={16} />
             Bloquear
           </Button>
-          <Button variant="outline" className="gap-1">
-            <RefreshCw size={16} />
-            Substituir
+          <Button variant="outline" className="gap-1" asChild>
+            <Link to={`/devices/${deviceId}/replace`}>
+              <RefreshCw size={16} />
+              Substituir
+            </Link>
           </Button>
           <Button variant="destructive" className="gap-1">
             <XCircle size={16} />
@@ -292,4 +296,4 @@ export default function DeviceDetails() {
       </div>
     </div>
   );
-};
+}

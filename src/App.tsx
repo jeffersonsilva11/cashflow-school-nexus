@@ -12,6 +12,11 @@ import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
 import DeviceBatches from "./pages/DeviceBatches";
+import RegisterDevice from "./pages/deviceManagement/RegisterDevice";
+import AllocateToSchool from "./pages/deviceManagement/AllocateToSchool";
+import BindToStudents from "./pages/deviceManagement/BindToStudents";
+import EditDevice from "./pages/deviceManagement/EditDevice";
+import ReplaceDevice from "./pages/deviceManagement/ReplaceDevice";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -33,9 +38,18 @@ const App = () => (
             <Route path="schools" element={<Schools />} />
             <Route path="users" element={<Users />} />
             <Route path="transactions" element={<Transactions />} />
+            
+            {/* Dispositivos */}
             <Route path="devices" element={<Devices />} />
             <Route path="devices/:deviceId" element={<DeviceDetails />} />
             <Route path="device-batches" element={<DeviceBatches />} />
+            
+            {/* Gestão de Dispositivos */}
+            <Route path="devices/register" element={<RegisterDevice />} />
+            <Route path="devices/allocate" element={<AllocateToSchool />} />
+            <Route path="devices/bind" element={<BindToStudents />} />
+            <Route path="devices/:deviceId/edit" element={<EditDevice />} />
+            <Route path="devices/:deviceId/replace" element={<ReplaceDevice />} />
             
             {/* Placeholder routes that will show "Coming Soon" */}
             <Route path="financial" element={<ComingSoonPage title="Financeiro" />} />
