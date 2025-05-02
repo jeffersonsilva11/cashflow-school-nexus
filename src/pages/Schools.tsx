@@ -26,9 +26,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, FileDown } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, FileDown, Building } from 'lucide-react';
 import { schools } from '@/services/mockData';
 import { formatCurrency } from '@/lib/format';
+import { Link } from 'react-router-dom';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Schools() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,9 +67,11 @@ export default function Schools() {
           <h1 className="text-3xl font-bold tracking-tight">Escolas</h1>
           <p className="text-muted-foreground">Gerencie todas as escolas cadastradas no sistema.</p>
         </div>
-        <Button className="gap-1">
-          <Plus size={18} />
-          Nova Escola
+        <Button className="gap-1" asChild>
+          <Link to="/schools/new">
+            <Plus size={18} />
+            Nova Escola
+          </Link>
         </Button>
       </div>
       
@@ -155,7 +160,20 @@ export default function Schools() {
           
           {filteredSchools.length === 0 && (
             <div className="py-8 text-center">
-              <p className="text-muted-foreground">Nenhuma escola encontrada.</p>
+              <div className="mx-auto w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Building className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Nenhuma escola encontrada</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                Não foram encontradas escolas com os critérios de busca atuais.
+                Tente ajustar os filtros ou cadastre uma nova escola.
+              </p>
+              <Button className="gap-1" asChild>
+                <Link to="/schools/new">
+                  <Plus size={16} />
+                  Nova Escola
+                </Link>
+              </Button>
             </div>
           )}
         </div>
@@ -175,6 +193,92 @@ export default function Schools() {
           </div>
         </div>
       </div>
+      
+      {/* Quick Actions */}
+      <div className="mt-6">
+        <h2 className="text-lg font-medium mb-4">Ações rápidas</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="h-auto p-4 justify-start flex flex-col items-start w-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <Plus className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="font-medium">Importar Dados</span>
+                </div>
+                <p className="text-xs text-muted-foreground text-left">
+                  Importe escolas através de planilha Excel ou CSV
+                </p>
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Importar Escolas</SheetTitle>
+                <SheetDescription>
+                  Esta funcionalidade será implementada em breve.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-6">
+                <p>Módulo de importação em desenvolvimento.</p>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="h-auto p-4 justify-start flex flex-col items-start w-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <Search className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="font-medium">Busca Avançada</span>
+                </div>
+                <p className="text-xs text-muted-foreground text-left">
+                  Busque escolas com filtros avançados
+                </p>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Busca Avançada</DialogTitle>
+                <DialogDescription>
+                  Esta funcionalidade será implementada em breve.
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+          
+          <Link to="/schools/students/import">
+            <Button variant="outline" className="h-auto p-4 justify-start flex flex-col items-start w-full">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <FileDown className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-medium">Exportar Relatório</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-left">
+                Gere relatórios detalhados das escolas
+              </p>
+            </Button>
+          </Link>
+          
+          <Link to="/schools/map">
+            <Button variant="outline" className="h-auto p-4 justify-start flex flex-col items-start w-full">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <Building className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-medium">Ver no Mapa</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-left">
+                Visualize a distribuição geográfica das escolas
+              </p>
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
+

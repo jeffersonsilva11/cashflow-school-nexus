@@ -19,6 +19,8 @@ import EditDevice from "./pages/deviceManagement/EditDevice";
 import ReplaceDevice from "./pages/deviceManagement/ReplaceDevice";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
+import NewSchool from "./pages/NewSchool";
+import StudentsImport from "./pages/school/StudentsImport";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +37,14 @@ const App = () => (
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
+            
+            {/* Escolas */}
             <Route path="schools" element={<Schools />} />
+            <Route path="schools/new" element={<NewSchool />} />
+            <Route path="schools/students/import" element={<StudentsImport />} />
+            <Route path="schools/invites" element={<ComingSoonPage title="Convites" description="Módulo de envio de convites para responsáveis e colaboradores" />} />
+            <Route path="schools/map" element={<ComingSoonPage title="Mapa de Escolas" description="Visualização geográfica das escolas cadastradas" />} />
+            
             <Route path="users" element={<Users />} />
             <Route path="transactions" element={<Transactions />} />
             
@@ -66,11 +75,13 @@ const App = () => (
 );
 
 // Simple component for pages that are coming soon
-function ComingSoonPage({ title }: { title: string }) {
+function ComingSoonPage({ title, description }: { title: string; description?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <h1 className="text-3xl font-bold mb-2">{title}</h1>
-      <p className="text-muted-foreground mb-6">Esta funcionalidade estará disponível em breve!</p>
+      <p className="text-muted-foreground mb-6">
+        {description || "Esta funcionalidade estará disponível em breve!"}
+      </p>
       <div className="w-20 h-1 bg-primary rounded-full mb-6"></div>
       <p className="text-sm text-muted-foreground max-w-md text-center">
         Estamos trabalhando para trazer esta funcionalidade para o sistema Cashflow School Nexus.
@@ -81,3 +92,4 @@ function ComingSoonPage({ title }: { title: string }) {
 }
 
 export default App;
+
