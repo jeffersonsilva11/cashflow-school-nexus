@@ -4,7 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Login from "./pages/Login";
+import AccessDenied from "./pages/AccessDenied";
 import Dashboard from "./pages/Dashboard";
 import Schools from "./pages/Schools";
 import Users from "./pages/Users";
@@ -42,72 +45,223 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          {/* Protected routes with AppLayout */}
-          <Route path="/" element={<AppLayout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
             
-            {/* Escolas */}
-            <Route path="schools" element={<Schools />} />
-            <Route path="schools/new" element={<NewSchool />} />
-            <Route path="schools/students/import" element={<StudentsImport />} />
-            <Route path="schools/invites" element={<ComingSoonPage title="Convites" description="Módulo de envio de convites para responsáveis e colaboradores" />} />
-            <Route path="schools/map" element={<ComingSoonPage title="Mapa de Escolas" description="Visualização geográfica das escolas cadastradas" />} />
+            {/* Rotas protegidas com AppLayout */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              
+              {/* Escolas - restrito a admin e school_admin */}
+              <Route path="schools" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <Schools />
+                </ProtectedRoute>
+              } />
+              <Route path="schools/new" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <NewSchool />
+                </ProtectedRoute>
+              } />
+              <Route path="schools/students/import" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <StudentsImport />
+                </ProtectedRoute>
+              } />
+              <Route path="schools/invites" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <ComingSoonPage title="Convites" description="Módulo de envio de convites para responsáveis e colaboradores" />
+                </ProtectedRoute>
+              } />
+              <Route path="schools/map" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ComingSoonPage title="Mapa de Escolas" description="Visualização geográfica das escolas cadastradas" />
+                </ProtectedRoute>
+              } />
+              
+              {/* Usuários - diferentes níveis de acesso */}
+              <Route path="users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Users />
+                </ProtectedRoute>
+              } />
+              <Route path="parents" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <Parents />
+                </ProtectedRoute>
+              } />
+              <Route path="parents/:parentId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <ParentDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="parents/new" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <ParentForm />
+                </ProtectedRoute>
+              } />
+              <Route path="parents/:parentId/edit" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <ComingSoonPage title="Editar Responsável" description="Edição de dados do responsável" />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="students" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <Students />
+                </ProtectedRoute>
+              } />
+              <Route path="students/:studentId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff', 'parent']}>
+                  <StudentDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="students/new" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <StudentForm />
+                </ProtectedRoute>
+              } />
+              <Route path="students/:studentId/edit" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <StudentEdit />
+                </ProtectedRoute>
+              } />
+              
+              {/* Financeiro - principalmente para admin */}
+              <Route path="transactions" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <Transactions />
+                </ProtectedRoute>
+              } />
+              <Route path="financial" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <Financial />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/invoices" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <Invoices />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/invoices/:invoiceId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <InvoiceDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/invoices/create" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CreateInvoice />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/subscriptions" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Subscriptions />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/subscriptions/:subscriptionId" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SubscriptionDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/billing" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Billing />
+                </ProtectedRoute>
+              } />
+              <Route path="financial/billing/:billingId" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <BillingDetails />
+                </ProtectedRoute>
+              } />
+              
+              {/* Dispositivos */}
+              <Route path="devices" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <Devices />
+                </ProtectedRoute>
+              } />
+              <Route path="devices/:deviceId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <DeviceDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="device-batches" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <DeviceBatches />
+                </ProtectedRoute>
+              } />
+              
+              {/* Gestão de Dispositivos */}
+              <Route path="devices/register" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <RegisterDevice />
+                </ProtectedRoute>
+              } />
+              <Route path="devices/allocate" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AllocateToSchool />
+                </ProtectedRoute>
+              } />
+              <Route path="devices/bind" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <BindToStudents />
+                </ProtectedRoute>
+              } />
+              <Route path="devices/:deviceId/edit" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <EditDevice />
+                </ProtectedRoute>
+              } />
+              <Route path="devices/:deviceId/replace" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <ReplaceDevice />
+                </ProtectedRoute>
+              } />
+              
+              {/* Relatórios */}
+              <Route path="analytics" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <ComingSoonPage title="Analytics" description="Visão geral de analytics do sistema" />
+                </ProtectedRoute>
+              } />
+              <Route path="reports/financial" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <ComingSoonPage title="Relatórios Financeiros" description="Relatórios detalhados de transações e dados financeiros" />
+                </ProtectedRoute>
+              } />
+              <Route path="reports/students" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin', 'staff']}>
+                  <ComingSoonPage title="Relatórios de Alunos" description="Relatórios de atividade e comportamento dos alunos" />
+                </ProtectedRoute>
+              } />
+              
+              {/* Configurações e Suporte */}
+              <Route path="settings" element={
+                <ProtectedRoute>
+                  <ComingSoonPage title="Configurações" description="Configurações gerais do sistema" />
+                </ProtectedRoute>
+              } />
+              <Route path="support" element={
+                <ProtectedRoute>
+                  <ComingSoonPage title="Suporte" description="Central de suporte e ajuda" />
+                </ProtectedRoute>
+              } />
+            </Route>
             
-            {/* Usuários */}
-            <Route path="users" element={<Users />} />
-            <Route path="parents" element={<Parents />} />
-            <Route path="parents/:parentId" element={<ParentDetails />} />
-            <Route path="parents/new" element={<ParentForm />} />
-            <Route path="parents/:parentId/edit" element={<ComingSoonPage title="Editar Responsável" description="Edição de dados do responsável" />} />
-            
-            <Route path="students" element={<Students />} />
-            <Route path="students/:studentId" element={<StudentDetails />} />
-            <Route path="students/new" element={<StudentForm />} />
-            <Route path="students/:studentId/edit" element={<StudentEdit />} />
-            
-            {/* Financeiro */}
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="financial" element={<Financial />} />
-            <Route path="financial/invoices" element={<Invoices />} />
-            <Route path="financial/invoices/:invoiceId" element={<InvoiceDetails />} />
-            <Route path="financial/invoices/create" element={<CreateInvoice />} />
-            <Route path="financial/subscriptions" element={<Subscriptions />} />
-            <Route path="financial/subscriptions/:subscriptionId" element={<SubscriptionDetails />} />
-            <Route path="financial/billing" element={<Billing />} />
-            <Route path="financial/billing/:billingId" element={<BillingDetails />} />
-            
-            {/* Dispositivos */}
-            <Route path="devices" element={<Devices />} />
-            <Route path="devices/:deviceId" element={<DeviceDetails />} />
-            <Route path="device-batches" element={<DeviceBatches />} />
-            
-            {/* Gestão de Dispositivos */}
-            <Route path="devices/register" element={<RegisterDevice />} />
-            <Route path="devices/allocate" element={<AllocateToSchool />} />
-            <Route path="devices/bind" element={<BindToStudents />} />
-            <Route path="devices/:deviceId/edit" element={<EditDevice />} />
-            <Route path="devices/:deviceId/replace" element={<ReplaceDevice />} />
-            
-            {/* Relatórios */}
-            <Route path="analytics" element={<ComingSoonPage title="Analytics" description="Visão geral de analytics do sistema" />} />
-            <Route path="reports/financial" element={<ComingSoonPage title="Relatórios Financeiros" description="Relatórios detalhados de transações e dados financeiros" />} />
-            <Route path="reports/students" element={<ComingSoonPage title="Relatórios de Alunos" description="Relatórios de atividade e comportamento dos alunos" />} />
-            
-            {/* Configurações e Suporte */}
-            <Route path="settings" element={<ComingSoonPage title="Configurações" description="Configurações gerais do sistema" />} />
-            <Route path="support" element={<ComingSoonPage title="Suporte" description="Central de suporte e ajuda" />} />
-          </Route>
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );

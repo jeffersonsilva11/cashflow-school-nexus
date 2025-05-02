@@ -1,26 +1,50 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { login, loading } = useAuth();
   
-  const handleLogin = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Obtém a URL de redirecionamento após login, se existir
+  const from = location.state?.from?.pathname || '/dashboard';
+  
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Mock login - in a real app, this would verify credentials with a backend
-    toast({
-      title: "Login realizado com sucesso",
-      description: "Bem-vindo ao sistema Cashflow School Nexus",
-    });
+    if (!email || !password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    navigate('/dashboard');
+    try {
+      await login(email, password);
+      // O redirecionamento é feito dentro da função login
+    } catch (error) {
+      // Erros já são tratados dentro da função login
+      console.error("Erro ao realizar login:", error);
+    }
+  };
+  
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
   };
   
   return (
@@ -47,12 +71,18 @@ export default function Login() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  required
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -61,19 +91,54 @@ export default function Login() {
                     Esqueceu a senha?
                   </Button>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    onClick={toggleShowPassword}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </Button>
+              </div>
+              
+              <div className="text-xs text-center text-muted-foreground mt-4">
+                <p>Para fins de demonstração, você pode usar:</p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="text-left">
+                    <p><strong>admin@example.com</strong></p>
+                    <p><strong>escola@example.com</strong></p>
+                    <p><strong>pai@example.com</strong></p>
+                    <p><strong>funcionario@example.com</strong></p>
+                  </div>
+                  <div className="text-left">
+                    <p>Administrador do Sistema</p>
+                    <p>Administrador da Escola</p>
+                    <p>Responsável/Pai</p>
+                    <p>Funcionário da Escola</p>
+                  </div>
+                </div>
+                <p className="mt-2">Senha para todos: <strong>123456</strong></p>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full">
-                Entrar
-              </Button>
-            </CardFooter>
           </form>
         </Card>
         
@@ -83,4 +148,4 @@ export default function Login() {
       </div>
     </div>
   );
-};
+}
