@@ -307,3 +307,25 @@ export const financialReports = {
     { month: "Apr", revenue: 142570.50 }
   ]
 };
+
+// Funções para gerenciar planos
+export const updatePlan = (planId: string, updatedPlan: any) => {
+  const index = plans.findIndex(plan => plan.id === planId);
+  if (index !== -1) {
+    plans[index] = { ...plans[index], ...updatedPlan };
+    return plans[index];
+  }
+  return null;
+};
+
+export const addPlan = (newPlan: any) => {
+  const planWithId = {
+    ...newPlan,
+    id: `plan-${newPlan.name.toLowerCase()}`
+  };
+  plans.push(planWithId);
+  return planWithId;
+};
+
+export type PlanType = typeof plans[0];
+

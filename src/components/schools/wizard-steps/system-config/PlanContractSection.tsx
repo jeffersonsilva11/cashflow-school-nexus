@@ -6,7 +6,8 @@ import {
   FormItem, 
   FormLabel, 
   FormControl, 
-  FormMessage 
+  FormMessage,
+  FormDescription 
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { 
@@ -17,7 +18,8 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { SystemConfigFormValues, plans, durations } from './types';
+import { SystemConfigFormValues, durations } from './types';
+import { plans } from '@/services/financialMockData';
 
 type PlanContractSectionProps = {
   form: UseFormReturn<SystemConfigFormValues>;
@@ -51,8 +53,8 @@ export const PlanContractSection: React.FC<PlanContractSectionProps> = ({ form, 
                   </FormControl>
                   <SelectContent>
                     {plans.map(plan => (
-                      <SelectItem key={plan.value} value={plan.value}>
-                        {plan.label}
+                      <SelectItem key={plan.id} value={plan.name}>
+                        {plan.name} - {plan.studentRange}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -112,6 +114,9 @@ export const PlanContractSection: React.FC<PlanContractSectionProps> = ({ form, 
                     }}
                   />
                 </FormControl>
+                <FormDescription>
+                  Este valor será utilizado para calcular o custo mensal estimado da assinatura
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
