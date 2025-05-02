@@ -151,7 +151,7 @@ export function SchoolWizard() {
     }
   };
 
-  // Função para finalizar o cadastro
+  // Function to finalize the registration
   const handleFinish = () => {
     // Generate a random ID for the school if not present
     if (!formData.id) {
@@ -159,8 +159,8 @@ export function SchoolWizard() {
       updateFormData({ id: newId });
     }
     
-    // Aqui seria implementada a lógica para salvar os dados no backend
-    console.log('Dados da escola para envio:', formData);
+    // Here would be implemented the logic to save the data in the backend
+    console.log('School data for submission:', formData);
     
     toast({
       title: "Escola cadastrada com sucesso!",
@@ -233,3 +233,5 @@ export function SchoolWizard() {
     </Card>
   );
 }
+
+export default SchoolWizard;

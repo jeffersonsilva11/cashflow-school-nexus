@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SchoolWizard } from '@/components/schools/SchoolWizard';
+import SchoolWizard from '@/components/schools/SchoolWizard';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Building, Home } from 'lucide-react';
 
