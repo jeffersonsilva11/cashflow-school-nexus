@@ -25,6 +25,14 @@ import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import NewSchool from "./pages/NewSchool";
 import StudentsImport from "./pages/school/StudentsImport";
+import Financial from "./pages/financial/Financial";
+import Invoices from "./pages/financial/Invoices";
+import InvoiceDetails from "./pages/financial/InvoiceDetails";
+import CreateInvoice from "./pages/financial/CreateInvoice";
+import Subscriptions from "./pages/financial/Subscriptions";
+import SubscriptionDetails from "./pages/financial/SubscriptionDetails";
+import Billing from "./pages/financial/Billing";
+import BillingDetails from "./pages/financial/BillingDetails";
 
 const queryClient = new QueryClient();
 
@@ -63,7 +71,14 @@ const App = () => (
             
             {/* Financeiro */}
             <Route path="transactions" element={<Transactions />} />
-            <Route path="financial" element={<ComingSoonPage title="Financeiro" description="Gestão financeira das escolas" />} />
+            <Route path="financial" element={<Financial />} />
+            <Route path="financial/invoices" element={<Invoices />} />
+            <Route path="financial/invoices/:invoiceId" element={<InvoiceDetails />} />
+            <Route path="financial/invoices/create" element={<CreateInvoice />} />
+            <Route path="financial/subscriptions" element={<Subscriptions />} />
+            <Route path="financial/subscriptions/:subscriptionId" element={<SubscriptionDetails />} />
+            <Route path="financial/billing" element={<Billing />} />
+            <Route path="financial/billing/:billingId" element={<BillingDetails />} />
             
             {/* Dispositivos */}
             <Route path="devices" element={<Devices />} />

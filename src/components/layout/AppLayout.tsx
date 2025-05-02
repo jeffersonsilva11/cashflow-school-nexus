@@ -20,7 +20,12 @@ import {
   FileBarChart,
   ShieldCheck,
   Layers,
-  GraduationCap
+  GraduationCap,
+  Building,
+  ReceiptText,
+  FileText,
+  CalendarClock,
+  ReceiptDollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -104,8 +109,11 @@ export default function AppLayout() {
   
   // Transações/Financeiro
   const financeItems = [
-    { to: "/transactions", icon: <CreditCard size={20} />, label: "Transações" },
-    { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro" },
+    { to: "/transactions", icon: <ReceiptText size={20} />, label: "Transações Cantina" },
+    { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro Admin" },
+    { to: "/financial/invoices", icon: <FileText size={20} />, label: "Faturas" },
+    { to: "/financial/subscriptions", icon: <CalendarClock size={20} />, label: "Assinaturas" },
+    { to: "/financial/billing", icon: <ReceiptDollarSign size={20} />, label: "Cobranças" },
   ];
   
   // Dispositivos
