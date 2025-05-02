@@ -79,7 +79,7 @@ export const ConfirmationStep = ({ formData }: ConfirmationStepProps) => {
                   Configure a interface de acordo com as necessidades da escola
                 </p>
                 <Button asChild variant="link" className="p-0 mt-2 h-auto">
-                  <Link to={`/schools/${formData.id}/settings`}>Configurar</Link>
+                  <Link to={`/schools/${formData.id || 'settings'}`}>Configurar</Link>
                 </Button>
               </div>
             </CardContent>

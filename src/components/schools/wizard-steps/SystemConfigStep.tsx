@@ -66,10 +66,18 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
     form.setValue(field, value);
   };
 
-  // Atualiza módulos habilitados
+  // Atualiza módulos habilitados - making sure we always pass all required properties
   const handleModuleChange = (module: keyof typeof formData.enabledModules, checked: boolean) => {
+    const currentModules = formData.enabledModules || {
+      cashless: true,
+      accessControl: false,
+      attendance: false,
+      parentComm: false,
+      advancedReports: false,
+    };
+    
     const updatedModules = {
-      ...(formData.enabledModules || {}),
+      ...currentModules,
       [module]: checked,
     };
     
