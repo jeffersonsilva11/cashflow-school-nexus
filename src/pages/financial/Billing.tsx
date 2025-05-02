@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ReceiptDollarSign, 
+  ReceiptText, 
   Search, 
   Filter, 
   MoreHorizontal, 
@@ -146,7 +145,7 @@ export default function Billing() {
             Relatório
           </Button>
           <Button onClick={() => navigate('/financial/invoices/create')}>
-            <ReceiptDollarSign className="mr-2 h-4 w-4" />
+            <ReceiptText className="mr-2 h-4 w-4" />
             Nova Cobrança
           </Button>
         </div>

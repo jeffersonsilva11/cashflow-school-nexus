@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { 
@@ -24,8 +23,7 @@ import {
   Building,
   ReceiptText,
   FileText,
-  CalendarClock,
-  ReceiptDollarSign
+  CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -113,7 +111,7 @@ export default function AppLayout() {
     { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro Admin" },
     { to: "/financial/invoices", icon: <FileText size={20} />, label: "Faturas" },
     { to: "/financial/subscriptions", icon: <CalendarClock size={20} />, label: "Assinaturas" },
-    { to: "/financial/billing", icon: <ReceiptDollarSign size={20} />, label: "Cobranças" },
+    { to: "/financial/billing", icon: <DollarSign size={20} />, label: "Cobranças" },
   ];
   
   // Dispositivos
