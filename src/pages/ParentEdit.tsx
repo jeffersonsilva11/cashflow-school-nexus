@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,9 +22,24 @@ const parentSchema = z.object({
 
 type ParentFormValues = z.infer<typeof parentSchema>;
 
-export default function ParentForm() {
+// Tipo para os dados de um responsável
+type Parent = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  documentId?: string;
+  address?: string;
+  status: string;
+  lastAccess: string;
+  students: number;
+};
+
+export default function ParentEdit() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { parentId } = useParams<{ parentId: string }>();
+  const [isLoading, setIsLoading] = useState(true);
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentSchema),
@@ -40,19 +55,19 @@ export default function ParentForm() {
   // Funções para aplicar máscaras de formatação
   const formatCPF = (value: string) => {
     return value
-      .replace(/\D/g, '') // Remove tudo o que não é dígito
-      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca um ponto entre o terceiro e o quarto dígitos
-      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca um ponto entre o sexto e o sétimo dígitos
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Coloca um hífen entre o nono e o décimo dígitos
-      .replace(/(-\d{2})\d+?$/, '$1'); // Limita a 11 dígitos
+      .replace(/\D/g, '')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
   };
 
   const formatPhone = (value: string) => {
     return value
-      .replace(/\D/g, '') // Remove tudo o que não é dígito
-      .replace(/(\d{2})(\d)/, '($1) $2') // Coloca parênteses em volta dos dois primeiros dígitos
-      .replace(/(\d{5})(\d)/, '$1-$2') // Coloca hífen entre o quinto e o sexto dígitos
-      .replace(/(-\d{4})\d+?$/, '$1'); // Limita a 11 dígitos
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1');
   };
   
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (...event: any[]) => void) => {
@@ -65,24 +80,94 @@ export default function ParentForm() {
     onChange(formatted);
   };
   
+  // Dados mockados de pais/responsáveis para simulação
+  const parentsMockData: Record<string, Parent> = {
+    'PAR001': {
+      id: 'PAR001',
+      name: 'José Silva',
+      email: 'jose.silva@exemplo.com',
+      phone: '(11) 98765-4321',
+      documentId: '123.456.789-00',
+      address: 'Rua das Flores, 123, São Paulo - SP',
+      students: 2,
+      status: 'active',
+      lastAccess: '2025-04-30T14:35:00'
+    },
+    'PAR002': {
+      id: 'PAR002',
+      name: 'Maria Oliveira',
+      email: 'maria.oliveira@exemplo.com',
+      phone: '(11) 97654-3210',
+      documentId: '987.654.321-00',
+      students: 1,
+      status: 'active',
+      lastAccess: '2025-05-01T08:22:00'
+    },
+    'PAR003': {
+      id: 'PAR003',
+      name: 'Carlos Santos',
+      email: 'carlos.santos@exemplo.com',
+      phone: '(11) 96543-2109',
+      students: 3,
+      status: 'active',
+      lastAccess: '2025-04-29T16:40:00'
+    },
+  };
+  
+  // Carregar dados do responsável
+  useEffect(() => {
+    if (parentId) {
+      setIsLoading(true);
+      
+      // Simula uma chamada à API
+      setTimeout(() => {
+        const parent = parentsMockData[parentId];
+        
+        if (parent) {
+          form.reset({
+            name: parent.name,
+            email: parent.email,
+            phone: parent.phone,
+            documentId: parent.documentId || '',
+            address: parent.address || '',
+          });
+        } else {
+          toast({
+            title: "Responsável não encontrado",
+            description: `Não foi possível encontrar o responsável com ID ${parentId}`,
+            variant: "destructive",
+          });
+          navigate('/parents');
+        }
+        
+        setIsLoading(false);
+      }, 800);
+    }
+  }, [parentId, form, navigate, toast]);
+  
   const onSubmit = async (data: ParentFormValues) => {
-    console.log("Dados do formulário:", data);
+    console.log("Dados do formulário para atualização:", data);
     
-    // Aqui seria feita a chamada à API para cadastrar o responsável
+    // Aqui seria feita a chamada à API para atualizar o responsável
     // Simulando um tempo de processamento
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simulando um ID gerado pelo backend
-    const newParentId = `PAR${Math.floor(10000 + Math.random() * 90000)}`;
-    
     toast({
-      title: "Responsável cadastrado com sucesso",
-      description: `O responsável ${data.name} foi cadastrado com o ID ${newParentId}`,
+      title: "Responsável atualizado com sucesso",
+      description: `Os dados de ${data.name} foram atualizados com sucesso`,
     });
     
-    // Redireciona para a página de detalhes do responsável recém-criado
-    navigate(`/parents/${newParentId}`);
+    // Redireciona para a página de detalhes do responsável
+    navigate(`/parents/${parentId}`);
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-24">
+        <p className="text-muted-foreground">Carregando dados do responsável...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="animate-fade-in">
@@ -91,13 +176,13 @@ export default function ParentForm() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate('/parents')}
+            onClick={() => navigate(`/parents/${parentId}`)}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Novo Responsável</h1>
-            <p className="text-muted-foreground">Cadastre um novo responsável de aluno no sistema.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Editar Responsável</h1>
+            <p className="text-muted-foreground">Atualize os dados do responsável no sistema.</p>
           </div>
         </div>
       </div>
@@ -142,8 +227,8 @@ export default function ParentForm() {
                           <FormControl>
                             <Input 
                               type="email" 
-                              placeholder="email@exemplo.com" 
-                              className="pl-10"
+                              placeholder="email@exemplo.com"
+                              className="pl-10" 
                               {...field} 
                             />
                           </FormControl>
@@ -166,9 +251,9 @@ export default function ParentForm() {
                           <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <FormControl>
                             <Input 
-                              placeholder="(00) 00000-0000"
+                              placeholder="(00) 00000-0000" 
                               className="pl-10"
-                              {...field}
+                              {...field} 
                               onChange={(e) => handlePhoneChange(e, field.onChange)}
                             />
                           </FormControl>
@@ -213,8 +298,8 @@ export default function ParentForm() {
                         <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <FormControl>
                           <Input 
-                            placeholder="Rua, número, bairro, cidade, estado" 
-                            className="pl-10"
+                            placeholder="Rua, número, bairro, cidade, estado"
+                            className="pl-10" 
                             {...field} 
                           />
                         </FormControl>
@@ -233,13 +318,13 @@ export default function ParentForm() {
               <Button 
                 type="button" 
                 variant="outline"
-                onClick={() => navigate('/parents')}
+                onClick={() => navigate(`/parents/${parentId}`)}
               >
                 Cancelar
               </Button>
               <Button type="submit" className="gap-2">
                 <Save className="h-4 w-4" />
-                Salvar Responsável
+                Salvar Alterações
               </Button>
             </div>
           </form>
