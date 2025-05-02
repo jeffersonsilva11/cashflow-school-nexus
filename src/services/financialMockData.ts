@@ -1,4 +1,3 @@
-
 // Dados financeiros para o módulo administrativo
 
 // Dados das escolas para visão financeira
@@ -8,7 +7,8 @@ export const schoolFinancials = [
     name: "Colégio Integrado",
     plan: "Premium",
     monthlyFee: 2500.00,
-    activeStudents: 1250,
+    activeStudents: 1250, // Alunos com pulseiras ativas
+    totalStudents: 1400,  // Total de alunos cadastrados
     activeDevices: 35,
     lastPayment: "2025-04-15",
     status: "active",
@@ -22,7 +22,8 @@ export const schoolFinancials = [
     name: "Escola Maria Eduarda",
     plan: "Standard",
     monthlyFee: 1800.00,
-    activeStudents: 890,
+    activeStudents: 890, // Alunos com pulseiras ativas
+    totalStudents: 950, // Total de alunos cadastrados
     activeDevices: 25,
     lastPayment: "2025-04-10",
     status: "active",
@@ -36,7 +37,8 @@ export const schoolFinancials = [
     name: "Colégio São Pedro",
     plan: "Basic",
     monthlyFee: 1200.00,
-    activeStudents: 650,
+    activeStudents: 650, // Alunos com pulseiras ativas
+    totalStudents: 720, // Total de alunos cadastrados
     activeDevices: 18,
     lastPayment: "2025-03-28",
     status: "pending",
@@ -50,7 +52,8 @@ export const schoolFinancials = [
     name: "Escola Técnica Federal",
     plan: "Premium",
     monthlyFee: 2500.00,
-    activeStudents: 1100,
+    activeStudents: 1100, // Alunos com pulseiras ativas
+    totalStudents: 1200, // Total de alunos cadastrados
     activeDevices: 30,
     lastPayment: "2025-04-05",
     status: "active",
@@ -64,7 +67,8 @@ export const schoolFinancials = [
     name: "Instituto Educacional Fortaleza",
     plan: "Standard",
     monthlyFee: 1800.00,
-    activeStudents: 780,
+    activeStudents: 780, // Alunos com pulseiras ativas
+    totalStudents: 850, // Total de alunos cadastrados
     activeDevices: 22,
     lastPayment: "2025-04-01",
     status: "overdue",
@@ -213,20 +217,20 @@ export const subscriptions = [
   },
 ];
 
-// Planos disponíveis - Atualizados para modelo de preço por aluno, com faixas
+// Planos disponíveis - Atualizados para modelo de preço por aluno com pulseira ativa, com faixas
 export const plans = [
   {
     id: "plan-basic",
     name: "Basic",
     pricePerStudent: 10.00,
-    studentRange: "Até 800 alunos",
+    studentRange: "Até 800 alunos ativos",
     deviceLimit: 20,
     minStudents: 1,
     maxStudents: 800,
     discount: null,
     features: [
-      "Até 800 alunos",
-      "Até 20 dispositivos",
+      "Até 800 alunos com pulseiras ativas",
+      "Até 20 dispositivos terminais",
       "Suporte básico",
       "Relatórios mensais",
       "1 usuário administrativo"
@@ -236,7 +240,7 @@ export const plans = [
     id: "plan-standard",
     name: "Standard",
     pricePerStudent: 12.00,
-    studentRange: "Até 1000 alunos",
+    studentRange: "Até 1000 alunos ativos",
     deviceLimit: 30,
     minStudents: 801,
     maxStudents: 1000,
@@ -245,8 +249,8 @@ export const plans = [
       percentage: 5
     },
     features: [
-      "Até 1000 alunos",
-      "Até 30 dispositivos",
+      "Até 1000 alunos com pulseiras ativas",
+      "Até 30 dispositivos terminais",
       "Suporte prioritário",
       "Relatórios semanais",
       "3 usuários administrativos",
@@ -257,7 +261,7 @@ export const plans = [
     id: "plan-premium",
     name: "Premium",
     pricePerStudent: 15.00,
-    studentRange: "Alunos ilimitados",
+    studentRange: "Alunos ativos ilimitados",
     deviceLimit: 50,
     minStudents: 1001,
     maxStudents: null,
@@ -266,8 +270,8 @@ export const plans = [
       percentage: 10
     },
     features: [
-      "Alunos ilimitados",
-      "Até 50 dispositivos",
+      "Ilimitados alunos com pulseiras ativas",
+      "Até 50 dispositivos terminais",
       "Suporte 24/7",
       "Relatórios em tempo real",
       "5 usuários administrativos",
@@ -328,4 +332,3 @@ export const addPlan = (newPlan: any) => {
 };
 
 export type PlanType = typeof plans[0];
-

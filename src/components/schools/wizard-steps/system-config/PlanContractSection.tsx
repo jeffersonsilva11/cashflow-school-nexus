@@ -18,7 +18,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { SystemConfigFormValues, durations, planOptions } from './types';
+import { SystemConfigFormValues, durations } from './types';
 import { plans } from '@/services/financialMockData';
 
 type PlanContractSectionProps = {
@@ -102,7 +102,7 @@ export const PlanContractSection: React.FC<PlanContractSectionProps> = ({ form, 
             name="estimatedStudents"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantidade estimada de alunos *</FormLabel>
+                <FormLabel>Quantidade estimada de alunos com pulseiras ativas *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -115,7 +115,7 @@ export const PlanContractSection: React.FC<PlanContractSectionProps> = ({ form, 
                   />
                 </FormControl>
                 <FormDescription>
-                  Este valor será utilizado para calcular o custo mensal estimado da assinatura
+                  Este valor será utilizado para calcular o custo mensal estimado da assinatura (somente alunos com pulseiras ativas serão cobrados)
                 </FormDescription>
                 <FormMessage />
               </FormItem>

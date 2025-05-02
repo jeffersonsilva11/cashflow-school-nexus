@@ -38,7 +38,7 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
     },
   });
 
-  // Calcula o preço estimado com base no plano e número de alunos
+  // Calcula o preço estimado com base no plano e número de alunos com pulseiras ativas
   useEffect(() => {
     const calculateEstimatedPrice = () => {
       const currentPlan = form.getValues('plan');
@@ -97,7 +97,10 @@ export const SystemConfigStep = ({ formData, updateFormData }: SystemConfigStepP
               <span className="text-sm font-normal text-muted-foreground"> /mês</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Baseado em {form.getValues('estimatedStudents')} alunos ativos
+              Baseado em {form.getValues('estimatedStudents')} alunos com pulseiras ativas
+            </p>
+            <p className="text-xs text-blue-600 mt-2">
+              <strong>Importante:</strong> Somente alunos com pulseiras/cartões ativos serão contabilizados na cobrança mensal
             </p>
           </div>
         )}

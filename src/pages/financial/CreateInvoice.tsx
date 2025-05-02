@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, School, CalendarIcon, Plus, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, School, CalendarIcon, Plus, Trash2, Users, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -56,10 +56,10 @@ export default function CreateInvoice() {
     ? schoolFinancials.find(school => school.id === selectedSchoolId) 
     : null;
 
-  // Calcular valor automaticamente com base nos alunos ativos quando a escola ou a opção mudar
+  // Calcular valor automaticamente com base nos alunos com pulseiras ativas quando a escola ou a opção mudar
   useEffect(() => {
     if (selectedSchool && useActiveStudents) {
-      // Obter o número de alunos ativos
+      // Obter o número de alunos com pulseiras ativas
       const activeStudents = selectedSchool.activeStudents;
       setActiveStudentsCount(activeStudents);
       
@@ -83,7 +83,7 @@ export default function CreateInvoice() {
       const totalAmount = (activeStudents * pricePerStudent).toFixed(2);
       setValue('items', [
         { 
-          description: `Mensalidade ${selectedSchool.plan} - ${activeStudents} alunos ativos`, 
+          description: `Mensalidade ${selectedSchool.plan} - ${activeStudents} alunos com pulseiras ativas`, 
           amount: totalAmount 
         }
       ]);
@@ -179,12 +179,17 @@ export default function CreateInvoice() {
                         <div>{formatCurrency(selectedSchool.monthlyFee)}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
-                        <div className="text-muted-foreground">Alunos Ativos:</div>
+                        <CreditCard className="h-4 w-4 text-primary" />
+                        <div className="text-muted-foreground">Alunos com Pulseiras Ativas:</div>
                         <div className="font-medium">{selectedSchool.activeStudents}</div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <div className="text-muted-foreground">Total de Alunos Cadastrados:</div>
+                        <div>{selectedSchool.totalStudents || selectedSchool.activeStudents}</div>
+                      </div>
                       <div>
-                        <div className="text-muted-foreground">Dispositivos Ativos:</div>
+                        <div className="text-muted-foreground">Dispositivos Terminais:</div>
                         <div>{selectedSchool.activeDevices}</div>
                       </div>
                     </div>
@@ -197,17 +202,17 @@ export default function CreateInvoice() {
                     checked={useActiveStudents}
                     onCheckedChange={(checked) => setValue('useActiveStudents', checked)}
                   />
-                  <Label htmlFor="useActiveStudents">Calcular valor com base em alunos ativos</Label>
+                  <Label htmlFor="useActiveStudents">Calcular valor com base em alunos com pulseiras ativas</Label>
                 </div>
                 
                 {useActiveStudents && selectedSchool && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                     <div className="flex items-center gap-2 mb-2">
-                      <Users className="h-4 w-4 text-green-600" />
-                      <h3 className="font-medium text-green-800">Cálculo por Alunos Ativos</h3>
+                      <CreditCard className="h-4 w-4 text-green-600" />
+                      <h3 className="font-medium text-green-800">Cálculo por Pulseiras Ativas</h3>
                     </div>
                     <p className="text-sm text-green-700">
-                      A cobrança será calculada com base no número de alunos ativos ({activeStudentsCount}) 
+                      A cobrança será calculada com base no número de alunos com pulseiras ativas ({activeStudentsCount}) 
                       e no plano da escola ({selectedSchool.plan}).
                     </p>
                   </div>
