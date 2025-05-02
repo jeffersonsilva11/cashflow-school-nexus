@@ -9,7 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Schools from "./pages/Schools";
 import Users from "./pages/Users";
 import Parents from "./pages/Parents";
+import ParentDetails from "./pages/ParentDetails";
 import Students from "./pages/Students";
+import StudentDetails from "./pages/StudentDetails";
 import Transactions from "./pages/Transactions";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
@@ -49,8 +51,15 @@ const App = () => (
             
             {/* Usuários */}
             <Route path="users" element={<Users />} />
-            <Route path="parents" element={<ComingSoonPage title="Pais/Responsáveis" description="Cadastro e gestão de responsáveis pelos alunos" />} />
-            <Route path="students" element={<ComingSoonPage title="Alunos" description="Cadastro e gestão de alunos" />} />
+            <Route path="parents" element={<Parents />} />
+            <Route path="parents/:parentId" element={<ParentDetails />} />
+            <Route path="parents/new" element={<ComingSoonPage title="Novo Responsável" description="Cadastro de novo responsável" />} />
+            <Route path="parents/:parentId/edit" element={<ComingSoonPage title="Editar Responsável" description="Edição de dados do responsável" />} />
+            
+            <Route path="students" element={<Students />} />
+            <Route path="students/:studentId" element={<StudentDetails />} />
+            <Route path="students/new" element={<ComingSoonPage title="Novo Aluno" description="Cadastro de novo aluno" />} />
+            <Route path="students/:studentId/edit" element={<ComingSoonPage title="Editar Aluno" description="Edição de dados do aluno" />} />
             
             {/* Financeiro */}
             <Route path="transactions" element={<Transactions />} />
