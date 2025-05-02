@@ -36,10 +36,11 @@ export interface CreatePaymentData {
 }
 
 // Configuração para integração com Stripe (simulada)
+// Usando import.meta.env ao invés de process.env para compatibilidade com Vite
 const stripeConfig = {
-  apiKey: process.env.STRIPE_API_KEY || 'sk_test_simulado', // Em produção, usar variável de ambiente
+  apiKey: import.meta.env.VITE_STRIPE_API_KEY || 'sk_test_simulado', // Em produção, usar variável de ambiente
   apiVersion: '2023-10-16',
-  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_simulado',
+  webhookSecret: import.meta.env.VITE_STRIPE_WEBHOOK_SECRET || 'whsec_simulado',
 };
 
 // Simula um gateway de pagamentos
