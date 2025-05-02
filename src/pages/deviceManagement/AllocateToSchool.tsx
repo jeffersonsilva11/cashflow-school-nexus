@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ArrowLeft, School, Search, Check, Plus, X } from 'lucide-react';
+import { ArrowLeft, School, Search, Check, Plus, X, Package, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
