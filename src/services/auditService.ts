@@ -14,7 +14,7 @@ export interface AuditLog {
   user?: {
     name: string;
     email: string;
-  };
+  } | null;
 }
 
 export async function fetchAuditLogs(
@@ -33,7 +33,7 @@ export async function fetchAuditLogs(
       .from('audit_logs')
       .select(`
         *,
-        user:changed_by (
+        user:profiles!changed_by (
           name,
           email
         )
@@ -73,8 +73,20 @@ export async function fetchAuditLogs(
       throw error;
     }
 
+    // Process data to make sure user is correctly formatted
+    const processedData = data?.map(log => {
+      // If user has error property, set user to null
+      if (log.user && (log.user as any).error) {
+        return {
+          ...log,
+          user: null
+        };
+      }
+      return log;
+    }) as unknown as AuditLog[];
+
     return {
-      data: data as AuditLog[],
+      data: processedData || [],
       count: count || 0,
       currentPage: page,
       pageSize
@@ -122,7 +134,7 @@ export async function fetchAuditLogDetails(logId: string) {
       .from('audit_logs')
       .select(`
         *,
-        user:changed_by (
+        user:profiles!changed_by (
           name,
           email,
           role
@@ -136,7 +148,13 @@ export async function fetchAuditLogDetails(logId: string) {
       throw error;
     }
 
-    return data as AuditLog;
+    // Handle case where user might have error
+    const processedData = data ? {
+      ...data,
+      user: (data.user && (data.user as any).error) ? null : data.user
+    } : null;
+
+    return processedData as AuditLog | null;
   } catch (error) {
     console.error(`Erro em fetchAuditLogDetails para ${logId}:`, error);
     return null;

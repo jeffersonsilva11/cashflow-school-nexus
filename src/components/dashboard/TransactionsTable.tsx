@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -22,10 +21,11 @@ interface Transaction {
   status: string;
 }
 
-interface TransactionsTableProps {
+export interface TransactionsTableProps {
   transactions: Transaction[];
   title: string;
   description: string;
+  type?: string;
 }
 
 // Format date to display only the day and month
@@ -38,27 +38,26 @@ const formatDate = (date: Date) => {
   }).format(date);
 };
 
-export const TransactionsTable = ({ transactions, title, description }: TransactionsTableProps) => {
+export const TransactionsTable = ({ transactions, title, description, type }: TransactionsTableProps) => {
+  // If type is specified, filter transactions
+  const displayTransactions = type 
+    ? transactions.filter(t => t.type === type || t.status === type) 
+    : transactions;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
-          {description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Aluno</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead>Tipo</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.map((transaction) => (
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Data</TableHead>
+            <TableHead>Aluno</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
+            <TableHead>Tipo</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {displayTransactions.length > 0 ? (
+            displayTransactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell className="text-sm">{formatDate(transaction.date)}</TableCell>
                 <TableCell>
@@ -74,10 +73,16 @@ export const TransactionsTable = ({ transactions, title, description }: Transact
                   </Badge>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                Nenhuma transação encontrada.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

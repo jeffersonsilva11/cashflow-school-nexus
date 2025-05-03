@@ -7,21 +7,26 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  changeValue: number;
-  changeLabel: string;
+  trend: string;
+  description: string;
 }
 
 // Function to determine if a change is positive
-const isPositiveChange = (value: number) => value > 0;
+const isPositiveChange = (value: string) => {
+  if (!value.startsWith('-')) {
+    return true;
+  }
+  return false;
+};
 
 export const StatCard = ({ 
   title, 
   value, 
   icon, 
-  changeValue, 
-  changeLabel 
+  trend, 
+  description 
 }: StatCardProps) => {
-  const isPositive = isPositiveChange(changeValue);
+  const isPositive = isPositiveChange(trend);
   
   return (
     <Card>
@@ -41,7 +46,7 @@ export const StatCard = ({
           ) : (
             <ArrowDown size={16} className="mr-1" />
           )}
-          <span>{Math.abs(changeValue)}% {changeLabel}</span>
+          <span>{trend} {description}</span>
         </div>
       </CardContent>
     </Card>
