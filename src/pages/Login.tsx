@@ -129,7 +129,8 @@ export default function Login() {
                       <li>Clique em "Add User"</li>
                       <li>Crie com o email: admin@cashflow.com</li>
                       <li>Use a senha: admin123</li>
-                      <li>Em "User Metadata", adicione: <code className="bg-blue-100 px-1">{`{"role":"admin","name":"Admin"}`}</code></li>
+                      <li>Na aba "Options", ative "Email Confirmations"</li>
+                      <li>No painel "User Metadata", adicione: <code className="bg-blue-100 px-1">{`{"role":"admin","name":"Admin"}`}</code></li>
                     </ol>
                   </div>
                 </div>
