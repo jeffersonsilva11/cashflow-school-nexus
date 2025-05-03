@@ -4,10 +4,47 @@ import { schoolFinancials, subscriptions, invoices, financialReports, plans } fr
 import { schools, students } from "@/services/mockData";
 import { toast } from "@/components/ui/use-toast";
 
+// Tipos para os resultados da migração
+export type MigrationResult = {
+  success: boolean;
+  message: string;
+  schoolsCount?: number;
+  plansCount?: number;
+  error?: any;
+};
+
 // Helper functions to generate random IDs for relationships
 const generateId = () => crypto.randomUUID();
 const generateInvoiceId = () => `INV-${Math.floor(100000 + Math.random() * 900000)}`;
 const generateSubscriptionId = () => `SUB-${Math.floor(100000 + Math.random() * 900000)}`;
+
+// Verifica se já existem dados no banco
+const checkExistingData = async (): Promise<{
+  hasData: boolean;
+  schoolCount: number;
+  planCount: number;
+}> => {
+  try {
+    const { data: existingSchools } = await supabase.from('schools').select('count').single();
+    const { data: existingPlans } = await supabase.from('plans').select('count').single();
+    
+    const schoolCount = existingSchools?.count || 0;
+    const planCount = existingPlans?.count || 0;
+    
+    return {
+      hasData: schoolCount > 0 || planCount > 0,
+      schoolCount,
+      planCount
+    };
+  } catch (error) {
+    console.error("Error checking existing data:", error);
+    return {
+      hasData: false,
+      schoolCount: 0,
+      planCount: 0
+    };
+  }
+};
 
 // Step 1: Migrate schools data
 export async function migrateSchools() {
@@ -16,7 +53,6 @@ export async function migrateSchools() {
     const formattedSchools = schools.map(school => ({
       id: generateId(),
       name: school.name,
-      // Use optional chaining to handle potentially missing properties
       address: "Endereço não especificado",
       city: school.city,
       state: school.state,
@@ -73,7 +109,7 @@ export async function migratePlans() {
 }
 
 // Step 3: Migrate subscriptions data
-export async function migrateSubscriptions(schoolsMap, plansMap) {
+export async function migrateSubscriptions() {
   try {
     console.log("Starting subscriptions migration...");
     
@@ -262,39 +298,28 @@ export async function migrateFinancialReports() {
 }
 
 // Main migration function
-export async function migrateAllData() {
+export async function migrateAllData(): Promise<MigrationResult> {
   try {
     // Check if data already exists to avoid duplicates
-    const { data: existingSchools } = await supabase.from('schools').select('count').single();
-    const { data: existingPlans } = await supabase.from('plans').select('count').single();
+    const { hasData, schoolCount, planCount } = await checkExistingData();
     
-    const schoolCount = existingSchools?.count || 0;
-    const planCount = existingPlans?.count || 0;
-    
-    if (schoolCount > 0 || planCount > 0) {
+    if (hasData) {
       return {
         success: false,
         message: `Migração não realizada. Já existem dados no banco (${schoolCount} escolas, ${planCount} planos).`
       };
     }
     
-    // Disable RLS temporarily to avoid recursion issues
-    console.log("Attempting to disable RLS during migration");
-    
-    // Temporary maps to store relationships
-    const schoolsMap = {};
-    const plansMap = {};
+    console.log("Iniciando migração completa de dados");
     
     // Step 1: Migrate schools
     const migratedSchools = await migrateSchools();
-    migratedSchools.forEach(school => { schoolsMap[school.name] = school.id; });
     
     // Step 2: Migrate plans
     const migratedPlans = await migratePlans();
-    migratedPlans.forEach(plan => { plansMap[plan.name] = plan.id; });
     
     // Step 3: Migrate subscriptions
-    await migrateSubscriptions(schoolsMap, plansMap);
+    await migrateSubscriptions();
     
     // Step 4: Migrate invoices
     await migrateInvoices();
