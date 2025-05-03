@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { schoolFinancials, subscriptions, invoices, financialReports, plans } from "@/services/financialMockData";
-import { schools, students } from "@/services/mockData";
+import { schools, students, users } from "@/services/mockData";
 import { toast } from "@/components/ui/use-toast";
 
 // Tipos para os resultados da migração
@@ -297,6 +296,247 @@ export async function migrateFinancialReports() {
   }
 }
 
+// Step 6: Migrate students data
+export async function migrateStudents() {
+  try {
+    console.log("Starting students migration...");
+    
+    // Get schools from db to ensure we have the correct IDs
+    const { data: dbSchools, error: schoolsError } = await supabase
+      .from('schools')
+      .select('id, name');
+    
+    if (schoolsError) throw schoolsError;
+    
+    // Create map for easier lookups
+    const schoolsDbMap: Record<string, string> = {};
+    dbSchools.forEach(school => { schoolsDbMap[school.name] = school.id; });
+    
+    // Format students data with school IDs
+    const formattedStudents = students.map(student => {
+      const schoolName = schools.find(school => school.id === student.school_id)?.name || '';
+      const schoolId = schoolsDbMap[schoolName];
+      
+      if (!schoolId) {
+        console.warn(`No matching school found for student ${student.name} (school ID: ${student.school_id})`);
+      }
+      
+      return {
+        name: student.name,
+        grade: student.grade,
+        school_id: schoolId,
+        date_of_birth: student.date_of_birth,
+        document_id: student.document_id,
+        active: student.active
+      };
+    }).filter(student => student.school_id); // Only keep students with valid school IDs
+    
+    const { data, error } = await supabase
+      .from('students')
+      .insert(formattedStudents)
+      .select();
+    
+    if (error) throw error;
+    console.log(`Migrated ${data.length} students successfully`);
+    return data;
+  } catch (error) {
+    console.error("Error migrating students:", error);
+    throw error;
+  }
+}
+
+// Step 7: Migrate devices data
+export async function migrateDevices() {
+  try {
+    console.log("Starting devices migration...");
+    
+    // Get students and schools from db
+    const { data: dbStudents, error: studentsError } = await supabase
+      .from('students')
+      .select('id, name');
+    
+    if (studentsError) throw studentsError;
+    
+    const { data: dbSchools, error: schoolsError } = await supabase
+      .from('schools')
+      .select('id, name');
+    
+    if (schoolsError) throw schoolsError;
+    
+    // Create maps for lookups
+    const studentsDbMap: Record<string, string> = {};
+    dbStudents.forEach(student => { studentsDbMap[student.name] = student.id; });
+    
+    const schoolsDbMap: Record<string, string> = {};
+    dbSchools.forEach(school => { schoolsDbMap[school.name] = school.id; });
+    
+    // Create sample devices for each student
+    const devices = [];
+    
+    // For each student, create a device
+    for (const student of dbStudents) {
+      const randomSchool = dbSchools[Math.floor(Math.random() * dbSchools.length)];
+      
+      // Only create a device for 80% of students
+      if (Math.random() > 0.2) {
+        devices.push({
+          serial_number: `CARD-${Math.floor(1000 + Math.random() * 9000)}`,
+          device_type: 'card',
+          status: Math.random() > 0.1 ? 'active' : 'inactive',
+          student_id: student.id,
+          school_id: randomSchool.id,
+          firmware_version: '1.0.0',
+          device_model: 'Standard Card',
+          batch_id: `BATCH-${Math.floor(100 + Math.random() * 900)}`,
+          assigned_at: new Date().toISOString()
+        });
+      }
+    }
+    
+    const { data, error } = await supabase
+      .from('devices')
+      .insert(devices)
+      .select();
+    
+    if (error) throw error;
+    console.log(`Migrated ${data.length} devices successfully`);
+    return data;
+  } catch (error) {
+    console.error("Error migrating devices:", error);
+    throw error;
+  }
+}
+
+// Step 8: Migrate transactions data
+export async function migrateTransactions() {
+  try {
+    console.log("Starting transactions migration...");
+    
+    // Get students and devices from db
+    const { data: dbStudents, error: studentsError } = await supabase
+      .from('students')
+      .select('id, name');
+    
+    if (studentsError) throw studentsError;
+    
+    const { data: dbDevices, error: devicesError } = await supabase
+      .from('devices')
+      .select('id, student_id');
+    
+    if (devicesError) throw devicesError;
+    
+    // Create maps
+    const studentDeviceMap: Record<string, string> = {};
+    dbDevices.forEach(device => { 
+      if (device.student_id) {
+        studentDeviceMap[device.student_id] = device.id;
+      }
+    });
+    
+    // Create sample transactions
+    const transactions = [];
+    const transactionTypes = ['purchase', 'topup'];
+    const transactionStatuses = ['completed', 'pending', 'failed'];
+    
+    // Create transactions spanning the last 30 days
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // For each student with a device, create some transactions
+    for (const student of dbStudents) {
+      const deviceId = studentDeviceMap[student.id];
+      
+      if (deviceId) {
+        // Create between 1 and 10 transactions per student
+        const transactionCount = Math.floor(1 + Math.random() * 10);
+        
+        for (let i = 0; i < transactionCount; i++) {
+          // Random date in the last 30 days
+          const transactionDate = new Date(
+            thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime())
+          );
+          
+          const type = transactionTypes[Math.floor(Math.random() * transactionTypes.length)];
+          const amount = type === 'purchase' 
+            ? Math.round((5 + Math.random() * 20) * 100) / 100 
+            : Math.round((20 + Math.random() * 80) * 100) / 100;
+          
+          transactions.push({
+            transaction_id: `TX-${Math.floor(10000 + Math.random() * 90000)}`,
+            student_id: student.id,
+            device_id: deviceId,
+            amount,
+            type,
+            status: 'completed', // Most transactions succeed
+            transaction_date: transactionDate.toISOString(),
+            payment_method: type === 'purchase' ? 'card' : 'pix',
+          });
+        }
+      }
+    }
+    
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(transactions)
+      .select();
+    
+    if (error) throw error;
+    console.log(`Migrated ${data.length} transactions successfully`);
+    return data;
+  } catch (error) {
+    console.error("Error migrating transactions:", error);
+    throw error;
+  }
+}
+
+// Step 9: Migrate user profiles data
+export async function migrateUserProfiles() {
+  try {
+    console.log("Starting user profiles migration...");
+    
+    // Get schools
+    const { data: dbSchools, error: schoolsError } = await supabase
+      .from('schools')
+      .select('id, name');
+    
+    if (schoolsError) throw schoolsError;
+    
+    const schoolsDbMap: Record<string, string> = {};
+    dbSchools.forEach(school => { schoolsDbMap[school.name] = school.id; });
+    
+    // Format user profiles
+    const formattedUsers = users.map(user => {
+      // For school admins, find the school ID
+      let schoolId = null;
+      if (user.role === "School Admin" && user.school) {
+        schoolId = schoolsDbMap[user.school];
+      }
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role.toLowerCase().replace(' ', '_'), // convert to snake_case
+        school_id: schoolId,
+        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`
+      };
+    });
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(formattedUsers, { onConflict: 'id' })
+      .select();
+    
+    if (error) throw error;
+    console.log(`Migrated ${data.length} user profiles successfully`);
+    return data;
+  } catch (error) {
+    console.error("Error migrating user profiles:", error);
+    throw error;
+  }
+}
+
 // Main migration function
 export async function migrateAllData(): Promise<MigrationResult> {
   try {
@@ -326,6 +566,18 @@ export async function migrateAllData(): Promise<MigrationResult> {
     
     // Step 5: Migrate financial reports
     await migrateFinancialReports();
+    
+    // Step 6: Migrate students
+    const migratedStudents = await migrateStudents();
+    
+    // Step 7: Migrate devices
+    const migratedDevices = await migrateDevices();
+    
+    // Step 8: Migrate transactions
+    const migratedTransactions = await migrateTransactions();
+    
+    // Step 9: Migrate user profiles
+    const migratedUsers = await migrateUserProfiles();
     
     return {
       success: true,

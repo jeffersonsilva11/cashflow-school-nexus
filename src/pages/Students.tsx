@@ -11,7 +11,8 @@ import {
   Eye,
   Edit,
   Trash2,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -25,84 +26,28 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-
-// Dados simulados de alunos
-const studentsMockData = [
-  {
-    id: 'STD00498',
-    name: 'Maria Silva',
-    grade: '9º Ano B',
-    school: 'Colégio São Paulo',
-    parent: 'José Silva',
-    parentId: 'PAR001',
-    status: 'active',
-    deviceId: 'CARD-2023-8742',
-    photo: 'https://i.pravatar.cc/150?img=5'
-  },
-  {
-    id: 'STD00512',
-    name: 'João Oliveira',
-    grade: '7º Ano A',
-    school: 'Colégio São Paulo',
-    parent: 'Maria Oliveira',
-    parentId: 'PAR002',
-    status: 'active',
-    deviceId: 'CARD-2023-8743',
-    photo: 'https://i.pravatar.cc/150?img=3'
-  },
-  {
-    id: 'STD00523',
-    name: 'Pedro Santos',
-    grade: '5º Ano C',
-    school: 'Escola Maria Eduarda',
-    parent: 'Carlos Santos',
-    parentId: 'PAR003',
-    status: 'inactive',
-    deviceId: 'CARD-2023-8744',
-    photo: 'https://i.pravatar.cc/150?img=8'
-  },
-  {
-    id: 'STD00531',
-    name: 'Ana Costa',
-    grade: '3º Ano D',
-    school: 'Escola Maria Eduarda',
-    parent: 'Ana Pereira',
-    parentId: 'PAR004',
-    status: 'active',
-    deviceId: null,
-    photo: 'https://i.pravatar.cc/150?img=1'
-  },
-  {
-    id: 'STD00547',
-    name: 'Lucas Santos',
-    grade: '8º Ano B',
-    school: 'Colégio São Pedro',
-    parent: 'Roberto Costa',
-    parentId: 'PAR005',
-    status: 'pending',
-    deviceId: 'CARD-2023-8745',
-    photo: 'https://i.pravatar.cc/150?img=6'
-  }
-];
+import { useStudents, useDeleteStudent } from '@/services/studentService';
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: students, isLoading, error } = useStudents();
+  const deleteStudentMutation = useDeleteStudent();
   
   // Filtrar alunos com base no termo de busca
-  const filteredStudents = studentsMockData.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    student.grade.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.school.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students?.filter(student => 
+    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    student.grade?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.school?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.id?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
   
   // Estatísticas
-  const totalStudents = studentsMockData.length;
+  const totalStudents = students?.length || 0;
   const monthlyRegistrations = Math.floor(totalStudents * 0.4); // Simulação para exemplo
-  const activationRate = Math.round((studentsMockData.filter(student => 
-    student.status === 'active').length / totalStudents) * 100);
+  const activeStudents = students?.filter(student => student.active)?.length || 0;
+  const activationRate = totalStudents ? Math.round((activeStudents / totalStudents) * 100) : 0;
   
   // Funções de ações
   const handleViewStudent = (studentId: string) => {
@@ -114,27 +59,36 @@ export default function Students() {
   };
   
   const handleDeleteStudent = (studentId: string) => {
-    toast({
-      title: "Confirmação necessária",
-      description: "Esta funcionalidade será implementada em breve.",
-    });
+    if (window.confirm("Tem certeza que deseja excluir este aluno?")) {
+      deleteStudentMutation.mutate(studentId);
+    }
   };
   
   const handleNewStudent = () => {
     navigate('/students/new');
   };
   
-  const handleViewDevice = (deviceId: string | null) => {
-    if (deviceId) {
-      navigate(`/devices/${deviceId}`);
-    } else {
-      toast({
-        title: "Dispositivo não encontrado",
-        description: "Este aluno não possui dispositivo vinculado.",
-        variant: "destructive"
-      });
-    }
+  const handleViewDevice = (studentId: string) => {
+    navigate(`/students/${studentId}/device`);
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-lg text-muted-foreground">Carregando dados dos alunos...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <p className="text-lg text-red-500 mb-4">Erro ao carregar dados dos alunos</p>
+        <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -228,9 +182,8 @@ export default function Students() {
                 <TableHead>Aluno</TableHead>
                 <TableHead>Turma</TableHead>
                 <TableHead>Escola</TableHead>
-                <TableHead>Responsável</TableHead>
+                <TableHead>Documento</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Dispositivo</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -238,53 +191,34 @@ export default function Students() {
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.id}</TableCell>
+                    <TableCell className="font-medium">{student.id.substring(0, 8)}...</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full overflow-hidden">
-                          <img 
-                            src={student.photo} 
-                            alt={student.name} 
-                            className="h-full w-full object-cover" 
-                          />
+                        <div className="h-8 w-8 rounded-full overflow-hidden bg-muted">
+                          {student.photo_url ? (
+                            <img 
+                              src={student.photo_url} 
+                              alt={student.name} 
+                              className="h-full w-full object-cover" 
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
+                              {student.name?.charAt(0).toUpperCase() || 'A'}
+                            </div>
+                          )}
                         </div>
                         <span>{student.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{student.grade}</TableCell>
-                    <TableCell>{student.school}</TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto font-normal"
-                        onClick={() => navigate(`/parents/${student.parentId}`)}
-                      >
-                        {student.parent}
-                      </Button>
-                    </TableCell>
+                    <TableCell>{student.grade || 'N/A'}</TableCell>
+                    <TableCell>{student.school?.name || 'N/A'}</TableCell>
+                    <TableCell>{student.document_id || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge 
-                        variant={student.status === 'active' ? 'default' : 
-                                student.status === 'pending' ? 'outline' : 'secondary'}
+                        variant={student.active ? 'default' : 'secondary'}
                       >
-                        {student.status === 'active' ? 'Ativo' : 
-                         student.status === 'pending' ? 'Pendente' : 'Inativo'}
+                        {student.active ? 'Ativo' : 'Inativo'}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {student.deviceId ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 gap-1"
-                          onClick={() => handleViewDevice(student.deviceId)}
-                        >
-                          <CreditCard className="h-3 w-3" />
-                          {student.deviceId?.substring(0, 8)}...
-                        </Button>
-                      ) : (
-                        <Badge variant="outline">Não vinculado</Badge>
-                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -315,7 +249,7 @@ export default function Students() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Nenhum resultado encontrado.
                   </TableCell>
                 </TableRow>

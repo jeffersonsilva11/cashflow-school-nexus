@@ -34,7 +34,7 @@ export const SchoolsTable = ({ schools, title, description, isLoading = false }:
             <TableHeader>
               <TableRow>
                 <TableHead>Escola</TableHead>
-                <TableHead className="text-right">Alunos</TableHead>
+                <TableHead className="text-right">Localização</TableHead>
                 <TableHead className="text-right">Status</TableHead>
                 <TableHead className="text-right">Plano</TableHead>
               </TableRow>
@@ -79,21 +79,29 @@ export const SchoolsTable = ({ schools, title, description, isLoading = false }:
             </TableRow>
           </TableHeader>
           <TableBody>
-            {schools.slice(0, 5).map((school) => (
-              <TableRow key={school.id}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{school.name}</p>
-                    <p className="text-sm text-muted-foreground">{school.email || 'Sem email'}</p>
-                  </div>
+            {schools && schools.length > 0 ? (
+              schools.slice(0, 5).map((school) => (
+                <TableRow key={school.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{school.name}</p>
+                      <p className="text-sm text-muted-foreground">{school.email || 'Sem email'}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">{school.city || 'N/A'}, {school.state || 'N/A'}</TableCell>
+                  <TableCell className="text-right">
+                    <StatusBadge status={school.subscription_status || 'inactive'} />
+                  </TableCell>
+                  <TableCell className="text-right">{school.subscription_plan || 'Sem plano'}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  Nenhuma escola encontrada
                 </TableCell>
-                <TableCell className="text-right">{school.city || 'N/A'}, {school.state || 'N/A'}</TableCell>
-                <TableCell className="text-right">
-                  <StatusBadge status={school.subscription_status || 'inactive'} />
-                </TableCell>
-                <TableCell className="text-right">{school.subscription_plan || 'Sem plano'}</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </CardContent>
