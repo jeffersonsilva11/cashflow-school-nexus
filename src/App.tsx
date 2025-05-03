@@ -42,6 +42,8 @@ import BillingDetails from "./pages/financial/BillingDetails";
 import PaymentManager from "./pages/payment/PaymentManager";
 import NewPayment from "./pages/payment/NewPayment";
 import PaymentDetail from "./pages/payment/PaymentDetail";
+import FinancialReports from "./pages/reports/FinancialReports";
+import DeviceUsageReport from "./pages/reports/DeviceUsageReport";
 
 const queryClient = new QueryClient();
 
@@ -256,7 +258,12 @@ const App = () => (
               } />
               <Route path="reports/financial" element={
                 <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
-                  <ComingSoonPage title="Relatórios Financeiros" description="Relatórios detalhados de transações e dados financeiros" />
+                  <FinancialReports />
+                </ProtectedRoute>
+              } />
+              <Route path="reports/devices" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <DeviceUsageReport />
                 </ProtectedRoute>
               } />
               <Route path="reports/students" element={

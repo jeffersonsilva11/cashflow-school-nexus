@@ -18,7 +18,8 @@ import {
   Building,
   ReceiptText,
   FileText,
-  CalendarClock
+  CalendarClock,
+  Download
 } from 'lucide-react';
 
 // Dashboard
@@ -60,7 +61,9 @@ export const deviceItems = [
 export const reportItems = [
   { to: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
   { to: "/reports/financial", icon: <FileBarChart size={20} />, label: "Financeiros" },
+  { to: "/reports/devices", icon: <Database size={20} />, label: "Dispositivos" },
   { to: "/reports/students", icon: <BookOpen size={20} />, label: "Alunos" },
+  { to: "/reports/export", icon: <Download size={20} />, label: "Exportar Dados" },
 ];
 
 // Configurações e Suporte
