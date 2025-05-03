@@ -75,14 +75,17 @@ export async function fetchAuditLogs(
 
     // Process data to make sure user is correctly formatted
     const processedData = data?.map(log => {
-      // Check if user property has error or is undefined
-      if (!log.user || (log.user && typeof log.user === 'object' && 'error' in log.user)) {
+      // Need to check if user property has error or is undefined using a safe type check
+      const hasError = log.user && typeof log.user === 'object' && 'error' in log.user;
+      
+      if (hasError || !log.user) {
         return {
           ...log,
           user: null
-        } as AuditLog;
+        } as unknown as AuditLog;
       }
-      return log as AuditLog;
+      
+      return log as unknown as AuditLog;
     });
 
     return {
@@ -151,15 +154,17 @@ export async function fetchAuditLogDetails(logId: string) {
     // Process to check for error in user object
     if (!data) return null;
     
-    // Check if user property has error
-    if (!data.user || (data.user && typeof data.user === 'object' && 'error' in data.user)) {
+    // Need a proper type check for the error property
+    const hasError = data.user && typeof data.user === 'object' && 'error' in data.user;
+    
+    if (hasError || !data.user) {
       return {
         ...data,
         user: null
-      } as AuditLog;
+      } as unknown as AuditLog;
     }
 
-    return data as AuditLog;
+    return data as unknown as AuditLog;
   } catch (error) {
     console.error(`Erro em fetchAuditLogDetails para ${logId}:`, error);
     return null;
