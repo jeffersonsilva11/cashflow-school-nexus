@@ -79,7 +79,7 @@ export const generateApiKey = async (name: string, scope: string[]): Promise<Api
       success: true,
       data: {
         key: `${keyPrefix}.${key.substring(8)}`,
-        ...data
+        ...(data as any)
       },
       timestamp: new Date().toISOString()
     };
@@ -105,7 +105,7 @@ export const listApiKeys = async (): Promise<ApiResponse<ApiKey[]>> => {
     
     return {
       success: true,
-      data: data as ApiKey[],
+      data: data as any as ApiKey[],
       timestamp: new Date().toISOString()
     };
   } catch (error) {

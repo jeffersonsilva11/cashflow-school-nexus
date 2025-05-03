@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Types for transactions
@@ -128,5 +129,91 @@ export const generateFinancialReport = async (startDate: Date, endDate: Date): P
   } catch (error) {
     console.error("Error generating financial report:", error);
     throw error;
+  }
+};
+
+// Add the missing exported functions needed by financialReportHooks.ts
+export const generateFinancialOverviewReport = async (): Promise<any> => {
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  
+  try {
+    return await generateFinancialReport(startOfMonth, today);
+  } catch (error) {
+    console.error("Error generating financial overview report:", error);
+    throw error;
+  }
+};
+
+export const generateRevenueByPlanReport = async (): Promise<any[]> => {
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  
+  try {
+    const transactions = await fetchTransactions(startOfMonth, today);
+    
+    // Group transactions by plan
+    const planData: Record<string, number> = {};
+    transactions.forEach(transaction => {
+      if (transaction.status === 'completed') {
+        const plan = transaction.metadata?.plan || 'Standard Plan';
+        if (!planData[plan]) {
+          planData[plan] = 0;
+        }
+        planData[plan] += Number(transaction.amount) || 0;
+      }
+    });
+    
+    // Convert to array format for charts
+    return Object.entries(planData).map(([name, value]) => ({
+      name,
+      value
+    }));
+  } catch (error) {
+    console.error("Error generating revenue by plan report:", error);
+    return [];
+  }
+};
+
+export const generateMonthlyTrendReport = async (): Promise<any[]> => {
+  // Get data for the last 6 months
+  const today = new Date();
+  const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+  
+  try {
+    const transactions = await fetchTransactions(sixMonthsAgo, today);
+    
+    // Group by month
+    const monthlyData: Record<string, number> = {};
+    
+    // Initialize all months with zero
+    for (let i = 0; i < 6; i++) {
+      const monthDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData[monthKey] = 0;
+    }
+    
+    // Fill with actual data
+    transactions.forEach(transaction => {
+      if (transaction.status === 'completed') {
+        const transactionDate = new Date(transaction.transaction_date);
+        const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthlyData[monthKey] !== undefined) {
+          monthlyData[monthKey] += Number(transaction.amount) || 0;
+        }
+      }
+    });
+    
+    // Convert to array and sort by date
+    return Object.entries(monthlyData)
+      .map(([month, value]) => ({
+        month,
+        revenue: value
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+  } catch (error) {
+    console.error("Error generating monthly trend report:", error);
+    return [];
   }
 };

@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          scope: string[]
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          scope?: string[]
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          scope?: string[]
+          status?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -42,6 +78,39 @@ export type Database = {
           old_data?: Json | null
           record_id?: string | null
           table_name?: string
+        }
+        Relationships: []
+      }
+      backups: {
+        Row: {
+          backup_type: string
+          created_at: string
+          created_by: string | null
+          encrypted: boolean
+          file_name: string
+          file_size: number
+          id: string
+          tables_included: string[]
+        }
+        Insert: {
+          backup_type: string
+          created_at?: string
+          created_by?: string | null
+          encrypted?: boolean
+          file_name: string
+          file_size: number
+          id?: string
+          tables_included: string[]
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string
+          created_by?: string | null
+          encrypted?: boolean
+          file_name?: string
+          file_size?: number
+          id?: string
+          tables_included?: string[]
         }
         Relationships: []
       }
