@@ -38,14 +38,15 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
       return false;
     }
     
-    // Admin always has access to everything - use lowercase comparison for case insensitivity
+    // Admin always has access to everything - always use lowercase comparison
     if (user.role.toLowerCase() === 'admin') {
       console.log(`[Sidebar] User ${user.name} has admin role, granting access to all items`);
       return true;
     }
     
-    // For non-admins, check specific permissions
-    const hasAccess = requiredPermissions.includes(user.role);
+    // For non-admins, check specific permissions (case-insensitive)
+    const userRoleLower = user.role.toLowerCase();
+    const hasAccess = requiredPermissions.some(role => role.toLowerCase() === userRoleLower);
     console.log(`[Sidebar] User ${user.name} with role ${user.role} access to ${requiredPermissions.join(', ')}: ${hasAccess}`);
     return hasAccess;
   };
@@ -55,12 +56,12 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   console.log(`[Sidebar] User role:`, user?.role);
   console.log(`[Sidebar] Admin check (case-insensitive):`, user?.role?.toLowerCase() === 'admin' ? 'Is admin' : 'Not admin');
   
-  // When admin user, show all menu items without filtering
+  // Filter menu items based on user role
   let filteredMainNavItems = mainNavItems;
   let filteredFinancialNavItems = financialNavItems;
   let filteredReportsAndAdminItems = reportsAndAdminItems;
   
-  // Apply filtering only for non-admin users - use lowercase comparison for case insensitivity
+  // Apply filtering only for non-admin users - always use lowercase comparison
   if (!user || !user.role || user.role.toLowerCase() !== 'admin') {
     console.log('[Sidebar] Not an admin user, filtering menu items');
     filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));

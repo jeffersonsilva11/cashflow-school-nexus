@@ -30,7 +30,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   console.log(`[ProtectedRoute] User details: ${user.name} (${user.email}), role: ${user.role}`);
   console.log(`[ProtectedRoute] Required roles: ${allowedRoles.length ? allowedRoles.join(', ') : 'none'}`);
 
-  // Always allow admin users to access any route (compare role as lowercase for case insensitivity)
+  // Always allow admin users to access any route (always use lowercase comparison)
   if (user.role.toLowerCase() === 'admin') {
     console.log(`[ProtectedRoute] Admin user ${user.name} (${user.email}) detected - granting access to all routes`);
     return <>{children}</>;
@@ -42,8 +42,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     return <>{children}</>;
   }
 
-  // For non-admin users, check if they have the required role
-  if (!allowedRoles.includes(user.role)) {
+  // For non-admin users, check if they have the required role (case-insensitive)
+  const userRoleLower = user.role.toLowerCase();
+  if (!allowedRoles.some(role => role.toLowerCase() === userRoleLower)) {
     console.log(`[ProtectedRoute] Access denied: User ${user.name} (${user.email}) has role ${user.role}, but needs one of: ${allowedRoles.join(', ')}`);
     return <Navigate to="/access-denied" />;
   }

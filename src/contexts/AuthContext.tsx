@@ -52,18 +52,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
+        console.error('[AuthContext] Erro ao buscar perfil:', profileError);
         throw profileError;
       }
       
-      // Parse role to ensure it's a valid UserRole type
+      // Determine the user's role with proper normalization and validation
       let userRole: UserRole = 'parent'; // Default role
       
-      if (profileData?.role === 'admin' || 
-          profileData?.role === 'school_admin' || 
-          profileData?.role === 'parent' || 
-          profileData?.role === 'staff') {
-        userRole = profileData.role as UserRole;
+      if (profileData?.role) {
+        const normalizedRole = profileData.role.toLowerCase();
+        if (
+          normalizedRole === 'admin' || 
+          normalizedRole === 'school_admin' || 
+          normalizedRole === 'parent' || 
+          normalizedRole === 'staff'
+        ) {
+          userRole = normalizedRole as UserRole;
+        }
       }
 
       // Log para depuração
@@ -87,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[AuthContext] Formatted user object:', formattedUser);
       return formattedUser;
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      console.error('[AuthContext] Error getting user profile:', error);
       
       // Return a basic user even without a profile
       return {
@@ -132,9 +137,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       
       if (session?.user) {
-        const formattedUser = await formatUserData(session.user);
-        console.log(`[AuthContext] Usuário da sessão formatado: ${formattedUser?.role}`);
-        setUser(formattedUser);
+        try {
+          const formattedUser = await formatUserData(session.user);
+          console.log(`[AuthContext] Usuário da sessão formatado: ${formattedUser?.role}`);
+          setUser(formattedUser);
+        } catch (error) {
+          console.error('[AuthContext] Erro ao formatar dados do usuário:', error);
+          // Garantir que o loading é desligado mesmo em caso de erro
+          setUser(null);
+        }
       }
       setLoading(false);
     });
@@ -213,14 +224,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Log de depuração para verificação de permissões
     console.log(`[AuthContext] Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
     
-    // Admin always has access - use lowercase for case insensitivity
+    // Admin always has access - always use lowercase comparison
     if (user.role.toLowerCase() === 'admin') {
       console.log('[AuthContext] Admin tem permissão para todas as funcionalidades');
       return true;
     }
     
-    // Check for specific role
-    const hasAccess = requiredRoles.includes(user.role);
+    // Check for specific role - normalize both sides for case-insensitive comparison
+    const userRoleLower = user.role.toLowerCase();
+    const hasAccess = requiredRoles.some(role => role.toLowerCase() === userRoleLower);
     console.log(`[AuthContext] Usuário tem acesso: ${hasAccess}`);
     return hasAccess;
   };
