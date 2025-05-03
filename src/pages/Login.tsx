@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,14 +13,16 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { login, loading } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // Obtém a URL de redirecionamento após login, se existir
-  const from = location.state?.from?.pathname || '/dashboard';
+  // If already authenticated, redirect to dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +38,7 @@ export default function Login() {
     
     try {
       await login(email, password);
-      // O redirecionamento é feito dentro da função login
     } catch (error) {
-      // Erros já são tratados dentro da função login
       console.error("Erro ao realizar login:", error);
     }
   };
@@ -60,9 +60,9 @@ export default function Login() {
           <p className="text-white/70 mt-1">Sistema Cashless para Escolas</p>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Login</CardTitle>
+        <Card className="border-none shadow-2xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>
               Acesse o painel administrativo do sistema
             </CardDescription>
@@ -121,22 +121,8 @@ export default function Login() {
               </div>
               
               <div className="text-xs text-center text-muted-foreground mt-4">
-                <p>Para fins de demonstração, você pode usar:</p>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className="text-left">
-                    <p><strong>admin@example.com</strong></p>
-                    <p><strong>escola@example.com</strong></p>
-                    <p><strong>pai@example.com</strong></p>
-                    <p><strong>funcionario@example.com</strong></p>
-                  </div>
-                  <div className="text-left">
-                    <p>Administrador do Sistema</p>
-                    <p>Administrador da Escola</p>
-                    <p>Responsável/Pai</p>
-                    <p>Funcionário da Escola</p>
-                  </div>
-                </div>
-                <p className="mt-2">Senha para todos: <strong>123456</strong></p>
+                <p>Use as credenciais fornecidas pelo administrador do sistema.</p>
+                <p className="mt-2">Para testes, use: <strong>admin@cashflow.com</strong> e senha: <strong>admin123</strong></p>
               </div>
             </CardContent>
           </form>

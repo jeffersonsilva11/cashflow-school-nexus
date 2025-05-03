@@ -54,9 +54,11 @@ export default function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-          <Avatar className="h-9 w-9 border">
+          <Avatar className="h-9 w-9 border border-primary/10 transition-all hover:border-primary/30">
             <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-primary/80 to-primary text-white">
+              {getInitials(user.name)}
+            </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
@@ -67,9 +69,9 @@ export default function UserMenu() {
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-2 p-1 rounded-full bg-muted/50 w-fit">
               {getRoleIcon(user.role)}
-              <span className="text-xs">{getRole(user.role)}</span>
+              <span className="text-xs font-medium">{getRole(user.role)}</span>
             </div>
           </div>
         </DropdownMenuLabel>
@@ -85,7 +87,10 @@ export default function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => logout()}>
+        <DropdownMenuItem 
+          onClick={() => logout()}
+          className="text-destructive focus:text-destructive"
+        >
           <LogOut className="h-4 w-4 mr-2" />
           <span>Sair</span>
         </DropdownMenuItem>

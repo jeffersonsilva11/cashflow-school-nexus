@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ProtectedRoute } from './contexts/ProtectedRoute';
 
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
@@ -56,6 +57,7 @@ import AnalyticsReport from './pages/reports/AnalyticsReport';
 import AccessDenied from './pages/AccessDenied';
 import NotFound from './pages/NotFound';
 import SecurityCompliance from "./pages/SecurityCompliance";
+import Index from './pages/Index';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -93,10 +95,11 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Index />} />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/schools" element={<Schools />} />
               <Route path="/schools/map" element={<SchoolsMap />} />
               <Route path="/schools/invites" element={<SchoolInvites />} />
@@ -153,7 +156,6 @@ function App() {
               <Route path="/reports/students" element={<StudentsReport />} />
               <Route path="/analytics" element={<AnalyticsReport />} />
               
-              {/* Nova rota para Segurança e Compliance */}
               <Route path="/security-compliance" element={<SecurityCompliance />} />
               
               {/* Fallback routes */}
@@ -162,7 +164,7 @@ function App() {
             </Route>
           </Routes>
         </AuthProvider>
-        <Toaster />
+        <Toaster position="top-right" />
       </BrowserRouter>
     </QueryClientProvider>
   );
