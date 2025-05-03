@@ -48,6 +48,7 @@ import Vendors from "./pages/Vendors";
 import VendorDetails from "./pages/VendorDetails";
 import VendorForm from "./pages/VendorForm";
 import ThirdPartyDashboard from "./pages/ThirdPartyDashboard";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -300,8 +301,13 @@ const App = () => (
               
               {/* Configurações e Suporte */}
               <Route path="settings" element={
-                <ProtectedRoute>
-                  <ComingSoonPage title="Configurações" description="Configurações gerais do sistema" />
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="settings/:section" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Settings />
                 </ProtectedRoute>
               } />
               <Route path="support" element={
