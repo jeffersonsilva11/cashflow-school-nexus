@@ -45,6 +45,130 @@ export type Database = {
         }
         Relationships: []
       }
+      device_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          device_id: string
+          id: string
+          message: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          device_id: string
+          id?: string
+          message: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_batches: {
+        Row: {
+          allocated: number
+          available: number
+          batch_id: string
+          created_at: string
+          device_type: string
+          id: string
+          name: string
+          quantity: number
+          status: string
+          supplier: string | null
+          updated_at: string
+        }
+        Insert: {
+          allocated?: number
+          available?: number
+          batch_id: string
+          created_at?: string
+          device_type: string
+          id?: string
+          name: string
+          quantity?: number
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allocated?: number
+          available?: number
+          batch_id?: string
+          created_at?: string
+          device_type?: string
+          id?: string
+          name?: string
+          quantity?: number
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      device_logs: {
+        Row: {
+          created_at: string
+          description: string
+          device_id: string
+          id: string
+          log_type: string
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          device_id: string
+          id?: string
+          log_type: string
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          device_id?: string
+          id?: string
+          log_type?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           assigned_at: string | null
@@ -258,6 +382,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      parents: {
+        Row: {
+          address: string | null
+          created_at: string
+          document_id: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          document_id?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          document_id?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       payment_gateway_configs: {
         Row: {
@@ -876,6 +1036,62 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      tablets: {
+        Row: {
+          app_version: string | null
+          assigned_at: string | null
+          battery_level: number | null
+          connection_status: string | null
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          model: string | null
+          os_version: string | null
+          school_id: string | null
+          serial_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          app_version?: string | null
+          assigned_at?: string | null
+          battery_level?: number | null
+          connection_status?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          model?: string | null
+          os_version?: string | null
+          school_id?: string | null
+          serial_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          app_version?: string | null
+          assigned_at?: string | null
+          battery_level?: number | null
+          connection_status?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          model?: string | null
+          os_version?: string | null
+          school_id?: string | null
+          serial_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tablets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {

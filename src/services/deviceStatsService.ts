@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Device } from "@/services/deviceService";
@@ -114,15 +115,23 @@ export async function fetchDeviceAllocation(): Promise<DeviceAllocationData[]> {
 // Função para buscar lotes recentes de dispositivos
 export async function fetchRecentBatches(): Promise<DeviceBatchData[]> {
   try {
-    // Esta funcionalidade provavelmente requer tabela específica para lotes
-    // Por enquanto, vamos retornar dados mockados
-    // Em uma implementação real, buscaria da tabela de lotes
+    const { data, error } = await supabase
+      .from('device_batches')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
     
-    return [
-      { id: 'LOT-2023-05A', name: 'Lote Maio 2023 - Cartões', type: 'card', quantity: 1500, available: 342, allocated: 1158, date: '2023-05-10' },
-      { id: 'LOT-2023-06B', name: 'Lote Junho 2023 - Pulseiras', type: 'wristband', quantity: 2000, available: 230, allocated: 1770, date: '2023-06-15' },
-      { id: 'LOT-2023-08C', name: 'Lote Agosto 2023 - Cartões Premium', type: 'card', quantity: 1200, available: 120, allocated: 1080, date: '2023-08-22' }
-    ];
+    if (error) throw error;
+    
+    return data.map(batch => ({
+      id: batch.batch_id,
+      name: batch.name,
+      type: batch.device_type,
+      quantity: batch.quantity,
+      available: batch.available,
+      allocated: batch.allocated,
+      date: batch.created_at
+    }));
   } catch (error) {
     console.error("Error fetching recent batches:", error);
     return [];

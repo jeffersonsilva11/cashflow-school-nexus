@@ -10,18 +10,10 @@ import { TabletAlertsDashboard } from './TabletAlertsDashboard';
 import { TabletsTable } from './TabletsTable';
 import { useToast } from '@/hooks/use-toast';
 import { RegisterTabletDialog } from './RegisterTabletDialog';
+import { useTabletStatistics } from '@/services/tabletService';
 
 export const TabletsDevicesTab = () => {
-  // Dados mockados para tablets
-  const tabletStats = {
-    total: 124,
-    online: 98,
-    offline: 26,
-    batteryLow: 12,
-    alerts: 8,
-    pendingActivation: 15
-  };
-
+  const { data: tabletStats, isLoading } = useTabletStatistics();
   const { toast } = useToast();
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
@@ -39,11 +31,11 @@ export const TabletsDevicesTab = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Gerenciamento de Tablets</h2>
         <div className="flex gap-2">
-          <Badge variant={tabletStats.offline > 0 ? "destructive" : "outline"} className="gap-1">
-            {tabletStats.offline} offline
+          <Badge variant={tabletStats && tabletStats.offline > 0 ? "destructive" : "outline"} className="gap-1">
+            {isLoading ? '...' : tabletStats?.offline || 0} offline
           </Badge>
           <Badge variant="outline" className="gap-1 bg-amber-500 hover:bg-amber-600 text-white">
-            {tabletStats.batteryLow} bateria baixa
+            {isLoading ? '...' : tabletStats?.batteryLow || 0} bateria baixa
           </Badge>
           <Button 
             variant="outline" 
@@ -58,7 +50,14 @@ export const TabletsDevicesTab = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <TabletDeviceStats stats={tabletStats} />
+        <TabletDeviceStats stats={tabletStats || {
+          total: 0,
+          online: 0,
+          offline: 0,
+          batteryLow: 0,
+          alerts: 0,
+          pendingActivation: 0
+        }} />
       </div>
       
       <div className="flex justify-between items-center mt-8">

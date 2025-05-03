@@ -14,61 +14,54 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-
-interface TabletData {
-  id: string;
-  name: string;
-  serialNumber: string;
-  school: string;
-  status: 'online' | 'offline' | 'pending';
-  lastActive: string;
-  batteryLevel: number;
-}
+import { useTablets } from '@/services/tabletService';
 
 export const TabletsTable = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Dados mockados de tablets
-  const tablets: TabletData[] = [
-    { id: 'TB001', name: 'Tablet Recepção', serialNumber: 'SN78945612', school: 'Escola São Paulo', status: 'online', lastActive: '2023-06-01T15:30:00Z', batteryLevel: 78 },
-    { id: 'TB002', name: 'Tablet Cantina', serialNumber: 'SN78945613', school: 'Escola São Paulo', status: 'online', lastActive: '2023-06-01T15:20:00Z', batteryLevel: 32 },
-    { id: 'TB003', name: 'Tablet Secretaria', serialNumber: 'SN78945614', school: 'Escola Rio de Janeiro', status: 'online', lastActive: '2023-06-01T15:10:00Z', batteryLevel: 91 },
-    { id: 'TB004', name: 'Tablet Biblioteca', serialNumber: 'SN78945615', school: 'Escola Belo Horizonte', status: 'offline', lastActive: '2023-06-01T10:30:00Z', batteryLevel: 0 },
-    { id: 'TB005', name: 'Tablet Pátio', serialNumber: 'SN78945616', school: 'Escola Salvador', status: 'offline', lastActive: '2023-06-01T12:45:00Z', batteryLevel: 5 },
-    { id: 'TB006', name: 'Tablet Entrada', serialNumber: 'SN78945617', school: 'Escola Salvador', status: 'pending', lastActive: '', batteryLevel: 0 },
-  ];
+  const { data: tablets = [], isLoading } = useTablets();
   
   const filteredTablets = tablets.filter(
     tablet => 
-      tablet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tablet.serial_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tablet.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tablet.serialNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tablet.school.toLowerCase().includes(searchQuery.toLowerCase())
+      (tablet.model && tablet.model.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (tablet.school && tablet.school.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
   
   // Função para obter cor de status
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'online':
-        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Online</Badge>;
-      case 'offline':
-        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Offline</Badge>;
+      case 'active':
+        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Ativo</Badge>;
+      case 'inactive':
+        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Inativo</Badge>;
       case 'pending':
         return <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">Aguardando Ativação</Badge>;
       default:
         return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
+
+  const getConnectionBadge = (status: string) => {
+    switch (status) {
+      case 'online':
+        return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Online</Badge>;
+      case 'offline':
+        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Offline</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
+    }
+  };
   
   // Função para formatar data
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Nunca ativado';
     return new Date(dateString).toLocaleString('pt-BR');
   };
   
   // Função para renderizar indicador de bateria
-  const renderBatteryLevel = (level: number, status: string) => {
-    if (status === 'pending') return '-';
+  const renderBatteryLevel = (level: number | undefined, status: string) => {
+    if (status === 'pending' || level === undefined) return '-';
     if (status === 'offline' && level <= 5) return '0%';
     
     let color = 'text-green-600';
@@ -102,27 +95,36 @@ export const TabletsTable = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Nº de Série</TableHead>
+                <TableHead>Serial</TableHead>
+                <TableHead>Modelo</TableHead>
                 <TableHead>Escola</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Conexão</TableHead>
                 <TableHead>Última Atividade</TableHead>
                 <TableHead>Bateria</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTablets.length > 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    <div className="flex justify-center items-center">
+                      <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full mr-3"></div>
+                      <span className="text-muted-foreground">Carregando tablets...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredTablets.length > 0 ? (
                 filteredTablets.map((tablet) => (
                   <TableRow key={tablet.id}>
-                    <TableCell className="font-medium">{tablet.id}</TableCell>
-                    <TableCell>{tablet.name}</TableCell>
-                    <TableCell>{tablet.serialNumber}</TableCell>
-                    <TableCell>{tablet.school}</TableCell>
+                    <TableCell className="font-medium">{tablet.serial_number}</TableCell>
+                    <TableCell>{tablet.model || 'N/A'}</TableCell>
+                    <TableCell>{tablet.school?.name || 'Não alocado'}</TableCell>
                     <TableCell>{getStatusBadge(tablet.status)}</TableCell>
-                    <TableCell>{formatDate(tablet.lastActive)}</TableCell>
-                    <TableCell>{renderBatteryLevel(tablet.batteryLevel, tablet.status)}</TableCell>
+                    <TableCell>{getConnectionBadge(tablet.connection_status)}</TableCell>
+                    <TableCell>{formatDate(tablet.last_sync_at)}</TableCell>
+                    <TableCell>{renderBatteryLevel(tablet.battery_level, tablet.status)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -166,7 +168,11 @@ export const TabletsTable = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center">
-                    Nenhum tablet encontrado.
+                    {searchQuery ? (
+                      <span className="text-muted-foreground">Nenhum tablet encontrado com a busca "{searchQuery}".</span>
+                    ) : (
+                      <span className="text-muted-foreground">Nenhum tablet cadastrado.</span>
+                    )}
                   </TableCell>
                 </TableRow>
               )}
