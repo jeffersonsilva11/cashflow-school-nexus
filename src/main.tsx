@@ -5,7 +5,7 @@ import App from './App.tsx'
 import './index.css'
 
 // Create a client
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,

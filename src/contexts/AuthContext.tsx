@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -36,8 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // We need to handle the case when the component is rendered outside of a Router
+  // by creating a custom navigate function that checks if useNavigate is available
+  const navigate = useCustomNavigate();
 
   // Function to transform the Supabase user into the format needed for the application
   const formatUserData = async (supaUser: SupabaseUser | null): Promise<User | null> => {
@@ -266,6 +269,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+// Custom navigate function that works both inside and outside Router context
+function useCustomNavigate() {
+  // Try to use the real useNavigate hook
+  const navigateReal = useNavigateSafe();
+  
+  // Return a function that uses the real navigate if available, or logs a message if not
+  return (to: string) => {
+    if (navigateReal) {
+      navigateReal(to);
+    } else {
+      console.log(`[AuthContext] Navigation to ${to} not available (no Router context)`);
+    }
+  };
+}
+
+// Safe wrapper around useNavigate to handle component rendering outside Router
+function useNavigateSafe() {
+  try {
+    // In a non-Router context, this will throw an error, which we catch
+    return useNavigate();
+  } catch (e) {
+    console.log('[AuthContext] useNavigate hook not available (component not inside Router)');
+    return null;
+  }
 }
 
 // Hook to use the authentication context
