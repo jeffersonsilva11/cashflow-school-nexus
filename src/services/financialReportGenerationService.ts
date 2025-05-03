@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
 import {
   FinancialReportOverviewData,
   RevenueByPlanItemData,
@@ -52,7 +51,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     const totalPendingPayments = pendingInvoices?.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) || 0;
     
     // Calculate average revenue per school
-    const averageRevenuePerSchool = totalActiveSchools > 0 
+    const averageRevenuePerSchool = totalActiveSchools && totalActiveSchools > 0 
       ? totalRevenueMonth / totalActiveSchools 
       : 0;
     

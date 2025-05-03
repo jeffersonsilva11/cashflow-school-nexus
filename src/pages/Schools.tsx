@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useSchools } from "@/services/schoolService";
 import { 
   ArrowUpDown, Search, MoreHorizontal, Filter, Plus, 
-  Map, Download, Upload 
+  Map, Download, Upload, Mail
 } from 'lucide-react';
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -56,6 +56,12 @@ export default function Schools() {
             <Link to="/schools/map">
               <Map className="mr-2 h-4 w-4" />
               Ver Mapa
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/schools/invites">
+              <Mail className="mr-2 h-4 w-4" />
+              Convites
             </Link>
           </Button>
           <Button asChild>

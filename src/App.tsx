@@ -1,87 +1,66 @@
-
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import NotFound from "@/pages/NotFound";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import MainLayout from "@/components/layout/MainLayout";
-import AccessDenied from "@/pages/AccessDenied";
-import SchoolsPage from "@/pages/Schools";
-import VendorsPage from "@/pages/Vendors";
-import DevicesPage from "@/pages/Devices";
-import DeviceDetails from "@/pages/DeviceDetails";
-import Students from "@/pages/Students";
-import StudentDetails from "@/pages/StudentDetails";
-import StudentEdit from "@/pages/StudentEdit";
-import Transactions from "@/pages/Transactions";
-import Financial from "@/pages/financial/Financial";
-import Invoices from "@/pages/financial/Invoices";
-import InvoiceDetails from "@/pages/financial/InvoiceDetails";
-import CreateInvoice from "@/pages/financial/CreateInvoice";
-import Billing from "@/pages/financial/Billing";
-import BillingDetails from "@/pages/financial/BillingDetails";
-import FinancialReports from "@/pages/reports/FinancialReports";
-import { Toaster } from "@/components/ui/toaster";
-import DataMigration from "@/pages/admin/DataMigration"; 
-import StudentsImport from "@/pages/school/StudentsImport";
-import SchoolsMap from "@/pages/schools/SchoolsMap";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import Schools from './pages/Schools';
+import NewSchool from './pages/NewSchool';
+import SchoolDetails from './pages/SchoolDetails';
+import SchoolsMap from './pages/SchoolsMap';
+import SchoolInvites from './pages/schools/SchoolInvites';
+import StudentsImport from './pages/StudentsImport';
+import Tablets from './pages/Tablets';
+import NewTablet from './pages/NewTablet';
+import TabletDetails from './pages/TabletDetails';
+import DeviceAlerts from './pages/DeviceAlerts';
+import Payments from './pages/Payments';
+import Canteen from './pages/Canteen';
+import FinancialReports from './pages/FinancialReports';
+import Settings from './pages/Settings';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <AuthProvider>
+      <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/access-denied" element={<AccessDenied />} />
-          
-          {/* Protected routes inside main layout */}
-          <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            
-            {/* Schools */}
-            <Route path="/schools" element={<SchoolsPage />} />
-            <Route path="/schools/map" element={<SchoolsMap />} />
-            <Route path="/schools/students-import" element={<StudentsImport />} />
-            
-            {/* Students */}
-            <Route path="/students" element={<Students />} />
-            <Route path="/students/:studentId" element={<StudentDetails />} />
-            <Route path="/students/:studentId/edit" element={<StudentEdit />} />
-            
-            {/* Vendors */}
-            <Route path="/vendors" element={<VendorsPage />} />
-            
-            {/* Devices */}
-            <Route path="/devices" element={<DevicesPage />} />
-            <Route path="/devices/:deviceId" element={<DeviceDetails />} />
-            
-            {/* Transactions */}
-            <Route path="/transactions" element={<Transactions />} />
-            
-            {/* Financial */}
-            <Route path="/financial" element={<Financial />} />
-            <Route path="/financial/invoices" element={<Invoices />} />
-            <Route path="/financial/invoices/:invoiceId" element={<InvoiceDetails />} />
-            <Route path="/financial/invoices/create" element={<CreateInvoice />} />
-            <Route path="/financial/billing" element={<Billing />} />
-            <Route path="/financial/billing/:billingId" element={<BillingDetails />} />
-            
-            {/* Reports */}
-            <Route path="/reports/financial" element={<FinancialReports />} />
-            
-            {/* Admin */}
-            <Route path="/admin/data-migration" element={<DataMigration />} />
-          </Route>
-          
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
+
+          {/* Protected Routes */}
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+
+          {/* Schools Routes */}
+          <Route path="/schools" element={<ProtectedRoute><Schools /></ProtectedRoute>} />
+          <Route path="/schools/new" element={<ProtectedRoute><NewSchool /></ProtectedRoute>} />
+          <Route path="/schools/map" element={<ProtectedRoute><SchoolsMap /></ProtectedRoute>} />
+          <Route path="/schools/invites" element={<ProtectedRoute><SchoolInvites /></ProtectedRoute>} />
+          <Route path="/schools/students-import" element={<ProtectedRoute><StudentsImport /></ProtectedRoute>} />
+          <Route path="/schools/:schoolId" element={<ProtectedRoute><SchoolDetails /></ProtectedRoute>} />
+
+          {/* Tablets Routes */}
+          <Route path="/tablets" element={<ProtectedRoute><Tablets /></ProtectedRoute>} />
+          <Route path="/tablets/new" element={<ProtectedRoute><NewTablet /></ProtectedRoute>} />
+          <Route path="/tablets/:tabletId" element={<ProtectedRoute><TabletDetails /></ProtectedRoute>} />
+
+          {/* Device Alerts Route */}
+          <Route path="/device-alerts" element={<ProtectedRoute><DeviceAlerts /></ProtectedRoute>} />
+
+          {/* Payments Route */}
+          <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+
+          {/* Canteen Route */}
+          <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
+
+          {/* Financial Reports Route */}
+          <Route path="/financial-reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
+
+          {/* Settings Route */}
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
-        
-        <Toaster />
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 
