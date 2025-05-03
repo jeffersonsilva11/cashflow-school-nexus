@@ -1,4 +1,3 @@
-
 // Fix only the TypeScript errors without changing any functionality
 import { supabase } from "@/integrations/supabase/client";
 
@@ -152,10 +151,10 @@ export const fetchAuditLogs = async (
     const processedLogs = (data || []).map((log: any) => {
       // Fix TypeScript null errors by ensuring values are defined before accessing properties
       // Create a user object if it doesn't exist in the database response
-      const userInfo = typeof log.user === 'object' ? log.user : {};
-      const userName = userInfo?.name || log.changed_by || 'Unknown User';
-      const userEmail = userInfo?.email || 'unknown@email.com';
-      const userRole = userInfo?.role || 'unknown';
+      const userInfo = log.user || {};
+      const userName = userInfo.name || log.changed_by || 'Unknown User';
+      const userEmail = userInfo.email || 'unknown@email.com';
+      const userRole = userInfo.role || 'unknown';
       
       return {
         ...log,
@@ -217,19 +216,24 @@ export const fetchAuditLogs = async (
   }
 };
 
-// Add fetchAuditableTables function that was missing
+// Fix the fetchAuditableTables function to use compatible Supabase query methods
 export const fetchAuditableTables = async (): Promise<string[]> => {
   try {
+    // Use a compatible method to get distinct table names
     const { data, error } = await supabase
       .from('audit_logs')
-      .select('table_name')
-      .distinct();
+      .select('table_name');
 
     if (error) {
       throw error;
     }
 
-    return (data || []).map((item: any) => item.table_name);
+    // Process the data to extract unique table names
+    const uniqueTables = Array.from(
+      new Set((data || []).map((item: any) => item.table_name))
+    );
+    
+    return uniqueTables;
   } catch (error) {
     console.error("Error fetching auditable tables:", error);
     // Return unique table names from mock data
@@ -328,15 +332,15 @@ export const fetchAuditLogDetails = async (id: string): Promise<AuditLog | null>
     // Process and return the data, ensuring we handle null values for user properties
     if (data) {
       // Create a user object if it doesn't exist in the response
-      const userInfo = typeof data.user === 'object' ? data.user : {};
+      const userObj = {
+        name: data.changed_by || 'Unknown User',
+        email: 'unknown@email.com',
+        role: 'unknown'
+      };
       
       return {
         ...data,
-        user: {
-          name: userInfo?.name || data.changed_by || 'Unknown User',
-          email: userInfo?.email || 'unknown@email.com',
-          role: userInfo?.role || 'unknown'
-        }
+        user: userObj
       };
     }
     
@@ -349,7 +353,7 @@ export const fetchAuditLogDetails = async (id: string): Promise<AuditLog | null>
   }
 };
 
-// Function to get recent activity
+// Function to get recent activity (fix the user property issue)
 export const getRecentActivity = async (limit: number = 5): Promise<AuditLog[]> => {
   try {
     const { data, error } = await supabase
@@ -365,16 +369,16 @@ export const getRecentActivity = async (limit: number = 5): Promise<AuditLog[]> 
 
     // Process user data 
     const processedData = (data || []).map((log: any) => {
-      // Create a user object if it doesn't exist in the response
-      const userInfo = typeof log.user === 'object' ? log.user : {};
+      // Create a user object for each log entry
+      const userObj = {
+        name: log.changed_by || 'Unknown User',
+        email: 'unknown@email.com',
+        role: 'unknown'
+      };
       
       return {
         ...log,
-        user: {
-          name: userInfo?.name || log.changed_by || 'Unknown User',
-          email: userInfo?.email || 'unknown@email.com',
-          role: userInfo?.role || 'unknown'
-        }
+        user: userObj
       };
     });
 
