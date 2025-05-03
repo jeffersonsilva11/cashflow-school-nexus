@@ -1,4 +1,3 @@
-
 import { 
   Home, 
   Users, 
@@ -72,4 +71,90 @@ export const reportItems = [
 export const settingsItems = [
   { to: "/settings", icon: <Settings size={20} />, label: "Configurações" },
   { to: "/support", icon: <HelpCircle size={20} />, label: "Suporte" },
+];
+
+export const navigationItems = [
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    permission: "general",
+  },
+  {
+    title: "Escolas",
+    href: "/schools",
+    icon: <School className="h-5 w-5" />,
+    permission: "schools",
+  },
+  {
+    title: "Alunos",
+    href: "/students",
+    icon: <Users className="h-5 w-5" />,
+    permission: "students",
+  },
+  {
+    title: "Responsáveis",
+    href: "/parents",
+    icon: <User className="h-5 w-5" />,
+    permission: "parents",
+  },
+  {
+    title: "Dispositivos",
+    href: "/devices",
+    icon: <CreditCard className="h-5 w-5" />,
+    permission: "devices",
+  },
+  {
+    title: "Transações",
+    href: "/transactions",
+    icon: <Receipt className="h-5 w-5" />,
+    permission: "transactions",
+  },
+  {
+    title: "Financeiro",
+    href: "/financial",
+    icon: <DollarSign className="h-5 w-5" />,
+    permission: "financial",
+  },
+  {
+    title: "Cantinas",
+    href: "/vendors",
+    icon: <Store className="h-5 w-5" />,
+    permission: "vendors",
+  },
+  {
+    title: "Usuários",
+    href: "/users",
+    icon: <UserCog className="h-5 w-5" />,
+    permission: "users",
+  },
+  {
+    title: "Relatórios",
+    icon: <FileBarChart className="h-5 w-5" />,
+    permission: "reports",
+    children: [
+      {
+        title: "Relatórios Financeiros",
+        href: "/reports/financial",
+        icon: <FileSpreadsheet className="h-4 w-4" />,
+      },
+      {
+        title: "Uso de Dispositivos",
+        href: "/reports/device-usage",
+        icon: <FileBarChart className="h-4 w-4" />,
+      },
+    ],
+  },
+  {
+    title: "Segurança",
+    href: "/security-compliance",
+    icon: <Shield className="h-5 w-5" />,
+    permission: "admin",
+  },
+  {
+    title: "Configurações",
+    href: "/settings",
+    icon: <Settings className="h-5 w-5" />,
+    permission: "settings",
+  },
 ];

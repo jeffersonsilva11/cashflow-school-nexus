@@ -7,7 +7,13 @@ import {
   Calendar, 
   ArrowUpRight, 
   Search,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Filter,
+  CreditCard,
+  TrendingUp,
+  PieChart,
+  Users,
+  School
 } from 'lucide-react';
 import { 
   Card, 
@@ -33,7 +39,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import { 
   RevenueByPlanChart 
 } from '@/components/financial/RevenueByPlanChart';
@@ -48,12 +56,14 @@ import {
 import { formatCurrency } from '@/lib/format';
 import { SchoolUsageReport } from '@/components/reports/SchoolUsageReport';
 import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
+import { ConsumptionAnalysisReport } from '@/components/reports/ConsumptionAnalysisReport';
 
 export default function FinancialReports() {
   const { toast } = useToast();
   const [period, setPeriod] = useState('month');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Filtrar escolas pela busca
   const filteredSchools = schoolFinancials.filter(school => 
@@ -109,178 +119,230 @@ export default function FinancialReports() {
         </div>
       </div>
 
-      {/* Período e filtros */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="day">Hoje</SelectItem>
-            <SelectItem value="week">Esta Semana</SelectItem>
-            <SelectItem value="month">Este Mês</SelectItem>
-            <SelectItem value="quarter">Este Trimestre</SelectItem>
-            <SelectItem value="year">Este Ano</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Buscar escola..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-md grid-cols-3 mb-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <TrendingUp size={16} />
+            <span>Visão Geral</span>
+          </TabsTrigger>
+          <TabsTrigger value="schools" className="flex items-center gap-2">
+            <School size={16} />
+            <span>Escolas</span>
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <CreditCard size={16} />
+            <span>Transações</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Receita Total ({period === 'month' ? 'Mês' : period === 'year' ? 'Ano' : 'Período'})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(financialReports.overview.totalRevenueMonth)}
-            </div>
-            <div className="flex items-center text-xs text-green-600 mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>{financialReports.overview.growthRate}% em relação ao período anterior</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Assinaturas Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {subscriptions.filter(s => s.status === 'active').length}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {subscriptions.filter(s => s.status === 'past_due').length} em atraso
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Média de Receita por Escola
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(financialReports.overview.averageRevenuePerSchool)}
-            </div>
-            <div className="flex items-center text-xs text-green-600 mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>5.2% em relação ao período anterior</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Taxa de Renovação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              98.2%
-            </div>
-            <div className="text-xs text-green-600 mt-1">
-              <span>1.5% acima da meta</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="overview" className="space-y-6">
+          {/* Período e filtros */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Hoje</SelectItem>
+                <SelectItem value="week">Esta Semana</SelectItem>
+                <SelectItem value="month">Este Mês</SelectItem>
+                <SelectItem value="quarter">Este Trimestre</SelectItem>
+                <SelectItem value="year">Este Ano</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Tendência de Receita</CardTitle>
-            <CardDescription>Evolução da receita no período</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialTrendChart data={financialReports.monthlyTrend} />
-          </CardContent>
-        </Card>
-        
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Distribuição por Plano</CardTitle>
-            <CardDescription>Receita por tipo de plano</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RevenueByPlanChart data={financialReports.revenueByPlan} />
-            <div className="mt-4 space-y-3">
-              {financialReports.revenueByPlan.map((item) => (
-                <div key={item.plan} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="font-medium">{item.plan}</span>
-                  </div>
-                  <div className="font-medium">{formatCurrency(item.revenue)}</div>
+          {/* Cards de resumo */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Receita Total ({period === 'month' ? 'Mês' : period === 'year' ? 'Ano' : 'Período'})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(financialReports.overview.totalRevenueMonth)}
                 </div>
-              ))}
+                <div className="flex items-center text-xs text-green-600 mt-1">
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  <span>{financialReports.overview.growthRate}% em relação ao período anterior</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total de Assinaturas Ativas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {subscriptions.filter(s => s.status === 'active').length}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {subscriptions.filter(s => s.status === 'past_due').length} em atraso
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Média de Receita por Escola
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(financialReports.overview.averageRevenuePerSchool)}
+                </div>
+                <div className="flex items-center text-xs text-green-600 mt-1">
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  <span>5.2% em relação ao período anterior</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Taxa de Renovação
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  98.2%
+                </div>
+                <div className="text-xs text-green-600 mt-1">
+                  <span>1.5% acima da meta</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle>Tendência de Receita</CardTitle>
+                <CardDescription>Evolução da receita no período</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FinancialTrendChart data={financialReports.monthlyTrend} />
+              </CardContent>
+            </Card>
+            
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle>Distribuição por Plano</CardTitle>
+                <CardDescription>Receita por tipo de plano</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RevenueByPlanChart data={financialReports.revenueByPlan} />
+                <div className="mt-4 space-y-3">
+                  {financialReports.revenueByPlan.map((item) => (
+                    <div key={item.plan} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="font-medium">{item.plan}</span>
+                      </div>
+                      <div className="font-medium">{formatCurrency(item.revenue)}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Análise de Consumo */}
+          <ConsumptionAnalysisReport />
+        </TabsContent>
+
+        <TabsContent value="schools" className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Buscar escola..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Uso por escola */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Uso por Escola</CardTitle>
-          <CardDescription>Análise detalhada do uso do sistema por cada escola</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SchoolUsageReport schools={filteredSchools} />
-        </CardContent>
-      </Card>
-
-      {/* Transações diárias */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transações Diárias (Maio/2025)</CardTitle>
-          <CardDescription>Volume e valor das transações por dia</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Qtde. Transações</TableHead>
-                <TableHead>Volume Total</TableHead>
-                <TableHead>Ticket Médio</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dailyTransactions.slice(0, 10).map((day) => (
-                <TableRow key={day.date}>
-                  <TableCell>{new Date(day.date).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{day.transactions}</TableCell>
-                  <TableCell>{formatCurrency(day.amount)}</TableCell>
-                  <TableCell>{formatCurrency(day.amount / day.transactions)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="flex justify-end mt-4">
-            <Button variant="outline" size="sm">
-              Ver todos os dias
+            <Button variant="outline" className="gap-2">
+              <Filter size={16} />
+              Filtros
             </Button>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Uso por escola */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Uso por Escola</CardTitle>
+              <CardDescription>Análise detalhada do uso do sistema por cada escola</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SchoolUsageReport schools={filteredSchools} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transactions" className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Hoje</SelectItem>
+                <SelectItem value="week">Esta Semana</SelectItem>
+                <SelectItem value="month">Este Mês</SelectItem>
+                <SelectItem value="quarter">Este Trimestre</SelectItem>
+                <SelectItem value="year">Este Ano</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" className="gap-2">
+              <Calendar size={16} />
+              Selecionar Período
+            </Button>
+          </div>
+
+          {/* Transações diárias */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Transações Diárias (Maio/2025)</CardTitle>
+              <CardDescription>Volume e valor das transações por dia</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Qtde. Transações</TableHead>
+                    <TableHead>Volume Total</TableHead>
+                    <TableHead>Ticket Médio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dailyTransactions.slice(0, 10).map((day) => (
+                    <TableRow key={day.date}>
+                      <TableCell>{new Date(day.date).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>{day.transactions}</TableCell>
+                      <TableCell>{formatCurrency(day.amount)}</TableCell>
+                      <TableCell>{formatCurrency(day.amount / day.transactions)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="flex justify-end mt-4">
+                <Button variant="outline" size="sm">
+                  Ver todos os dias
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Modal de exportação */}
       <ExportDataDialog 
