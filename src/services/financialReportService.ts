@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
@@ -314,7 +313,7 @@ export async function generateMonthlyTrendReport(months = 4) {
   }
 }
 
-// Fixed type instantiation issue by removing recursive type structure
+// Define non-recursive types to avoid deep instantiation
 export type FinancialReportOverview = {
   totalActiveSchools: number;
   totalRevenueMonth: number;
@@ -335,6 +334,7 @@ export type MonthlyTrendItem = {
   revenue: number;
 };
 
+// Create a separate top-level type for the complete report
 export type FinancialReportComplete = {
   overview: FinancialReportOverview;
   revenueByPlan: RevenueByPlanItem[];
