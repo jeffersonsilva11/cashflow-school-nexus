@@ -14,6 +14,15 @@ interface DeviceChartsProps {
 }
 
 export const DeviceCharts = ({ deviceStats }: DeviceChartsProps) => {
+  // Mock data for device allocation by school
+  const schoolAllocationData = [
+    { name: 'Escola São Paulo', value: 1892 },
+    { name: 'Colégio Dom Bosco', value: 1456 },
+    { name: 'Instituto Futuro', value: 1245 },
+    { name: 'Escola Estadual Central', value: 987 },
+    { name: 'Colégio Santa Maria', value: 843 }
+  ];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -40,9 +49,10 @@ export const DeviceCharts = ({ deviceStats }: DeviceChartsProps) => {
           </div>
         </CardHeader>
         <CardContent className="pt-2">
-          <DeviceAllocationChart />
+          <DeviceAllocationChart data={schoolAllocationData} />
         </CardContent>
       </Card>
     </div>
   );
 };
+
