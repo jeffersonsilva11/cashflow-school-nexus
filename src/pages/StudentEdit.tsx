@@ -9,16 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowLeft, Save, User, School, UserRound } from 'lucide-react';
+import { ArrowLeft, Save, User, School, UserRound, MapPin, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { StudentCard } from '@/components/devices/StudentCard';
+import { ParentsMultiSelect, ParentOption } from '@/components/students/ParentsMultiSelect';
+import { Switch } from '@/components/ui/switch';
 
-// Definir o esquema de validação com Zod (igual ao do StudentForm)
+// Definir o esquema de validação com Zod
 const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   school: z.string().min(1, "Escola é obrigatória"),
   grade: z.string().min(1, "Turma é obrigatória"),
-  parentId: z.string().min(1, "Responsável é obrigatório"),
+  parentIds: z.array(z.string()).min(1, "Pelo menos um responsável deve ser selecionado"),
   dateOfBirth: z.string().refine(value => {
     const date = new Date(value);
     return !isNaN(date.getTime());
@@ -27,6 +29,9 @@ const studentSchema = z.object({
   }),
   documentId: z.string().optional(),
   notes: z.string().optional(),
+  geofencingEnabled: z.boolean().default(true),
+  geofencingRadius: z.number().min(50, "O raio mínimo é de 50 metros").max(500, "O raio máximo é de 500 metros").default(100),
+  notifyOnApproach: z.boolean().default(true),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -54,7 +59,7 @@ export default function StudentEdit() {
     '6º Ano B', '7º Ano B', '8º Ano B', '9º Ano B',
   ];
   
-  const parents = [
+  const parents: ParentOption[] = [
     { id: 'PAR001', name: 'José Silva', email: 'jose.silva@exemplo.com' },
     { id: 'PAR002', name: 'Maria Oliveira', email: 'maria.oliveira@exemplo.com' },
     { id: 'PAR003', name: 'Carlos Santos', email: 'carlos.santos@exemplo.com' },
@@ -69,26 +74,32 @@ export default function StudentEdit() {
       name: 'Maria Silva',
       grade: '9º Ano B',
       school: 'SCH001',
-      parentId: 'PAR001',
+      parentIds: ['PAR001', 'PAR003'],
       dateOfBirth: '2008-05-15',
       documentId: '123.456.789-00',
       notes: 'Alergia a amendoim',
       photo: 'https://i.pravatar.cc/150?img=5',
       status: 'active' as StatusType,
-      deviceStatus: 'active' as StatusType
+      deviceStatus: 'active' as StatusType,
+      geofencingEnabled: true,
+      geofencingRadius: 150,
+      notifyOnApproach: true
     },
     'STD00512': {
       id: 'STD00512',
       name: 'João Oliveira',
       grade: '7º Ano A',
       school: 'SCH001',
-      parentId: 'PAR002',
+      parentIds: ['PAR002'],
       dateOfBirth: '2010-03-22',
       documentId: '987.654.321-00',
       notes: '',
       photo: 'https://i.pravatar.cc/150?img=3',
       status: 'active' as StatusType,
-      deviceStatus: 'inactive' as StatusType
+      deviceStatus: 'inactive' as StatusType,
+      geofencingEnabled: false,
+      geofencingRadius: 100,
+      notifyOnApproach: false
     }
   };
   
@@ -98,10 +109,13 @@ export default function StudentEdit() {
       name: '',
       school: '',
       grade: '',
-      parentId: '',
+      parentIds: [],
       dateOfBirth: '',
       documentId: '',
       notes: '',
+      geofencingEnabled: true,
+      geofencingRadius: 100,
+      notifyOnApproach: true,
     },
   });
   
@@ -129,10 +143,13 @@ export default function StudentEdit() {
             name: student.name,
             school: student.school,
             grade: student.grade,
-            parentId: student.parentId,
+            parentIds: student.parentIds,
             dateOfBirth: student.dateOfBirth,
             documentId: student.documentId || '',
             notes: student.notes || '',
+            geofencingEnabled: student.geofencingEnabled,
+            geofencingRadius: student.geofencingRadius,
+            notifyOnApproach: student.notifyOnApproach,
           });
           
           setPreviewData({
@@ -186,6 +203,8 @@ export default function StudentEdit() {
     // Redireciona para a página de detalhes do aluno
     navigate(`/students/${studentId}`);
   };
+  
+  const geofencingEnabled = form.watch('geofencingEnabled');
   
   if (isLoading) {
     return (
@@ -370,37 +389,25 @@ export default function StudentEdit() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <UserRound className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle>Responsável</CardTitle>
+                    <CardTitle>Responsáveis</CardTitle>
                   </div>
                   <CardDescription>
-                    Responsável legal pelo aluno
+                    Responsáveis legais pelo aluno
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="parentId"
+                    name="parentIds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Responsável</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          value={field.value}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um responsável" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {parents.map(parent => (
-                              <SelectItem key={parent.id} value={parent.id}>
-                                {parent.name} ({parent.email})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Selecione um ou mais responsáveis</FormLabel>
+                        <ParentsMultiSelect
+                          options={parents}
+                          selectedValues={field.value}
+                          onChange={field.onChange}
+                          placeholder="Selecione os responsáveis"
+                        />
                         <FormDescription>
                           <Button 
                             variant="link" 
@@ -415,6 +422,98 @@ export default function StudentEdit() {
                       </FormItem>
                     )}
                   />
+                </CardContent>
+              </Card>
+              
+              <Card className="mt-6">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle>Geolocalização</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Configurações da cerca eletrônica para detecção de aproximação dos responsáveis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="geofencingEnabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Ativar Cerca Eletrônica</FormLabel>
+                          <FormDescription>
+                            Detectar quando o responsável se aproxima da escola
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {geofencingEnabled && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="geofencingRadius"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Raio de detecção (metros)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={50}
+                                max={500}
+                                value={field.value}
+                                onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 100)}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Distância em metros da escola para detecção da aproximação
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="notifyOnApproach"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">Notificar na aproximação</FormLabel>
+                              <FormDescription>
+                                Enviar notificação para a escola quando o responsável estiver próximo
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-md flex gap-2 items-start">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-amber-800">
+                          <p className="font-medium">Informação Importante</p>
+                          <p>A funcionalidade de cerca eletrônica depende do aplicativo do responsável. 
+                          O responsável precisa ter o aplicativo instalado e autorizar o compartilhamento de localização 
+                          para que a detecção de aproximação funcione corretamente.</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
               
