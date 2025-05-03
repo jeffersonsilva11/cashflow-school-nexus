@@ -1,3 +1,4 @@
+
 // Fix only the TypeScript errors without changing any functionality
 import { supabase } from "@/integrations/supabase/client";
 
@@ -110,20 +111,24 @@ export interface AuditLogFilters {
   dateRange?: { from: Date | null; to: Date | null };
 }
 
-// fetchAuditLogs function
-export const fetchAuditLogs = async (filters?: AuditLogFilters) => {
+// fetchAuditLogs function with pagination support
+export const fetchAuditLogs = async (
+  page: number = 0, 
+  pageSize: number = 20, 
+  filters?: AuditLogFilters
+) => {
   try {
-    let query = supabase.from('audit_logs').select('*');
+    let query = supabase.from('audit_logs').select('*', { count: 'exact' });
 
     if (filters?.searchTerm) {
       query = query.ilike('record_id', `%${filters.searchTerm}%`);
     }
 
-    if (filters?.actionType) {
+    if (filters?.actionType && filters.actionType !== 'all') {
       query = query.eq('action', filters.actionType);
     }
 
-    if (filters?.tableName) {
+    if (filters?.tableName && filters.tableName !== 'all') {
       query = query.eq('table_name', filters.tableName);
     }
 
@@ -132,18 +137,25 @@ export const fetchAuditLogs = async (filters?: AuditLogFilters) => {
       query = query.lte('changed_at', filters.dateRange.to.toISOString());
     }
 
-    const { data, error } = await query;
+    // Add pagination
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
 
     if (error) {
       throw error;
     }
     
     // Handle fetched data
-    const processedLogs = data.map((log: any) => {
+    const processedLogs = (data || []).map((log: any) => {
       // Fix TypeScript null errors by ensuring values are defined before accessing properties
-      const userName = log.user?.name || 'Unknown User';
-      const userEmail = log.user?.email || 'unknown@email.com';
-      const userRole = log.user?.role || 'unknown';
+      // Create a user object if it doesn't exist in the database response
+      const userInfo = typeof log.user === 'object' ? log.user : {};
+      const userName = userInfo?.name || log.changed_by || 'Unknown User';
+      const userEmail = userInfo?.email || 'unknown@email.com';
+      const userRole = userInfo?.role || 'unknown';
       
       return {
         ...log,
@@ -157,12 +169,15 @@ export const fetchAuditLogs = async (filters?: AuditLogFilters) => {
     });
 
     console.log("Processed audit logs:", processedLogs);
-    return processedLogs;
+    return {
+      data: processedLogs,
+      count: count || processedLogs.length
+    };
 
   } catch (error) {
     console.error("Error fetching audit logs:", error);
     // Return mock data in development or when there's an error
-    return mockAuditLogs.filter((log) => {
+    const filteredMockLogs = mockAuditLogs.filter((log) => {
       if (filters?.searchTerm) {
         const searchTermLower = filters.searchTerm.toLowerCase();
         if (
@@ -173,10 +188,10 @@ export const fetchAuditLogs = async (filters?: AuditLogFilters) => {
           return false;
         }
       }
-      if (filters?.actionType && log.action !== filters.actionType) {
+      if (filters?.actionType && filters.actionType !== 'all' && log.action !== filters.actionType) {
         return false;
       }
-      if (filters?.tableName && log.table_name !== filters.tableName) {
+      if (filters?.tableName && filters.tableName !== 'all' && log.table_name !== filters.tableName) {
         return false;
       }
       if (filters?.dateRange?.from && filters?.dateRange?.to) {
@@ -187,6 +202,41 @@ export const fetchAuditLogs = async (filters?: AuditLogFilters) => {
       }
       return true;
     });
+
+    // Apply pagination to mock data
+    const page = 0;
+    const pageSize = 20;
+    const from = page * pageSize;
+    const to = from + pageSize;
+    const paginatedMockLogs = filteredMockLogs.slice(from, to);
+
+    return {
+      data: paginatedMockLogs,
+      count: filteredMockLogs.length
+    };
+  }
+};
+
+// Add fetchAuditableTables function that was missing
+export const fetchAuditableTables = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('table_name')
+      .distinct();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((item: any) => item.table_name);
+  } catch (error) {
+    console.error("Error fetching auditable tables:", error);
+    // Return unique table names from mock data
+    const uniqueTables = Array.from(
+      new Set(mockAuditLogs.map(log => log.table_name))
+    );
+    return uniqueTables;
   }
 };
 
@@ -211,9 +261,6 @@ export const createAuditLog = async (
         ip_address: ipAddress,
         old_data: oldData,
         new_data: newData,
-        user: {
-          id: userId,
-        },
       },
     ]);
 
@@ -280,17 +327,15 @@ export const fetchAuditLogDetails = async (id: string): Promise<AuditLog | null>
     
     // Process and return the data, ensuring we handle null values for user properties
     if (data) {
-      // Fix TypeScript null errors by ensuring values are defined before accessing properties
-      const userName = data.user?.name || 'Unknown User';
-      const userEmail = data.user?.email || 'unknown@email.com';
-      const userRole = data.user?.role || 'unknown';
+      // Create a user object if it doesn't exist in the response
+      const userInfo = typeof data.user === 'object' ? data.user : {};
       
       return {
         ...data,
         user: {
-          name: userName,
-          email: userEmail,
-          role: userRole
+          name: userInfo?.name || data.changed_by || 'Unknown User',
+          email: userInfo?.email || 'unknown@email.com',
+          role: userInfo?.role || 'unknown'
         }
       };
     }
@@ -318,9 +363,24 @@ export const getRecentActivity = async (limit: number = 5): Promise<AuditLog[]> 
       return [];
     }
 
-    return data as AuditLog[];
+    // Process user data 
+    const processedData = (data || []).map((log: any) => {
+      // Create a user object if it doesn't exist in the response
+      const userInfo = typeof log.user === 'object' ? log.user : {};
+      
+      return {
+        ...log,
+        user: {
+          name: userInfo?.name || log.changed_by || 'Unknown User',
+          email: userInfo?.email || 'unknown@email.com',
+          role: userInfo?.role || 'unknown'
+        }
+      };
+    });
+
+    return processedData;
   } catch (error) {
     console.error("Error fetching recent activity:", error);
-    return [];
+    return mockAuditLogs.slice(0, limit);
   }
 };

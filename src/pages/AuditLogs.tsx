@@ -47,7 +47,11 @@ const AuditLogs = () => {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const response = await fetchAuditLogs(page, pageSize, filters);
+      const response = await fetchAuditLogs(page, pageSize, {
+        tableName: filters.table !== 'all' ? filters.table : undefined,
+        actionType: filters.action !== 'all' ? filters.action : undefined,
+        searchTerm: filters.searchTerm || undefined
+      });
       setLogs(response.data);
       setTotalCount(response.count);
     } catch (error) {
@@ -102,11 +106,18 @@ const AuditLogs = () => {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'INSERT':
+      case 'create':
         return <Badge className="bg-green-600">Inserção</Badge>;
       case 'UPDATE':
+      case 'update':
         return <Badge className="bg-blue-600">Atualização</Badge>;
       case 'DELETE':
+      case 'delete':
         return <Badge className="bg-red-600">Exclusão</Badge>;
+      case 'login':
+        return <Badge className="bg-purple-600">Login</Badge>;
+      case 'logout':
+        return <Badge className="bg-orange-600">Logout</Badge>;
       default:
         return <Badge>{action}</Badge>;
     }
@@ -178,6 +189,8 @@ const AuditLogs = () => {
                   <SelectItem value="INSERT">Inserção</SelectItem>
                   <SelectItem value="UPDATE">Atualização</SelectItem>
                   <SelectItem value="DELETE">Exclusão</SelectItem>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="logout">Logout</SelectItem>
                 </SelectContent>
               </Select>
               
