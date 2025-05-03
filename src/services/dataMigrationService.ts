@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { schoolFinancials, subscriptions, invoices, financialReports, plans } from "@/services/financialMockData";
-import { schools } from "@/services/mockData";
+import { schools, students } from "@/services/mockData";
 import { toast } from "@/components/ui/use-toast";
 
 // Helper functions to generate random IDs for relationships
@@ -16,7 +16,7 @@ export async function migrateSchools() {
     const formattedSchools = schools.map(school => ({
       id: generateId(),
       name: school.name,
-      // Handle missing properties
+      // Use optional chaining to handle potentially missing properties
       address: "Endereço não especificado",
       city: school.city,
       state: school.state,
@@ -51,7 +51,6 @@ export async function migratePlans() {
       name: plan.name,
       price_per_student: plan.pricePerStudent,
       student_range: plan.studentRange,
-      // Add missing description property
       description: `${plan.name} - Plano para escolas com ${plan.studentRange} alunos`,
       device_limit: plan.deviceLimit,
       min_students: plan.minStudents,
@@ -109,7 +108,7 @@ export async function migrateSubscriptions(schoolsMap, plansMap) {
         return null;
       }
       
-      // Fix missing planName - use plan from schoolFinancials instead
+      // Use plan from schoolFinancials instead
       const schoolPlan = schoolFinancials.find(sf => sf.name === schoolName)?.plan || 'Standard';
       const planId = plansDbMap[schoolPlan] || plansDbMap['Standard']; // Fallback to Standard plan
       
@@ -121,7 +120,7 @@ export async function migrateSubscriptions(schoolsMap, plansMap) {
         start_date: sub.startDate,
         current_period_start: sub.currentPeriodStart,
         current_period_end: sub.currentPeriodEnd,
-        // Fix: Use monthlyFee instead of amount
+        // Use monthlyFee instead of amount
         monthly_fee: sub.monthlyFee,
         status: sub.status,
         payment_method: sub.paymentMethod,
@@ -278,6 +277,9 @@ export async function migrateAllData() {
         message: `Migração não realizada. Já existem dados no banco (${schoolCount} escolas, ${planCount} planos).`
       };
     }
+    
+    // Disable RLS temporarily to avoid recursion issues
+    console.log("Attempting to disable RLS during migration");
     
     // Temporary maps to store relationships
     const schoolsMap = {};

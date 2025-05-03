@@ -250,7 +250,7 @@ export async function createTransaction(transaction: Omit<Transaction, 'id'>) {
     
     const { data, error } = await supabase
       .from('transactions')
-      .insert(formattedTransaction)
+      .insert(formattedTransaction as any)
       .select()
       .single();
     
