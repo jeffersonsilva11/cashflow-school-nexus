@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
-// Define types
+// Define basic types
 export type FinancialReport = {
   id: string;
   report_type: string;
@@ -313,33 +314,33 @@ export async function generateMonthlyTrendReport(months = 4) {
   }
 }
 
-// Define non-recursive types to avoid deep instantiation
-export type FinancialReportOverview = {
+// Define completely separate types to avoid any circular references
+export interface FinancialReportOverview {
   totalActiveSchools: number;
   totalRevenueMonth: number;
   totalActiveSubscriptions: number;
   totalPendingPayments: number;
   averageRevenuePerSchool: number;
   growthRate: number;
-};
+}
 
-export type RevenueByPlanItem = {
+export interface RevenueByPlanItem {
   plan: string;
   revenue: number;
   percentage: number;
-};
+}
 
-export type MonthlyTrendItem = {
+export interface MonthlyTrendItem {
   month: string;
   revenue: number;
-};
+}
 
-// Create a separate top-level type for the complete report
-export type FinancialReportComplete = {
+// Define a completely separate type for the complete report
+export interface FinancialReportComplete {
   overview: FinancialReportOverview;
   revenueByPlan: RevenueByPlanItem[];
   monthlyTrend: MonthlyTrendItem[];
-};
+}
 
 // Generate a complete financial report
 export async function generateCompleteFinancialReport(): Promise<FinancialReportComplete> {
