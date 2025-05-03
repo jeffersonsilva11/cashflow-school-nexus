@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
@@ -13,6 +14,34 @@ export type FinancialReport = {
   created_at?: string;
   updated_at?: string;
 };
+
+// Define primitive data types first to avoid circular references
+export interface FinancialReportOverviewData {
+  totalActiveSchools: number;
+  totalRevenueMonth: number;
+  totalActiveSubscriptions: number;
+  totalPendingPayments: number;
+  averageRevenuePerSchool: number;
+  growthRate: number;
+}
+
+export interface RevenueByPlanItemData {
+  plan: string;
+  revenue: number;
+  percentage: number;
+}
+
+export interface MonthlyTrendItemData {
+  month: string;
+  revenue: number;
+}
+
+// Define the comprehensive report interface using the primitive types
+export interface FinancialReportCompleteData {
+  overview: FinancialReportOverviewData;
+  revenueByPlan: RevenueByPlanItemData[];
+  monthlyTrend: MonthlyTrendItemData[];
+}
 
 // Fetch all financial reports
 export async function fetchFinancialReports() {
@@ -123,7 +152,7 @@ export async function deleteFinancialReport(id: string) {
 }
 
 // Generate financial overview report
-export async function generateFinancialOverviewReport() {
+export async function generateFinancialOverviewReport(): Promise<FinancialReportOverviewData> {
   try {
     // Get active schools count
     const { count: totalActiveSchools, error: schoolsError } = await supabase
@@ -204,7 +233,7 @@ export async function generateFinancialOverviewReport() {
 }
 
 // Generate revenue by plan report
-export async function generateRevenueByPlanReport() {
+export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemData[]> {
   try {
     // Get all plans
     const { data: plans, error: plansError } = await supabase
@@ -272,7 +301,7 @@ export async function generateRevenueByPlanReport() {
 }
 
 // Generate monthly trend report
-export async function generateMonthlyTrendReport(months = 4) {
+export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTrendItemData[]> {
   try {
     const result = [];
     const currentDate = new Date();
@@ -311,34 +340,6 @@ export async function generateMonthlyTrendReport(months = 4) {
     console.error("Error generating monthly trend report:", error);
     throw error;
   }
-}
-
-// Define base interfaces first to avoid circular references
-export interface FinancialReportOverviewData {
-  totalActiveSchools: number;
-  totalRevenueMonth: number;
-  totalActiveSubscriptions: number;
-  totalPendingPayments: number;
-  averageRevenuePerSchool: number;
-  growthRate: number;
-}
-
-export interface RevenueByPlanItemData {
-  plan: string;
-  revenue: number;
-  percentage: number;
-}
-
-export interface MonthlyTrendItemData {
-  month: string;
-  revenue: number;
-}
-
-// Then define the comprehensive report type
-export interface FinancialReportCompleteData {
-  overview: FinancialReportOverviewData;
-  revenueByPlan: RevenueByPlanItemData[];
-  monthlyTrend: MonthlyTrendItemData[];
 }
 
 // Generate a complete financial report
