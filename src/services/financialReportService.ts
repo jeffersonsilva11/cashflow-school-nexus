@@ -57,7 +57,7 @@ export async function fetchLatestFinancialReport(type: string) {
       .eq('report_type', type)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (error) {
       if (error.code === 'PGRST116') { // No rows returned
@@ -296,7 +296,10 @@ export async function generateMonthlyTrendReport(months = 4) {
       
       const revenue = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
       
-      const month = monthDate.toLocaleString('pt-BR', { month: 'short' });
+      const month = monthDate.toLocaleString('pt-BR', {
+        month: 'short',
+        year: 'numeric'
+      });
       
       result.unshift({
         month,
@@ -311,8 +314,29 @@ export async function generateMonthlyTrendReport(months = 4) {
   }
 }
 
+// Fixed type instantiation issue by removing recursive type structure
+export type FinancialReportComplete = {
+  overview: {
+    totalActiveSchools: number;
+    totalRevenueMonth: number;
+    totalActiveSubscriptions: number;
+    totalPendingPayments: number;
+    averageRevenuePerSchool: number;
+    growthRate: number;
+  };
+  revenueByPlan: Array<{
+    plan: string;
+    revenue: number;
+    percentage: number;
+  }>;
+  monthlyTrend: Array<{
+    month: string;
+    revenue: number;
+  }>;
+};
+
 // Generate a complete financial report
-export async function generateCompleteFinancialReport() {
+export async function generateCompleteFinancialReport(): Promise<FinancialReportComplete> {
   try {
     const overview = await generateFinancialOverviewReport();
     const revenueByPlan = await generateRevenueByPlanReport();

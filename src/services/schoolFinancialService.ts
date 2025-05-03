@@ -13,7 +13,7 @@ export type SchoolFinancial = {
   activeDevices: number;
   lastPayment: string;
   status: 'active' | 'pending' | 'overdue';
-  totalRevenue?: number;
+  totalRevenue: number; // Change from optional to required
 };
 
 // Função para buscar os dados financeiros de todas as escolas

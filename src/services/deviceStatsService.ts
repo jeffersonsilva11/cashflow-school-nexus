@@ -2,8 +2,36 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
+// Define types
+export interface DeviceStatistics {
+  active: number;
+  inactive: number;
+  pending: number;
+  transit: number;
+  total: number;
+}
+
+export interface DeviceBatchData {
+  id: string;
+  name: string;
+  batch_id: string;
+  type: 'card' | 'wristband';
+  quantity: number;
+  available: number;
+  allocated: number;
+  date: string;
+}
+
+export interface UnallocatedDevice {
+  id: string;
+  serial_number: string;
+  device_type: string;
+  batch_id: string;
+  created_at: string;
+}
+
 // Get device statistics 
-export async function fetchDeviceStatistics() {
+export async function fetchDeviceStatistics(): Promise<DeviceStatistics> {
   try {
     // Count devices by status
     const { data: devices, error: devicesError } = await supabase
@@ -51,15 +79,61 @@ export async function fetchDeviceAllocationBySchool() {
         
         return {
           name: school.name,
-          devices: count || 0
+          value: count || 0  // Changed from 'devices' to 'value' to match component expectations
         };
       })
     );
     
     // Sort schools by number of devices in descending order
-    return schoolsWithDevices.sort((a, b) => b.devices - a.devices);
+    return schoolsWithDevices.sort((a, b) => b.value - a.value);
   } catch (error) {
     console.error("Error fetching device allocation by school:", error);
+    return [];
+  }
+}
+
+// Fetch recent device batches
+export async function fetchRecentBatches(): Promise<DeviceBatchData[]> {
+  try {
+    const { data, error } = await supabase
+      .from('device_batches')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    if (error) throw error;
+    
+    return data.map(batch => ({
+      id: batch.id,
+      name: batch.name,
+      batch_id: batch.batch_id,
+      type: batch.device_type as 'card' | 'wristband',
+      quantity: batch.quantity,
+      available: batch.available,
+      allocated: batch.allocated,
+      date: batch.created_at
+    }));
+  } catch (error) {
+    console.error("Error fetching recent batches:", error);
+    return [];
+  }
+}
+
+// Fetch unallocated devices
+export async function fetchUnallocatedDevices(): Promise<UnallocatedDevice[]> {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select('id, serial_number, device_type, batch_id, created_at')
+      .is('school_id', null)
+      .is('student_id', null)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error("Error fetching unallocated devices:", error);
     return [];
   }
 }
@@ -76,5 +150,27 @@ export function useDeviceAllocation() {
   return useQuery({
     queryKey: ['deviceAllocation'],
     queryFn: fetchDeviceAllocationBySchool,
+  });
+}
+
+// Add the missing hooks
+export function useDeviceStats() {
+  return useQuery({
+    queryKey: ['deviceStats'],
+    queryFn: fetchDeviceStatistics,
+  });
+}
+
+export function useRecentBatches() {
+  return useQuery({
+    queryKey: ['recentBatches'],
+    queryFn: fetchRecentBatches,
+  });
+}
+
+export function useUnallocatedDevices() {
+  return useQuery({
+    queryKey: ['unallocatedDevices'],
+    queryFn: fetchUnallocatedDevices,
   });
 }

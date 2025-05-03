@@ -33,8 +33,9 @@ export type TransactionTypeData = {
 async function calculateGrowthRate(table: string, currentPeriodStart: Date, previousPeriodStart: Date) {
   try {
     // Get current period count
+    // Fix: Use type assertion to work with TypeScript constraints
     const { count: currentCount, error: currentError } = await supabase
-      .from(table)
+      .from(table as any)
       .select('*', { count: 'exact', head: true })
       .gte('created_at', currentPeriodStart.toISOString());
     
@@ -42,7 +43,7 @@ async function calculateGrowthRate(table: string, currentPeriodStart: Date, prev
     
     // Get previous period count
     const { count: previousCount, error: previousError } = await supabase
-      .from(table)
+      .from(table as any)
       .select('*', { count: 'exact', head: true })
       .gte('created_at', previousPeriodStart.toISOString())
       .lt('created_at', currentPeriodStart.toISOString());
