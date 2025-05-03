@@ -41,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DateRange } from 'react-day-picker';
 
 export default function Transactions() {
   // Pagination state
@@ -51,10 +52,10 @@ export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionType, setTransactionType] = useState('all');
   const [vendorType, setVendorType] = useState('all');
-  const [dateRange, setDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: undefined,
+    to: undefined
+  });
 
   // Apply filters
   const { data: transactionsData, isLoading, isError } = useTransactions(
@@ -125,7 +126,7 @@ export default function Transactions() {
     setSearchTerm('');
     setTransactionType('all');
     setVendorType('all');
-    setDateRange({});
+    setDateRange({ from: undefined, to: undefined });
   };
 
   // Generate pagination items
@@ -301,7 +302,7 @@ export default function Transactions() {
                     <Calendar
                       mode="range"
                       selected={dateRange}
-                      onSelect={setDateRange}
+                      onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
                       locale={ptBR}
                       initialFocus
                     />
@@ -388,7 +389,7 @@ export default function Transactions() {
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 0}
+                        className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
                       />
                     </PaginationItem>
                     
@@ -397,7 +398,7 @@ export default function Transactions() {
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => currentPage < pageCount - 1 && handlePageChange(currentPage + 1)}
-                        disabled={currentPage >= pageCount - 1}
+                        className={currentPage >= pageCount - 1 ? "pointer-events-none opacity-50" : ""}
                       />
                     </PaginationItem>
                   </PaginationContent>

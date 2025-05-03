@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { schoolFinancials, subscriptions, invoices, financialReports, plans } from "@/services/financialMockData";
-import { schools, students } from "@/services/mockData";
+import { schools } from "@/services/mockData";
 import { toast } from "@/components/ui/use-toast";
 
 // Helper functions to generate random IDs for relationships
@@ -16,12 +16,13 @@ export async function migrateSchools() {
     const formattedSchools = schools.map(school => ({
       id: generateId(),
       name: school.name,
-      address: school.address,
+      // Handle missing properties
+      address: "Endereço não especificado",
       city: school.city,
       state: school.state,
-      zipcode: school.zipCode,
-      phone: school.phone,
-      email: school.email || `contact@${school.name.toLowerCase().replace(/\s+/g, '')}.edu.br`,
+      zipcode: "00000-000", // Default value
+      phone: "Não especificado",
+      email: `contact@${school.name.toLowerCase().replace(/\s+/g, '')}.edu.br`,
       subscription_status: 'active', // Default status
       subscription_plan: schoolFinancials.find(sf => sf.name === school.name)?.plan.toLowerCase() || 'basic',
       active: true
@@ -50,7 +51,8 @@ export async function migratePlans() {
       name: plan.name,
       price_per_student: plan.pricePerStudent,
       student_range: plan.studentRange,
-      description: plan.description,
+      // Add missing description property
+      description: `${plan.name} - Plano para escolas com ${plan.studentRange} alunos`,
       device_limit: plan.deviceLimit,
       min_students: plan.minStudents,
       max_students: plan.maxStudents,
@@ -107,7 +109,9 @@ export async function migrateSubscriptions(schoolsMap, plansMap) {
         return null;
       }
       
-      const planId = plansDbMap[sub.planName] || plansDbMap['Standard']; // Fallback to Standard plan
+      // Fix missing planName - use plan from schoolFinancials instead
+      const schoolPlan = schoolFinancials.find(sf => sf.name === schoolName)?.plan || 'Standard';
+      const planId = plansDbMap[schoolPlan] || plansDbMap['Standard']; // Fallback to Standard plan
       
       return {
         id: generateId(),
@@ -117,7 +121,8 @@ export async function migrateSubscriptions(schoolsMap, plansMap) {
         start_date: sub.startDate,
         current_period_start: sub.currentPeriodStart,
         current_period_end: sub.currentPeriodEnd,
-        monthly_fee: sub.amount,
+        // Fix: Use monthlyFee instead of amount
+        monthly_fee: sub.monthlyFee,
         status: sub.status,
         payment_method: sub.paymentMethod,
         auto_renew: true
@@ -326,7 +331,7 @@ export function useMigrateData() {
           toast({
             title: "Migração não realizada",
             description: result.message,
-            variant: "warning"
+            variant: "destructive"
           });
         }
         return result;

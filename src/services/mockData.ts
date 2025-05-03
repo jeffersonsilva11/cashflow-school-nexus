@@ -1,4 +1,3 @@
-
 // Mock data for the cashless school system
 
 // 1. Schools data
@@ -193,4 +192,53 @@ export const users = [
     role: "Finance Admin",
     status: "pending",
   },
+];
+
+// Add students array that was missing
+export const students = [
+  {
+    id: "S0001",
+    name: "João Silva",
+    school_id: "1",
+    grade: "9º ano",
+    date_of_birth: "2010-05-15",
+    document_id: "123.456.789-00",
+    active: true
+  },
+  {
+    id: "S0002",
+    name: "Maria Oliveira",
+    school_id: "2",
+    grade: "7º ano",
+    date_of_birth: "2012-08-22",
+    document_id: "234.567.890-11",
+    active: true
+  },
+  {
+    id: "S0003",
+    name: "Pedro Santos",
+    school_id: "3",
+    grade: "5º ano",
+    date_of_birth: "2014-02-10",
+    document_id: "345.678.901-22",
+    active: true
+  },
+  {
+    id: "S0004",
+    name: "Ana Costa",
+    school_id: "4",
+    grade: "3º ano",
+    date_of_birth: "2016-11-05",
+    document_id: "456.789.012-33",
+    active: true
+  },
+  {
+    id: "S0005",
+    name: "Lucas Almeida",
+    school_id: "1",
+    grade: "8º ano",
+    date_of_birth: "2011-07-30",
+    document_id: "567.890.123-44",
+    active: true
+  }
 ];

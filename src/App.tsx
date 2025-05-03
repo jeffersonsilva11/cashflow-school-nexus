@@ -8,7 +8,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import AccessDenied from "@/pages/AccessDenied";
 import SchoolsPage from "@/pages/Schools";
-import SchoolDetails from "@/pages/SchoolDetails";
 import VendorsPage from "@/pages/Vendors";
 import DevicesPage from "@/pages/Devices";
 import DeviceDetails from "@/pages/DeviceDetails";
@@ -22,10 +21,9 @@ import InvoiceDetails from "@/pages/financial/InvoiceDetails";
 import CreateInvoice from "@/pages/financial/CreateInvoice";
 import Billing from "@/pages/financial/Billing";
 import BillingDetails from "@/pages/financial/BillingDetails";
-import Reports from "@/pages/reports/Reports";
 import FinancialReports from "@/pages/reports/FinancialReports";
 import { Toaster } from "@/components/ui/toaster";
-import DataMigration from "@/pages/admin/DataMigration"; // Import the new page
+import DataMigration from "@/pages/admin/DataMigration"; 
 
 function App() {
   return (
@@ -42,7 +40,6 @@ function App() {
             
             {/* Schools */}
             <Route path="/schools" element={<SchoolsPage />} />
-            <Route path="/schools/:schoolId" element={<SchoolDetails />} />
             
             {/* Students */}
             <Route path="/students" element={<Students />} />
@@ -68,7 +65,6 @@ function App() {
             <Route path="/financial/billing/:billingId" element={<BillingDetails />} />
             
             {/* Reports */}
-            <Route path="/reports" element={<Reports />} />
             <Route path="/reports/financial" element={<FinancialReports />} />
             
             {/* Admin */}

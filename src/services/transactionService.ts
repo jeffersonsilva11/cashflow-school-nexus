@@ -240,9 +240,17 @@ export async function fetchTransactions(
 // Create a transaction
 export async function createTransaction(transaction: Omit<Transaction, 'id'>) {
   try {
+    // Convert Date objects to ISO strings if present
+    const formattedTransaction = {
+      ...transaction,
+      transaction_date: transaction.transaction_date instanceof Date 
+        ? transaction.transaction_date.toISOString() 
+        : transaction.transaction_date
+    };
+    
     const { data, error } = await supabase
       .from('transactions')
-      .insert(transaction)
+      .insert(formattedTransaction)
       .select()
       .single();
     
