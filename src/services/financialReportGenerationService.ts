@@ -129,15 +129,24 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
       firstDayOfMonth.setDate(1);
       firstDayOfMonth.setHours(0, 0, 0, 0);
       
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('amount')
-        .in('school_id', schoolIds)
-        .gte('transaction_date', firstDayOfMonth.toISOString());
+      // Using a safer approach that doesn't trigger deep instantiation
+      let revenue = 0;
       
-      if (transactionsError) throw transactionsError;
-      
-      const revenue = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
+      if (schoolIds.length > 0) {
+        const { data: transactions, error: transactionsError } = await supabase
+          .from('transactions')
+          .select('amount')
+          .in('school_id', schoolIds)
+          .gte('transaction_date', firstDayOfMonth.toISOString());
+        
+        if (transactionsError) throw transactionsError;
+        
+        if (transactions) {
+          for (const tx of transactions) {
+            revenue += (tx.amount || 0);
+          }
+        }
+      }
       
       revenueByPlanData.push({
         plan: plan.name,
