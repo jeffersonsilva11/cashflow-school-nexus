@@ -11,17 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavItem, NavGroup } from './NavComponents';
 import { 
-  dashboardItems, 
-  schoolItems, 
-  userItems, 
-  financeItems,
-  deviceItems, 
-  reportItems,
-  settingsItems 
+  mainNavItems,
+  financialNavItems,
+  reportsAndAdminItems
 } from './NavigationItems';
 
 type SidebarProps = {
@@ -60,85 +56,37 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
       <div className="mt-2 px-3 flex-1 overflow-y-auto">
         <nav className="space-y-2">
           <NavGroup title="Principal" sidebarOpen={sidebarOpen}>
-            {dashboardItems.map((item) => (
+            {mainNavItems.map((item) => (
               <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname === item.to}
-              />
-            ))}
-          </NavGroup>
-          
-          <NavGroup title="Gestão Escolar" sidebarOpen={sidebarOpen}>
-            {schoolItems.map((item) => (
-              <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
-              />
-            ))}
-          </NavGroup>
-          
-          <NavGroup title="Usuários" sidebarOpen={sidebarOpen}>
-            {userItems.map((item) => (
-              <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
+                key={item.href}
+                to={item.href}
+                icon={<item.icon size={20} />}
+                label={item.title}
+                active={location.pathname === item.href}
               />
             ))}
           </NavGroup>
           
           <NavGroup title="Financeiro" sidebarOpen={sidebarOpen}>
-            {financeItems.map((item) => (
+            {financialNavItems.map((item) => (
               <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
+                key={item.href}
+                to={item.href}
+                icon={<item.icon size={20} />}
+                label={item.title}
+                active={location.pathname.startsWith(item.href)}
               />
             ))}
           </NavGroup>
           
-          <NavGroup title="Dispositivos" sidebarOpen={sidebarOpen}>
-            {deviceItems.map((item) => (
+          <NavGroup title="Relatórios & Admin" sidebarOpen={sidebarOpen}>
+            {reportsAndAdminItems.map((item) => (
               <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
-              />
-            ))}
-          </NavGroup>
-          
-          <NavGroup title="Relatórios" sidebarOpen={sidebarOpen}>
-            {reportItems.map((item) => (
-              <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
-              />
-            ))}
-          </NavGroup>
-          
-          <NavGroup title="Sistema" sidebarOpen={sidebarOpen}>
-            {settingsItems.map((item) => (
-              <NavItem 
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                active={location.pathname.startsWith(item.to)}
+                key={item.href}
+                to={item.href}
+                icon={<item.icon size={20} />}
+                label={item.title}
+                active={location.pathname.startsWith(item.href)}
               />
             ))}
           </NavGroup>

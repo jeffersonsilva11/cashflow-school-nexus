@@ -2,11 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StatCard from "@/components/dashboard/StatCard";
-import TransactionTrendChart from "@/components/dashboard/TransactionTrendChart";
-import TransactionTypePieChart from "@/components/dashboard/TransactionTypePieChart";
-import TransactionsTable from "@/components/dashboard/TransactionsTable";
-import SchoolsTable from "@/components/dashboard/SchoolsTable";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { TransactionTrendChart } from "@/components/dashboard/TransactionTrendChart";
+import { TransactionTypePieChart } from "@/components/dashboard/TransactionTypePieChart";
+import { TransactionsTable } from "@/components/dashboard/TransactionsTable";
+import { SchoolsTable } from "@/components/dashboard/SchoolsTable";
 import TransactionsLogWidget from "@/components/financial/TransactionsLogWidget"; 
 import { useAuth } from "@/contexts/AuthContext";
 import { CreditCard, Users, School, DollarSign } from "lucide-react";

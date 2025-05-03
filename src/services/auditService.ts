@@ -57,9 +57,7 @@ export async function fetchAuditLogs(
     }
 
     if (filters.searchTerm) {
-      query = query.or(
-        `record_id.ilike.%${filters.searchTerm}%,table_name.ilike.%${filters.searchTerm}%`
-      );
+      query = query.or(`table_name.ilike.%${filters.searchTerm}%,record_id.ilike.%${filters.searchTerm}%`);
     }
 
     // Aplicar paginação
