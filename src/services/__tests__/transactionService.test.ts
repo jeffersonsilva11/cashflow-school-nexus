@@ -1,5 +1,7 @@
+
 import { createTransaction } from '../transactionService';
 import { supabase } from '@/integrations/supabase/client';
+import '@types/jest';
 
 // Mock the supabase client
 jest.mock('@/integrations/supabase/client', () => ({
