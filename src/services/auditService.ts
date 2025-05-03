@@ -76,9 +76,8 @@ export async function fetchAuditLogs(
     // Process data to make sure user is correctly formatted
     const processedData = data?.map(log => {
       // Need to check if user property has error or is undefined using a safe type check
-      // Correção: Use verificação de tipo mais segura e separada para evitar erros de nulidade
       const hasError = typeof log.user === 'object' && log.user !== null && 
-        ('error' in log.user || !('name' in log.user) || !('email' in log.user));
+        ('error' in log.user || !('name' in log.user && 'email' in log.user));
       
       if (hasError || !log.user) {
         return {
@@ -225,9 +224,8 @@ export async function fetchAuditLogDetails(logId: string) {
     }
     
     // Need a proper type check for the error property
-    // Correção: Use verificação de tipo mais segura e separada para evitar erros de nulidade
     const hasError = typeof data.user === 'object' && data.user !== null && 
-      ('error' in data.user || !('name' in data.user) || !('email' in data.user));
+      ('error' in data.user || !('name' in data.user && 'email' in data.user));
     
     if (hasError || !data.user) {
       return {
