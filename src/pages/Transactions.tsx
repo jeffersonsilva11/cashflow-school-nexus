@@ -1,6 +1,13 @@
 
 import React, { useState } from 'react';
-import { 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Table,
   TableBody,
   TableCell,
@@ -8,267 +15,402 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Search, MoreHorizontal, FileDown, Calendar } from 'lucide-react';
-import { recentTransactions } from '@/services/mockData';
-import { formatCurrency } from '@/lib/format';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { useTransactions } from "@/services/transactionService";
+import { CalendarIcon, FilterIcon, SearchIcon, XCircle } from 'lucide-react';
+import { formatCurrency, formatDateTime } from '@/lib/format';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedVendorType, setSelectedVendorType] = useState('all');
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 15;
 
-  // Generate more transactions for display purposes
-  const expandedTransactions = [
-    ...recentTransactions,
-    ...recentTransactions.map(t => ({...t, id: `T${parseInt(t.id.substring(1)) + 100}`})),
-    ...recentTransactions.map(t => ({...t, id: `T${parseInt(t.id.substring(1)) + 200}`})),
-  ];
-  
-  // Adicionar informações de terceirização a algumas transações para exemplo
-  const transactionsWithVendorInfo = expandedTransactions.map((t, index) => {
-    // Alterna entre própria e terceirizada
-    const isThirdParty = index % 4 === 0 || index % 5 === 0;
-    return {
-      ...t,
-      vendorType: isThirdParty ? 'third_party' : 'own',
-      vendorName: isThirdParty 
-        ? ['Cantina do João', 'Lanchonete Maria', 'Delícias Gourmet'][index % 3] 
-        : 'Cantina Escolar',
-    };
-  });
-  
-  const filteredTransactions = transactionsWithVendorInfo.filter(transaction => {
-    const matchesSearch = transaction.student.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                      transaction.school.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (transaction.vendorName && transaction.vendorName.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = selectedType === 'all' || transaction.type === selectedType;
-    
-    const matchesVendorType = selectedVendorType === 'all' || transaction.vendorType === selectedVendorType;
-    
-    return matchesSearch && matchesType && matchesVendorType;
-  });
-  
-  const getTypeBadge = (type: string) => {
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [transactionType, setTransactionType] = useState('all');
+  const [vendorType, setVendorType] = useState('all');
+  const [dateRange, setDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
+
+  // Apply filters
+  const { data: transactionsData, isLoading, isError } = useTransactions(
+    currentPage,
+    pageSize,
+    {
+      searchTerm,
+      type: transactionType !== 'all' ? transactionType : undefined,
+      vendorType: vendorType !== 'all' ? vendorType : undefined,
+      startDate: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+      endDate: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+    }
+  );
+
+  const transactions = transactionsData?.data || [];
+  const totalCount = transactionsData?.count || 0;
+  const pageCount = Math.ceil(totalCount / pageSize);
+
+  // Format transaction type for display
+  const formatTransactionType = (type: string) => {
     switch (type) {
       case 'purchase':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Compra</Badge>;
-      case 'reload':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Recarga</Badge>;
+        return 'Compra';
+      case 'topup':
+        return 'Recarga';
+      case 'refund':
+        return 'Estorno';
       default:
-        return <Badge>{type}</Badge>;
+        return type;
     }
   };
 
-  const getVendorBadge = (vendorType: string) => {
-    switch (vendorType) {
-      case 'third_party':
-        return <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">Terceirizado</Badge>;
+  // Format vendor type for display
+  const formatVendorType = (type: string) => {
+    switch (type) {
       case 'own':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">Próprio</Badge>;
+        return 'Próprio';
+      case 'third_party':
+        return 'Terceirizado';
       default:
-        return null;
+        return type;
     }
   };
-  
-  // Format date to display as readable format
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', { 
-      day: '2-digit', 
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }).format(date);
+
+  // Get status badge variant
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge variant="success">Concluído</Badge>;
+      case 'pending':
+        return <Badge variant="outline">Pendente</Badge>;
+      case 'failed':
+        return <Badge variant="destructive">Falhou</Badge>;
+      case 'refunded':
+        return <Badge variant="warning">Estornado</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
   };
-  
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setTransactionType('all');
+    setVendorType('all');
+    setDateRange({});
+  };
+
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+    
+    // Logic for showing ellipsis in pagination
+    if (pageCount <= maxVisiblePages) {
+      // Show all pages if there are fewer than maxVisiblePages
+      for (let i = 0; i < pageCount; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i + 1}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={0}>
+          <PaginationLink
+            isActive={currentPage === 0}
+            onClick={() => handlePageChange(0)}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Show ellipsis if current page is far from start
+      if (currentPage > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Show pages around current page
+      const startPage = Math.max(1, currentPage - 1);
+      const endPage = Math.min(pageCount - 2, currentPage + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i + 1}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+
+      // Show ellipsis if current page is far from end
+      if (currentPage < pageCount - 3) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Always show last page
+      if (pageCount > 1) {
+        items.push(
+          <PaginationItem key={pageCount - 1}>
+            <PaginationLink
+              isActive={currentPage === pageCount - 1}
+              onClick={() => handlePageChange(pageCount - 1)}
+            >
+              {pageCount}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   return (
-    <div className="animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
-          <p className="text-muted-foreground">Visualize e gerencie todas as transações do sistema.</p>
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Calendar size={16} />
-          Hoje
-        </Button>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col gap-2 mb-6">
+        <h1 className="text-2xl font-bold">Transações</h1>
+        <p className="text-muted-foreground">
+          Visualize e gerencie todas as transações do sistema
+        </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="stats-card">
-          <p className="stats-label">Total de Transações (Hoje)</p>
-          <p className="stats-value">1,458</p>
-          <p className="stats-change stats-change-positive">
-            <span>↑ 12.5% desde ontem</span>
-          </p>
-        </div>
-        
-        <div className="stats-card">
-          <p className="stats-label">Volume Financeiro (Hoje)</p>
-          <p className="stats-value">{formatCurrency(18452.75)}</p>
-          <p className="stats-change stats-change-positive">
-            <span>↑ 8.3% desde ontem</span>
-          </p>
-        </div>
-        
-        <div className="stats-card">
-          <p className="stats-label">Ticket Médio</p>
-          <p className="stats-value">{formatCurrency(12.65)}</p>
-          <p className="stats-change stats-change-negative">
-            <span>↓ 2.1% desde ontem</span>
-          </p>
-        </div>
-      </div>
-      
-      <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-        <div className="p-4 border-b flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Buscar transações..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Histórico de Transações</CardTitle>
+          <CardDescription>
+            Transações de compras, recargas e estornos realizadas na plataforma.
+          </CardDescription>
           
-          <div className="flex flex-wrap gap-2">
-            <Select
-              value={selectedType}
-              onValueChange={setSelectedType}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                <SelectItem value="purchase">Compra</SelectItem>
-                <SelectItem value="reload">Recarga</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={selectedVendorType}
-              onValueChange={setSelectedVendorType}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tipo de Cantina" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as cantinas</SelectItem>
-                <SelectItem value="own">Cantinas próprias</SelectItem>
-                <SelectItem value="third_party">Cantinas terceirizadas</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button variant="outline" size="icon">
-              <FileDown className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Aluno</TableHead>
-                <TableHead>Escola</TableHead>
-                <TableHead>Estabelecimento</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-mono text-sm">{transaction.id}</TableCell>
-                  <TableCell className="text-sm">{formatDate(transaction.date)}</TableCell>
-                  <TableCell className="font-medium">{transaction.student}</TableCell>
-                  <TableCell>{transaction.school}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {transaction.vendorName}
-                      {getVendorBadge(transaction.vendorType)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Abrir menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-                        <DropdownMenuItem>Imprimir comprovante</DropdownMenuItem>
-                        {transaction.type === 'purchase' && (
-                          <DropdownMenuItem className="text-red-500">
-                            Estornar
-                          </DropdownMenuItem>
-                        )}
-                        {transaction.vendorType === 'third_party' && (
-                          <DropdownMenuItem>
-                            Detalhes do estabelecimento
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {filteredTransactions.length === 0 && (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
+          <div className="flex flex-col md:flex-row items-end gap-4 mt-4">
+            <div className="w-full md:w-1/3">
+              <label className="text-sm font-medium mb-1 block">Buscar</label>
+              <div className="relative">
+                <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por aluno, transação..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          )}
-        </div>
+            
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Tipo de Transação</label>
+                <Select value={transactionType} onValueChange={setTransactionType}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="purchase">Compra</SelectItem>
+                    <SelectItem value="topup">Recarga</SelectItem>
+                    <SelectItem value="refund">Estorno</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Tipo de Estabelecimento</label>
+                <Select value={vendorType} onValueChange={setVendorType}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Estabelecimento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="own">Próprio</SelectItem>
+                    <SelectItem value="third_party">Terceirizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Período</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-[230px] justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, 'P', { locale: ptBR })} -{' '}
+                            {format(dateRange.to, 'P', { locale: ptBR })}
+                          </>
+                        ) : (
+                          format(dateRange.from, 'P', { locale: ptBR })
+                        )
+                      ) : (
+                        <span>Selecionar período</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      locale={ptBR}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="flex items-end">
+                <Button variant="ghost" onClick={clearFilters}>
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
         
-        <div className="p-4 border-t flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            Mostrando {filteredTransactions.length} de {transactionsWithVendorInfo.length} transações
-          </div>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled>
-              Anterior
-            </Button>
-            <Button variant="outline" size="sm">
-              Próxima
-            </Button>
-          </div>
-        </div>
-      </div>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-8 text-red-500">
+              <p>Erro ao carregar as transações. Tente novamente mais tarde.</p>
+            </div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Nenhuma transação encontrada.</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Aluno</TableHead>
+                      <TableHead>Estabelecimento</TableHead>
+                      <TableHead>Escola</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {formatDateTime(transaction.transaction_date)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {transaction.transaction_id}
+                        </TableCell>
+                        <TableCell>{transaction.student?.name || '—'}</TableCell>
+                        <TableCell>
+                          {transaction.vendor?.name || '—'}
+                          {transaction.vendor?.type && (
+                            <span className="text-xs text-muted-foreground block">
+                              {formatVendorType(transaction.vendor.type)}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>{transaction.student?.school?.name || '—'}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(transaction.amount)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {formatTransactionType(transaction.type)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(transaction.status)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div className="mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 0}
+                      />
+                    </PaginationItem>
+                    
+                    {renderPaginationItems()}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < pageCount - 1 && handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= pageCount - 1}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+                
+                <div className="text-center text-sm text-muted-foreground mt-2">
+                  Exibindo {transactions.length} de {totalCount} transações
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}

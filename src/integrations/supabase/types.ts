@@ -121,6 +121,99 @@ export type Database = {
           },
         ]
       }
+      financial_reports: {
+        Row: {
+          created_at: string
+          data: Json
+          end_date: string
+          id: string
+          period: string
+          report_type: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          end_date: string
+          id?: string
+          period: string
+          report_type: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          end_date?: string
+          id?: string
+          period?: string
+          report_type?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          invoice_id: string
+          issued_date: string
+          items: Json | null
+          paid_date: string | null
+          school_id: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          invoice_id: string
+          issued_date: string
+          items?: Json | null
+          paid_date?: string | null
+          school_id: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          invoice_id?: string
+          issued_date?: string
+          items?: Json | null
+          paid_date?: string | null
+          school_id?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_student: {
         Row: {
           created_at: string | null
@@ -426,6 +519,48 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          device_limit: number | null
+          features: Json | null
+          id: string
+          max_students: number | null
+          min_students: number | null
+          name: string
+          price_per_student: number
+          student_range: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          device_limit?: number | null
+          features?: Json | null
+          id?: string
+          max_students?: number | null
+          min_students?: number | null
+          name: string
+          price_per_student: number
+          student_range?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          device_limit?: number | null
+          features?: Json | null
+          id?: string
+          max_students?: number | null
+          min_students?: number | null
+          name?: string
+          price_per_student?: number
+          student_range?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -597,6 +732,69 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "students_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          monthly_fee: number
+          payment_method: string | null
+          plan_id: string
+          school_id: string
+          start_date: string
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          created_at?: string
+          current_period_end: string
+          current_period_start: string
+          id?: string
+          monthly_fee: number
+          payment_method?: string | null
+          plan_id: string
+          school_id: string
+          start_date: string
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          monthly_fee?: number
+          payment_method?: string | null
+          plan_id?: string
+          school_id?: string
+          start_date?: string
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"

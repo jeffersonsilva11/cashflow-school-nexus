@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { CreditCard } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
-import { Transaction, fetchDeviceTransactions } from '@/services/transactionService';
+import { Transaction, fetchDeviceTransactions, useDeviceTransactions } from '@/services/transactionService';
 
 interface DeviceTransactionsProps {
   deviceId?: string;
@@ -31,35 +30,22 @@ const formatDate = (date: Date | string) => {
 };
 
 export const DeviceTransactions = ({ deviceId, transactions: initialTransactions }: DeviceTransactionsProps) => {
+  const { data: fetchedTransactions, isLoading, error } = useDeviceTransactions(deviceId);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
+    // If initial transactions are provided, use them
     if (initialTransactions && initialTransactions.length > 0) {
       setTransactions(initialTransactions);
       return;
     }
-
-    const loadTransactions = async () => {
-      if (!deviceId) return;
-      
-      setLoading(true);
-      try {
-        const data = await fetchDeviceTransactions(deviceId);
-        setTransactions(data);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to load device transactions:", err);
-        setError("Não foi possível carregar as transações. Por favor, tente novamente.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTransactions();
-  }, [deviceId, initialTransactions]);
-
+    
+    // Otherwise use the fetched transactions
+    if (fetchedTransactions) {
+      setTransactions(fetchedTransactions);
+    }
+  }, [initialTransactions, fetchedTransactions]);
+  
   const hasTransactions = transactions.length > 0;
 
   // Dados de exemplo se não houver transações reais
@@ -100,9 +86,9 @@ export const DeviceTransactions = ({ deviceId, transactions: initialTransactions
   ];
 
   // Use transações reais ou mockadas
-  const displayTransactions = loading ? [] : (hasTransactions ? transactions : mockTransactions);
+  const displayTransactions = isLoading ? [] : (hasTransactions ? transactions : mockTransactions);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -130,7 +116,7 @@ export const DeviceTransactions = ({ deviceId, transactions: initialTransactions
             <CreditCard className="h-10 w-10 text-red-500 mb-4" />
             <h3 className="text-lg font-medium mb-2">Erro ao carregar transações</h3>
             <p className="text-muted-foreground max-w-md">
-              {error}
+              {error instanceof Error ? error.message : "Erro ao carregar as transações. Tente novamente mais tarde."}
             </p>
           </div>
         </CardContent>

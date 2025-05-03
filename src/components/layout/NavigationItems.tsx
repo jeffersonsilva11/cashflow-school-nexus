@@ -1,89 +1,112 @@
 
-import { Home, CreditCard, Building, UserCog, Settings, Users, History, School, GraduationCap, FileText, Layout, BarChart3, Banknote } from "lucide-react";
+import {
+  Home,
+  School,
+  User,
+  Package,
+  CreditCard,
+  FileText,
+  Settings,
+  Users,
+  Store,
+  ChartPieIcon,
+  BarChart3,
+  FileBarChart,
+  Database,
+  DollarSign
+} from 'lucide-react';
+import { UserRole } from '@/contexts/AuthContext';
 
-export const mainNavItems = [
+export type NavItemType = {
+  title: string;
+  href: string;
+  icon: any;
+  permission: UserRole[];
+};
+
+export const mainNavItems: NavItemType[] = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
+    title: 'Dashboard',
+    href: '/dashboard',
     icon: Home,
-    permission: ["admin", "school_admin", "parent", "staff"]
+    permission: ['admin', 'school_admin', 'staff', 'parent']
   },
   {
-    title: "Escolas",
-    href: "/schools",
+    title: 'Escolas',
+    href: '/schools',
     icon: School,
-    permission: ["admin"]
+    permission: ['admin', 'school_admin']
   },
   {
-    title: "Alunos",
-    href: "/students",
-    icon: GraduationCap,
-    permission: ["admin", "school_admin"]
-  },
-  {
-    title: "Responsáveis",
-    href: "/parents",
-    icon: UserCog,
-    permission: ["admin", "school_admin"]
-  },
-  {
-    title: "Usuários",
-    href: "/users",
+    title: 'Estudantes',
+    href: '/students',
     icon: Users,
-    permission: ["admin"]
+    permission: ['admin', 'school_admin', 'staff']
   },
   {
-    title: "Dispositivos",
-    href: "/devices",
-    icon: Layout,
-    permission: ["admin", "school_admin"]
-  },
-  {
-    title: "Vendedores",
-    href: "/vendors",
-    icon: Building,
-    permission: ["admin", "school_admin"]
-  },
-  {
-    title: "Transações",
-    href: "/transactions",
+    title: 'Dispositivos',
+    href: '/devices',
     icon: CreditCard,
-    permission: ["admin", "school_admin", "parent", "staff"]
-  }
-];
-
-export const financialNavItems = [
-  {
-    title: "Financeiro",
-    href: "/financial",
-    icon: Banknote,
-    permission: ["admin"]
+    permission: ['admin', 'school_admin']
   },
   {
-    title: "Faturas",
-    href: "/financial/invoices",
+    title: 'Estabelecimentos',
+    href: '/vendors',
+    icon: Store,
+    permission: ['admin', 'school_admin']
+  },
+];
+
+export const financialNavItems: NavItemType[] = [
+  {
+    title: 'Visão Geral',
+    href: '/financial',
+    icon: DollarSign,
+    permission: ['admin']
+  },
+  {
+    title: 'Cobranças',
+    href: '/financial/billing',
     icon: FileText,
-    permission: ["admin"]
-  }
+    permission: ['admin']
+  },
+  {
+    title: 'Faturas',
+    href: '/financial/invoices',
+    icon: CreditCard,
+    permission: ['admin']
+  },
+  {
+    title: 'Transações',
+    href: '/transactions',
+    icon: CreditCard,
+    permission: ['admin', 'school_admin', 'staff']
+  },
 ];
 
-export const reportsAndAdminItems = [
+export const reportsAndAdminItems: NavItemType[] = [
   {
-    title: "Relatórios",
-    href: "/reports",
+    title: 'Relatórios',
+    href: '/reports',
     icon: BarChart3,
-    permission: ["admin", "school_admin"]
+    permission: ['admin', 'school_admin']
   },
   {
-    title: "Logs de Auditoria",
-    href: "/audit-logs", 
-    icon: History,
-    permission: ["admin", "school_admin"]
+    title: 'Relatórios Financeiros',
+    href: '/reports/financial',
+    icon: FileBarChart,
+    permission: ['admin']
   },
   {
-    title: "Configurações",
-    href: "/settings",
+    title: 'Configurações',
+    href: '/settings',
     icon: Settings,
-    permission: ["admin"]
+    permission: ['admin', 'school_admin']
+  },
+  {
+    title: 'Migração de Dados',
+    href: '/admin/data-migration',
+    icon: Database,
+    permission: ['admin']
   }
 ];
