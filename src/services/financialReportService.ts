@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
@@ -314,8 +313,8 @@ export async function generateMonthlyTrendReport(months = 4) {
   }
 }
 
-// Define completely separate types to avoid any circular references
-export interface FinancialReportOverview {
+// Define base interfaces first to avoid circular references
+export interface FinancialReportOverviewData {
   totalActiveSchools: number;
   totalRevenueMonth: number;
   totalActiveSubscriptions: number;
@@ -324,26 +323,26 @@ export interface FinancialReportOverview {
   growthRate: number;
 }
 
-export interface RevenueByPlanItem {
+export interface RevenueByPlanItemData {
   plan: string;
   revenue: number;
   percentage: number;
 }
 
-export interface MonthlyTrendItem {
+export interface MonthlyTrendItemData {
   month: string;
   revenue: number;
 }
 
-// Define a completely separate type for the complete report
-export interface FinancialReportComplete {
-  overview: FinancialReportOverview;
-  revenueByPlan: RevenueByPlanItem[];
-  monthlyTrend: MonthlyTrendItem[];
+// Then define the comprehensive report type
+export interface FinancialReportCompleteData {
+  overview: FinancialReportOverviewData;
+  revenueByPlan: RevenueByPlanItemData[];
+  monthlyTrend: MonthlyTrendItemData[];
 }
 
 // Generate a complete financial report
-export async function generateCompleteFinancialReport(): Promise<FinancialReportComplete> {
+export async function generateCompleteFinancialReport(): Promise<FinancialReportCompleteData> {
   try {
     const overview = await generateFinancialOverviewReport();
     const revenueByPlan = await generateRevenueByPlanReport();
