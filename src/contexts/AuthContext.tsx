@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -50,7 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', supaUser.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError);
+        throw profileError;
+      }
       
       // Parse role to ensure it's a valid UserRole type
       let userRole: UserRole = 'parent'; // Default role
@@ -62,8 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userRole = profileData.role as UserRole;
       }
 
-      // Adicionando log para depuração
-      console.log('Dados do usuário carregados:', {
+      // Log para depuração
+      console.log('[AuthContext] Dados do usuário carregados:', {
         id: supaUser.id,
         email: supaUser.email,
         profileData: profileData,
@@ -94,17 +98,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check if the user is already authenticated when loading
   useEffect(() => {
+    console.log('[AuthContext] Iniciando verificação de autenticação');
+    
     // First, set up a listener for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`[AuthContext] Evento de autenticação: ${event}`);
         setSession(session);
         
         // Don't make direct Supabase calls in the callback to avoid deadlocks
         setTimeout(async () => {
           if (session?.user) {
+            console.log(`[AuthContext] Usuário autenticado: ${session.user.email}`);
             const formattedUser = await formatUserData(session.user);
+            console.log(`[AuthContext] Perfil formatado: ${formattedUser?.role}`);
             setUser(formattedUser);
           } else {
+            console.log('[AuthContext] Nenhum usuário autenticado');
             setUser(null);
           }
           setLoading(false);
@@ -114,10 +124,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check the current session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log(`[AuthContext] Sessão atual: ${session ? 'Existe' : 'Não existe'}`);
       setSession(session);
       
       if (session?.user) {
         const formattedUser = await formatUserData(session.user);
+        console.log(`[AuthContext] Usuário da sessão formatado: ${formattedUser?.role}`);
         setUser(formattedUser);
       }
       setLoading(false);
@@ -142,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const formattedUser = await formatUserData(data.user);
       
       // Log de depuração do login
-      console.log('Login bem-sucedido:', {
+      console.log('[AuthContext] Login bem-sucedido:', {
         userId: data.user?.id,
         email: data.user?.email,
         formattedUser
@@ -155,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      console.error('[AuthContext] Erro no login:', error);
       toast({
         title: "Erro ao realizar login",
         description: error.message || "Ocorreu um erro durante o login",
@@ -189,12 +201,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check if the user has permission based on their role
   const hasPermission = (requiredRoles: UserRole[]): boolean => {
-    if (!user) return false;
+    if (!user) {
+      console.log('[AuthContext] hasPermission: Nenhum usuário logado');
+      return false;
+    }
     
     // Log de depuração para verificação de permissões
-    console.log(`Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
+    console.log(`[AuthContext] Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
     
-    return requiredRoles.includes(user.role);
+    // Admin always has access
+    if (user.role === 'admin') {
+      console.log('[AuthContext] Admin tem permissão para todas as funcionalidades');
+      return true;
+    }
+    
+    // Check for specific role
+    const hasAccess = requiredRoles.includes(user.role);
+    console.log(`[AuthContext] Usuário tem acesso: ${hasAccess}`);
+    return hasAccess;
   };
 
   const value = {

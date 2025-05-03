@@ -12,6 +12,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   const { user, loading } = useAuth();
 
   if (loading) {
+    console.log('[ProtectedRoute] Auth loading, showing spinner...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -24,6 +25,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     console.log('[ProtectedRoute] No user logged in, redirecting to login');
     return <Navigate to="/login" />;
   }
+
+  // Debugging user details
+  console.log(`[ProtectedRoute] User details: ${user.name} (${user.email}), role: ${user.role}`);
+  console.log(`[ProtectedRoute] Required roles: ${allowedRoles.length ? allowedRoles.join(', ') : 'none'}`);
 
   // Always allow admin users to access any route
   if (user.role === 'admin') {
