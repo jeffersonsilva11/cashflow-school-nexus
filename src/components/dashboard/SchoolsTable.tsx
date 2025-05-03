@@ -11,25 +11,55 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/format';
-
-interface School {
-  id: string;
-  name: string;
-  city: string;
-  state: string;
-  students: number;
-  transactions: number;
-  volume: number;
-  status: string;
-}
+import { School } from '@/services/schoolService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SchoolsTableProps {
   schools: School[];
   title: string;
   description: string;
+  isLoading?: boolean;
 }
 
-export const SchoolsTable = ({ schools, title, description }: SchoolsTableProps) => {
+export const SchoolsTable = ({ schools, title, description, isLoading = false }: SchoolsTableProps) => {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Escola</TableHead>
+                <TableHead className="text-right">Alunos</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+                <TableHead className="text-right">Plano</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div>
+                      <Skeleton className="h-5 w-[150px] mb-1" />
+                      <Skeleton className="h-4 w-[120px]" />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -43,9 +73,9 @@ export const SchoolsTable = ({ schools, title, description }: SchoolsTableProps)
           <TableHeader>
             <TableRow>
               <TableHead>Escola</TableHead>
-              <TableHead className="text-right">Alunos</TableHead>
-              <TableHead className="text-right">Transações</TableHead>
-              <TableHead className="text-right">Volume</TableHead>
+              <TableHead className="text-right">Localização</TableHead>
+              <TableHead className="text-right">Status</TableHead>
+              <TableHead className="text-right">Plano</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,12 +84,14 @@ export const SchoolsTable = ({ schools, title, description }: SchoolsTableProps)
                 <TableCell>
                   <div>
                     <p className="font-medium">{school.name}</p>
-                    <p className="text-sm text-muted-foreground">{school.city}, {school.state}</p>
+                    <p className="text-sm text-muted-foreground">{school.email || 'Sem email'}</p>
                   </div>
                 </TableCell>
-                <TableCell className="text-right">{school.students}</TableCell>
-                <TableCell className="text-right">{school.transactions}</TableCell>
-                <TableCell className="text-right">{formatCurrency(school.volume)}</TableCell>
+                <TableCell className="text-right">{school.city || 'N/A'}, {school.state || 'N/A'}</TableCell>
+                <TableCell className="text-right">
+                  <StatusBadge status={school.subscription_status || 'inactive'} />
+                </TableCell>
+                <TableCell className="text-right">{school.subscription_plan || 'Sem plano'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

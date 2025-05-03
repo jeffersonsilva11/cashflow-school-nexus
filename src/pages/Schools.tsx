@@ -26,26 +26,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, FileDown, Building } from 'lucide-react';
-import { schools } from '@/services/mockData';
+import { Plus, Search, MoreHorizontal, FileDown, Building, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useSchools } from '@/services/schoolService';
 
 export default function Schools() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   
-  const filteredSchools = schools.filter(school => {
-    const matchesSearch = school.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          school.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          school.state.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch schools from the database using the useSchools hook
+  const { data: schools, isLoading, error } = useSchools();
+  
+  const filteredSchools = schools?.filter(school => {
+    const matchesSearch = school.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          school.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          school.state?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = selectedStatus === 'all' || school.status === selectedStatus;
+    const matchesStatus = selectedStatus === 'all' || school.subscription_status === selectedStatus;
     
     return matchesSearch && matchesStatus;
-  });
+  }) || [];
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -110,55 +113,65 @@ export default function Schools() {
         </div>
         
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">Escola</TableHead>
-                <TableHead>Localização</TableHead>
-                <TableHead className="text-right">Alunos</TableHead>
-                <TableHead className="text-right">Transações</TableHead>
-                <TableHead className="text-right">Volume</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSchools.map((school) => (
-                <TableRow key={school.id}>
-                  <TableCell className="font-medium">{school.name}</TableCell>
-                  <TableCell>{school.city}, {school.state}</TableCell>
-                  <TableCell className="text-right">{school.students}</TableCell>
-                  <TableCell className="text-right">{school.transactions}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(school.volume)}</TableCell>
-                  <TableCell>{getStatusBadge(school.status)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Abrir menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem>Gerenciar usuários</DropdownMenuItem>
-                        <DropdownMenuItem>Ver transações</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500">
-                          Desativar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-lg">Carregando escolas...</span>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-64 flex-col">
+              <div className="text-red-500 mb-2">Erro ao carregar escolas</div>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Tentar novamente
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[250px]">Escola</TableHead>
+                  <TableHead>Localização</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="text-right">Plano</TableHead>
+                  <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredSchools.map((school) => (
+                  <TableRow key={school.id}>
+                    <TableCell className="font-medium">{school.name}</TableCell>
+                    <TableCell>{school.city || 'N/A'}, {school.state || 'N/A'}</TableCell>
+                    <TableCell className="text-right">{getStatusBadge(school.subscription_status || 'inactive')}</TableCell>
+                    <TableCell className="text-right">{school.subscription_plan || 'Sem plano'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Abrir menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
+                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem>Gerenciar usuários</DropdownMenuItem>
+                          <DropdownMenuItem>Ver transações</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-500">
+                            Desativar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
           
-          {filteredSchools.length === 0 && (
+          {!isLoading && !error && filteredSchools.length === 0 && (
             <div className="py-8 text-center">
               <div className="mx-auto w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Building className="h-10 w-10 text-muted-foreground" />
@@ -180,7 +193,7 @@ export default function Schools() {
         
         <div className="p-4 border-t flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Mostrando {filteredSchools.length} de {schools.length} escolas
+            Mostrando {filteredSchools.length} de {schools?.length || 0} escolas
           </div>
           
           <div className="flex gap-2">
@@ -281,4 +294,3 @@ export default function Schools() {
     </div>
   );
 };
-
