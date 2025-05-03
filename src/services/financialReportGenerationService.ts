@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Json } from "@/integrations/supabase/types";
 import {
   FinancialReportOverviewData,
@@ -100,45 +99,50 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
     
     if (plansError) throw plansError;
     
+    if (!plans || plans.length === 0) {
+      return [];
+    }
+    
     // For each plan, calculate revenue
-    const revenueByPlanData: RevenueByPlanItemData[] = await Promise.all(
-      plans.map(async (plan) => {
-        // Get schools using this plan
-        const { data: schoolsWithPlan, error: schoolsError } = await supabase
-          .from('schools')
-          .select('id')
-          .eq('subscription_plan', plan.name.toLowerCase());
-        
-        if (schoolsError) throw schoolsError;
-        
-        const schoolIds = schoolsWithPlan.map(school => school.id);
-        
-        if (schoolIds.length === 0) {
-          return { plan: plan.name, revenue: 0, percentage: 0 };
-        }
-        
-        // Get transactions from these schools in the current month
-        const firstDayOfMonth = new Date();
-        firstDayOfMonth.setDate(1);
-        firstDayOfMonth.setHours(0, 0, 0, 0);
-        
-        const { data: transactions, error: transactionsError } = await supabase
-          .from('transactions')
-          .select('amount')
-          .in('school_id', schoolIds)
-          .gte('transaction_date', firstDayOfMonth.toISOString());
-        
-        if (transactionsError) throw transactionsError;
-        
-        const revenue = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
-        
-        return {
-          plan: plan.name,
-          revenue,
-          percentage: 0 // Percentages calculated after all revenue totals are known
-        };
-      })
-    );
+    const revenueByPlanData: RevenueByPlanItemData[] = [];
+    
+    for (const plan of plans) {
+      // Get schools using this plan
+      const { data: schoolsWithPlan, error: schoolsError } = await supabase
+        .from('schools')
+        .select('id')
+        .eq('subscription_plan', plan.name.toLowerCase());
+      
+      if (schoolsError) throw schoolsError;
+      
+      const schoolIds = schoolsWithPlan ? schoolsWithPlan.map(school => school.id) : [];
+      
+      if (schoolIds.length === 0) {
+        revenueByPlanData.push({ plan: plan.name, revenue: 0, percentage: 0 });
+        continue;
+      }
+      
+      // Get transactions from these schools in the current month
+      const firstDayOfMonth = new Date();
+      firstDayOfMonth.setDate(1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+      
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('amount')
+        .in('school_id', schoolIds)
+        .gte('transaction_date', firstDayOfMonth.toISOString());
+      
+      if (transactionsError) throw transactionsError;
+      
+      const revenue = transactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
+      
+      revenueByPlanData.push({
+        plan: plan.name,
+        revenue,
+        percentage: 0 // Percentages calculated after all revenue totals are known
+      });
+    }
     
     // Calculate total revenue
     const totalRevenue = revenueByPlanData.reduce((sum, item) => sum + item.revenue, 0);
@@ -216,26 +220,4 @@ export async function generateCompleteFinancialReport(): Promise<FinancialReport
     console.error("Error generating complete financial report:", error);
     throw error;
   }
-}
-
-// React Query hooks for report generation
-export function useFinancialOverview() {
-  return useQuery<FinancialReportOverviewData, Error>({
-    queryKey: ['financial-overview'],
-    queryFn: generateFinancialOverviewReport,
-  });
-}
-
-export function useRevenueByPlan() {
-  return useQuery<RevenueByPlanItemData[], Error>({
-    queryKey: ['revenue-by-plan'],
-    queryFn: generateRevenueByPlanReport,
-  });
-}
-
-export function useMonthlyTrend() {
-  return useQuery<MonthlyTrendItemData[], Error>({
-    queryKey: ['monthly-trend'],
-    queryFn: () => generateMonthlyTrendReport(),
-  });
 }

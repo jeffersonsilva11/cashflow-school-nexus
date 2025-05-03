@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import SchoolsTable from "@/components/dashboard/SchoolsTable";
+import { SchoolsTable } from "@/components/dashboard/SchoolsTable";
 
 export default function Schools() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,7 +108,7 @@ export default function Schools() {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       ) : (
-        <SchoolsTable schools={filteredSchools} />
+        <SchoolsTable schools={filteredSchools} title="Escolas" description="Lista de todas as escolas cadastradas" />
       )}
 
       <div className="flex justify-end">

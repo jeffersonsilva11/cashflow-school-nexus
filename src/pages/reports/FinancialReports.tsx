@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   FileBarChart, 
@@ -56,7 +55,7 @@ import {
   useFinancialOverview,
   useRevenueByPlan,
   useMonthlyTrend 
-} from '@/services/financialReportService';
+} from '@/services/financialReportHooks';
 import { useSchoolsFinancial } from '@/services/schoolFinancialService';
 
 export default function FinancialReports() {
