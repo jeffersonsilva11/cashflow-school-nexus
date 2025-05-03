@@ -46,6 +46,7 @@ import FinancialReports from "./pages/reports/FinancialReports";
 import DeviceUsageReport from "./pages/reports/DeviceUsageReport";
 import Vendors from "./pages/Vendors";
 import VendorDetails from "./pages/VendorDetails";
+import VendorForm from "./pages/VendorForm";
 import ThirdPartyDashboard from "./pages/ThirdPartyDashboard";
 
 const queryClient = new QueryClient();
@@ -257,6 +258,11 @@ const App = () => (
               <Route path="vendors" element={
                 <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
                   <Vendors />
+                </ProtectedRoute>
+              } />
+              <Route path="vendors/new" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <VendorForm />
                 </ProtectedRoute>
               } />
               <Route path="vendors/:vendorId" element={
