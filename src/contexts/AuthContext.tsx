@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userRole = profileData.role as UserRole;
       }
 
+      // Adicionando log para depuração
+      console.log('Dados do usuário carregados:', {
+        id: supaUser.id,
+        email: supaUser.email,
+        profileData: profileData,
+        role: userRole
+      });
+
       return {
         id: supaUser.id,
         name: profileData?.name || supaUser.email?.split('@')[0] || 'Usuário',
@@ -79,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: supaUser.id,
         name: supaUser.email?.split('@')[0] || 'Usuário',
         email: supaUser.email || '',
-        role: 'parent',
+        role: 'parent', // Default to parent if profile fetching fails
         avatar: undefined
       };
     }
@@ -134,6 +141,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const formattedUser = await formatUserData(data.user);
       
+      // Log de depuração do login
+      console.log('Login bem-sucedido:', {
+        userId: data.user?.id,
+        email: data.user?.email,
+        formattedUser
+      });
+      
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${formattedUser?.name}!`,
@@ -141,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       navigate('/dashboard');
     } catch (error: any) {
+      console.error('Erro no login:', error);
       toast({
         title: "Erro ao realizar login",
         description: error.message || "Ocorreu um erro durante o login",
@@ -175,6 +190,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if the user has permission based on their role
   const hasPermission = (requiredRoles: UserRole[]): boolean => {
     if (!user) return false;
+    
+    // Log de depuração para verificação de permissões
+    console.log(`Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
+    
     return requiredRoles.includes(user.role);
   };
 

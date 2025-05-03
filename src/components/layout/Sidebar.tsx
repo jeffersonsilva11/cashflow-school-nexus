@@ -19,6 +19,7 @@ import {
   financialNavItems,
   reportsAndAdminItems
 } from './NavigationItems';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SidebarProps = {
   sidebarOpen: boolean;
@@ -27,6 +28,19 @@ type SidebarProps = {
 };
 
 const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
+  const { user, logout } = useAuth();
+
+  // Função para verificar se o usuário tem permissão para ver um item do menu
+  const hasPermission = (requiredPermissions: string[]) => {
+    if (!user || !user.role) return false;
+    return requiredPermissions.includes(user.role);
+  };
+
+  // Filtra os itens de navegação com base nas permissões do usuário
+  const filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
+  const filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
+  const filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+
   return (
     <div 
       className={cn(
@@ -55,41 +69,47 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
       
       <div className="mt-2 px-3 flex-1 overflow-y-auto">
         <nav className="space-y-2">
-          <NavGroup title="Principal" sidebarOpen={sidebarOpen}>
-            {mainNavItems.map((item) => (
-              <NavItem 
-                key={item.href}
-                to={item.href}
-                icon={<item.icon size={20} />}
-                label={item.title}
-                active={location.pathname === item.href}
-              />
-            ))}
-          </NavGroup>
+          {filteredMainNavItems.length > 0 && (
+            <NavGroup title="Principal" sidebarOpen={sidebarOpen}>
+              {filteredMainNavItems.map((item) => (
+                <NavItem 
+                  key={item.href}
+                  to={item.href}
+                  icon={<item.icon size={20} />}
+                  label={item.title}
+                  active={location.pathname === item.href}
+                />
+              ))}
+            </NavGroup>
+          )}
           
-          <NavGroup title="Financeiro" sidebarOpen={sidebarOpen}>
-            {financialNavItems.map((item) => (
-              <NavItem 
-                key={item.href}
-                to={item.href}
-                icon={<item.icon size={20} />}
-                label={item.title}
-                active={location.pathname.startsWith(item.href)}
-              />
-            ))}
-          </NavGroup>
+          {filteredFinancialNavItems.length > 0 && (
+            <NavGroup title="Financeiro" sidebarOpen={sidebarOpen}>
+              {filteredFinancialNavItems.map((item) => (
+                <NavItem 
+                  key={item.href}
+                  to={item.href}
+                  icon={<item.icon size={20} />}
+                  label={item.title}
+                  active={location.pathname.startsWith(item.href)}
+                />
+              ))}
+            </NavGroup>
+          )}
           
-          <NavGroup title="Relatórios & Admin" sidebarOpen={sidebarOpen}>
-            {reportsAndAdminItems.map((item) => (
-              <NavItem 
-                key={item.href}
-                to={item.href}
-                icon={<item.icon size={20} />}
-                label={item.title}
-                active={location.pathname.startsWith(item.href)}
-              />
-            ))}
-          </NavGroup>
+          {filteredReportsAndAdminItems.length > 0 && (
+            <NavGroup title="Relatórios & Admin" sidebarOpen={sidebarOpen}>
+              {filteredReportsAndAdminItems.map((item) => (
+                <NavItem 
+                  key={item.href}
+                  to={item.href}
+                  icon={<item.icon size={20} />}
+                  label={item.title}
+                  active={location.pathname.startsWith(item.href)}
+                />
+              ))}
+            </NavGroup>
+          )}
         </nav>
       </div>
       
@@ -101,12 +121,14 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
               className="w-full justify-start gap-2 font-normal"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src="" alt="Admin" />
-                <AvatarFallback className="bg-cashless-700 text-white">AD</AvatarFallback>
+                <AvatarImage src={user?.avatar || ""} alt={user?.name || "Usuário"} />
+                <AvatarFallback className="bg-cashless-700 text-white">
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : "UN"}
+                </AvatarFallback>
               </Avatar>
               {sidebarOpen && (
                 <div className="flex-1 flex justify-between items-center">
-                  <span className="text-sm">Admin</span>
+                  <span className="text-sm">{user?.name || "Usuário"}</span>
                   <ChevronDown size={16} />
                 </div>
               )}
@@ -122,7 +144,7 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
               Preferências
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-500">
+            <DropdownMenuItem className="text-red-500" onClick={() => logout()}>
               <LogOut size={16} className="mr-2" /> Sair
             </DropdownMenuItem>
           </DropdownMenuContent>

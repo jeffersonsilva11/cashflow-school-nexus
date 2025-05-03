@@ -23,7 +23,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     return <Navigate to="/login" />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  // Se não há roles especificadas ou a lista está vazia, permite o acesso
+  if (allowedRoles.length === 0) {
+    return <>{children}</>;
+  }
+
+  // Verifica se o usuário tem a role necessária
+  if (!allowedRoles.includes(user.role)) {
+    console.log(`Acesso negado: Usuário tem role ${user.role}, precisa de uma das seguintes: ${allowedRoles.join(', ')}`);
     return <Navigate to="/access-denied" />;
   }
 
