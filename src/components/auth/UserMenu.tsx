@@ -33,7 +33,10 @@ export default function UserMenu() {
   
   // Function to get user role display text
   const getRole = (role: string) => {
-    switch(role) {
+    // Normalizar para lowercase para garantir consistência
+    const normalizedRole = role.toLowerCase();
+    
+    switch(normalizedRole) {
       case 'admin': return 'Administrador';
       case 'school_admin': return 'Admin. Escolar';
       case 'parent': return 'Responsável';
@@ -44,7 +47,10 @@ export default function UserMenu() {
   
   // Function to get role icon based on user role
   const getRoleIcon = (role: string) => {
-    switch(role) {
+    // Normalizar para lowercase para garantir consistência
+    const normalizedRole = role.toLowerCase();
+    
+    switch(normalizedRole) {
       case 'admin': return <Shield className="h-4 w-4 mr-2 text-primary" />;
       case 'school_admin': return <School className="h-4 w-4 mr-2 text-green-500" />;
       case 'parent': return <UserRound className="h-4 w-4 mr-2 text-blue-500" />;
@@ -55,7 +61,10 @@ export default function UserMenu() {
   
   // Function to get badge variant based on user role
   const getRoleBadgeVariant = (role: string) => {
-    switch(role) {
+    // Normalizar para lowercase para garantir consistência
+    const normalizedRole = role.toLowerCase();
+    
+    switch(normalizedRole) {
       case 'admin': return 'default';
       case 'school_admin': return 'success';
       case 'parent': return 'info';
