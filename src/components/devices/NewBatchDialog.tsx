@@ -13,7 +13,7 @@ interface NewBatchDialogProps {
 
 export const NewBatchDialog = ({ open, onOpenChange }: NewBatchDialogProps) => {
   const { toast } = useToast();
-  const { mutateAsync: createDeviceBatch, isLoading } = useCreateDeviceBatch();
+  const { mutateAsync: createDeviceBatch, isPending } = useCreateDeviceBatch();
   
   const [batchName, setBatchName] = useState('');
   const [batchType, setBatchType] = useState('');
@@ -146,8 +146,8 @@ export const NewBatchDialog = ({ open, onOpenChange }: NewBatchDialogProps) => {
           
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)} type="button">Cancelar</Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Cadastrando...' : 'Cadastrar Lote'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Cadastrando...' : 'Cadastrar Lote'}
             </Button>
           </DialogFooter>
         </form>
