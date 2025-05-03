@@ -7,7 +7,7 @@ import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
 import { TerminalDeviceStats } from './DeviceStatsCards';
 import { TerminalsMonitoring } from './TerminalsMonitoring';
 import { DeviceAlertsDashboard } from './DeviceAlertsDashboard';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const TerminalsDevicesTab = () => {
   // Dados mockados para maquininhas
