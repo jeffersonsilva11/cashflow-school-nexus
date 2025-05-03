@@ -15,7 +15,7 @@ export type UserProfile = {
   updated_at?: string;
   school?: {
     name: string;
-  };
+  } | null;
 };
 
 // Fetch all user profiles
@@ -25,12 +25,19 @@ export async function fetchUserProfiles() {
       .from('profiles')
       .select(`
         *,
-        school:school_id (name)
+        school:schools(name)
       `)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data as UserProfile[];
+    
+    // Transform the data to ensure it matches the UserProfile type
+    const transformedData = data.map(profile => ({
+      ...profile,
+      school: profile.school || null
+    }));
+    
+    return transformedData as UserProfile[];
   } catch (error) {
     console.error("Error fetching user profiles:", error);
     throw error;
@@ -44,13 +51,20 @@ export async function fetchUserProfileById(id: string) {
       .from('profiles')
       .select(`
         *,
-        school:school_id (name)
+        school:schools(name)
       `)
       .eq('id', id)
       .single();
     
     if (error) throw error;
-    return data as UserProfile;
+    
+    // Transform the data to ensure it matches the UserProfile type
+    const transformedData = {
+      ...data,
+      school: data.school || null
+    };
+    
+    return transformedData as UserProfile;
   } catch (error) {
     console.error(`Error fetching user profile ${id}:`, error);
     throw error;
@@ -60,9 +74,13 @@ export async function fetchUserProfileById(id: string) {
 // Update a user profile
 export async function updateUserProfile(id: string, updates: Partial<UserProfile>) {
   try {
+    // Remove the school property if it exists in the updates
+    // as we cannot update a joined field directly
+    const { school, ...updatableFields } = updates;
+    
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updatableFields)
       .eq('id', id)
       .select()
       .single();
