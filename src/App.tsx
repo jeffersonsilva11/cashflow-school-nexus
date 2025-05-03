@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,6 +44,9 @@ import NewPayment from "./pages/payment/NewPayment";
 import PaymentDetail from "./pages/payment/PaymentDetail";
 import FinancialReports from "./pages/reports/FinancialReports";
 import DeviceUsageReport from "./pages/reports/DeviceUsageReport";
+import Vendors from "./pages/Vendors";
+import VendorDetails from "./pages/VendorDetails";
+import ThirdPartyDashboard from "./pages/ThirdPartyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -246,6 +250,23 @@ const App = () => (
               <Route path="devices/:deviceId/replace" element={
                 <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
                   <ReplaceDevice />
+                </ProtectedRoute>
+              } />
+              
+              {/* Cantinas Terceirizadas */}
+              <Route path="vendors" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <Vendors />
+                </ProtectedRoute>
+              } />
+              <Route path="vendors/:vendorId" element={
+                <ProtectedRoute allowedRoles={['admin', 'school_admin']}>
+                  <VendorDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="third-party-dashboard" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ThirdPartyDashboard />
                 </ProtectedRoute>
               } />
               

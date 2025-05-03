@@ -441,6 +441,197 @@ export type Database = {
           },
         ]
       }
+      vendor_commission_tiers: {
+        Row: {
+          commission_rate: number
+          created_at: string | null
+          id: string
+          max_sales_amount: number | null
+          min_sales_amount: number
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          commission_rate?: number
+          created_at?: string | null
+          id?: string
+          max_sales_amount?: number | null
+          min_sales_amount?: number
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          commission_rate?: number
+          created_at?: string | null
+          id?: string
+          max_sales_amount?: number | null
+          min_sales_amount?: number
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_commission_tiers_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_products: {
+        Row: {
+          active: boolean | null
+          allergens: string[] | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          price: number
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          allergens?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          active?: boolean | null
+          allergens?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_sales_reports: {
+        Row: {
+          commission_amount: number
+          end_date: string
+          id: string
+          net_amount: number
+          report_data: Json | null
+          report_generated_at: string | null
+          report_status: string | null
+          reporting_period: string
+          start_date: string
+          total_sales: number
+          total_transactions: number
+          vendor_id: string
+        }
+        Insert: {
+          commission_amount?: number
+          end_date: string
+          id?: string
+          net_amount?: number
+          report_data?: Json | null
+          report_generated_at?: string | null
+          report_status?: string | null
+          reporting_period: string
+          start_date: string
+          total_sales?: number
+          total_transactions?: number
+          vendor_id: string
+        }
+        Update: {
+          commission_amount?: number
+          end_date?: string
+          id?: string
+          net_amount?: number
+          report_data?: Json | null
+          report_generated_at?: string | null
+          report_status?: string | null
+          reporting_period?: string
+          start_date?: string
+          total_sales?: number
+          total_transactions?: number
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_sales_reports_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_transfers: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          payment_details: Json | null
+          payment_method: string | null
+          reference_period_end: string | null
+          reference_period_start: string | null
+          status: string
+          transfer_date: string | null
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_details?: Json | null
+          payment_method?: string | null
+          reference_period_end?: string | null
+          reference_period_start?: string | null
+          status?: string
+          transfer_date?: string | null
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_details?: Json | null
+          payment_method?: string | null
+          reference_period_end?: string | null
+          reference_period_start?: string | null
+          status?: string
+          transfer_date?: string | null
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_transfers_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           active: boolean | null
@@ -490,6 +681,56 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors_financials: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          last_transfer_date: string | null
+          next_transfer_date: string | null
+          payment_details: Json | null
+          payment_method: string | null
+          pending_transfer: number
+          transfer_frequency: string | null
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          last_transfer_date?: string | null
+          next_transfer_date?: string | null
+          payment_details?: Json | null
+          payment_method?: string | null
+          pending_transfer?: number
+          transfer_frequency?: string | null
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          last_transfer_date?: string | null
+          next_transfer_date?: string | null
+          payment_details?: Json | null
+          payment_method?: string | null
+          pending_transfer?: number
+          transfer_frequency?: string | null
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_financials_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]

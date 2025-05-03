@@ -25,6 +25,7 @@ import {
 // Dashboard
 export const dashboardItems = [
   { to: "/dashboard", icon: <Home size={20} />, label: "Dashboard" },
+  { to: "/third-party-dashboard", icon: <Building size={20} />, label: "Cantinas Terceirizadas" },
 ];
 
 // Escolas
@@ -45,6 +46,7 @@ export const userItems = [
 export const financeItems = [
   { to: "/payment", icon: <CreditCard size={20} />, label: "Pagamentos" },
   { to: "/transactions", icon: <ReceiptText size={20} />, label: "Transações Cantina" },
+  { to: "/vendors", icon: <Building size={20} />, label: "Cantinas" },
   { to: "/financial", icon: <DollarSign size={20} />, label: "Financeiro Admin" },
   { to: "/financial/invoices", icon: <FileText size={20} />, label: "Faturas" },
   { to: "/financial/subscriptions", icon: <CalendarClock size={20} />, label: "Assinaturas" },
