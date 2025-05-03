@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
-// Defina interfaces simples primeiro (sem auto-referência)
+// Interfaces base sem dependências circulares
 export interface FinancialReportOverviewData {
   totalActiveSchools: number;
   totalRevenueMonth: number;
@@ -23,26 +24,26 @@ export interface MonthlyTrendItemData {
   revenue: number;
 }
 
-// Defina a interface completa usando os tipos primitivos
+// Interface composta usando os tipos base
 export interface FinancialReportCompleteData {
   overview: FinancialReportOverviewData;
   revenueByPlan: RevenueByPlanItemData[];
   monthlyTrend: MonthlyTrendItemData[];
 }
 
-// Defina o tipo FinancialReport separadamente
+// Interface para relatórios financeiros
 export interface FinancialReport {
   id: string;
   report_type: string;
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   start_date: string;
   end_date: string;
-  data: any;
+  data: any; // Usando any para evitar problemas de inferência profunda
   created_at?: string;
   updated_at?: string;
 }
 
-// Fetch all financial reports
+// Buscar todos os relatórios financeiros
 export async function fetchFinancialReports(): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
@@ -58,7 +59,7 @@ export async function fetchFinancialReports(): Promise<FinancialReport[]> {
   }
 }
 
-// Fetch financial reports by type
+// Buscar relatórios financeiros por tipo
 export async function fetchFinancialReportsByType(type: string): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
@@ -75,7 +76,7 @@ export async function fetchFinancialReportsByType(type: string): Promise<Financi
   }
 }
 
-// Fetch the latest financial report by type
+// Buscar o último relatório financeiro por tipo
 export async function fetchLatestFinancialReport(type: string): Promise<FinancialReport | null> {
   try {
     const { data, error } = await supabase
@@ -87,7 +88,7 @@ export async function fetchLatestFinancialReport(type: string): Promise<Financia
       .maybeSingle();
     
     if (error) {
-      if (error.code === 'PGRST116') { // No rows returned
+      if (error.code === 'PGRST116') { // Nenhuma linha retornada
         return null;
       }
       throw error;
@@ -99,7 +100,7 @@ export async function fetchLatestFinancialReport(type: string): Promise<Financia
   }
 }
 
-// Create a new financial report
+// Criar um novo relatório financeiro
 export async function createFinancialReport(report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
@@ -116,7 +117,7 @@ export async function createFinancialReport(report: Omit<FinancialReport, 'id' |
   }
 }
 
-// Update a financial report
+// Atualizar um relatório financeiro
 export async function updateFinancialReport(id: string, updates: Partial<FinancialReport>): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
@@ -134,7 +135,7 @@ export async function updateFinancialReport(id: string, updates: Partial<Financi
   }
 }
 
-// Delete a financial report
+// Excluir um relatório financeiro
 export async function deleteFinancialReport(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -150,10 +151,10 @@ export async function deleteFinancialReport(id: string): Promise<boolean> {
   }
 }
 
-// Generate financial overview report
+// Gerar relatório de visão geral financeira
 export async function generateFinancialOverviewReport(): Promise<FinancialReportOverviewData> {
   try {
-    // Get active schools count
+    // Obter contagem de escolas ativas
     const { count: totalActiveSchools, error: schoolsError } = await supabase
       .from('schools')
       .select('*', { count: 'exact', head: true })
@@ -161,7 +162,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     if (schoolsError) throw schoolsError;
     
-    // Get total revenue from transactions for current month
+    // Obter receita total das transações do mês atual
     const firstDayOfMonth = new Date();
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
@@ -175,7 +176,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const totalRevenueMonth = monthTransactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
     
-    // Get active subscriptions count
+    // Obter contagem de assinaturas ativas
     const { count: totalActiveSubscriptions, error: subsError } = await supabase
       .from('subscriptions')
       .select('*', { count: 'exact', head: true })
@@ -183,7 +184,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     if (subsError) throw subsError;
     
-    // Get pending payments
+    // Obter pagamentos pendentes
     const { data: pendingInvoices, error: invoicesError } = await supabase
       .from('invoices')
       .select('amount')
@@ -193,12 +194,12 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const totalPendingPayments = pendingInvoices?.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) || 0;
     
-    // Calculate average revenue per school
+    // Calcular receita média por escola
     const averageRevenuePerSchool = totalActiveSchools > 0 
       ? totalRevenueMonth / totalActiveSchools 
       : 0;
     
-    // Get previous month's revenue for growth rate calculation
+    // Obter receita do mês anterior para cálculo de taxa de crescimento
     const previousMonth = new Date(firstDayOfMonth);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
     
@@ -212,7 +213,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const prevMonthRevenue = prevMonthTransactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
     
-    // Calculate growth rate
+    // Calcular taxa de crescimento
     const growthRate = prevMonthRevenue > 0 
       ? ((totalRevenueMonth - prevMonthRevenue) / prevMonthRevenue) * 100 
       : 0;
@@ -231,20 +232,20 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
   }
 }
 
-// Generate revenue by plan report
+// Gerar relatório de receita por plano
 export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemData[]> {
   try {
-    // Get all plans
+    // Obter todos os planos
     const { data: plans, error: plansError } = await supabase
       .from('plans')
       .select('id, name');
     
     if (plansError) throw plansError;
     
-    // For each plan, calculate the revenue
-    const revenueByPlanData = await Promise.all(
+    // Para cada plano, calcular a receita
+    const revenueByPlanData: RevenueByPlanItemData[] = await Promise.all(
       plans.map(async (plan) => {
-        // Get schools using this plan
+        // Obter escolas usando este plano
         const { data: schoolsWithPlan, error: schoolsError } = await supabase
           .from('schools')
           .select('id')
@@ -258,7 +259,7 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
           return { plan: plan.name, revenue: 0, percentage: 0 };
         }
         
-        // Get transactions for these schools in the current month
+        // Obter transações dessas escolas no mês atual
         const firstDayOfMonth = new Date();
         firstDayOfMonth.setDate(1);
         firstDayOfMonth.setHours(0, 0, 0, 0);
@@ -276,22 +277,22 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
         return {
           plan: plan.name,
           revenue,
-          percentage: 0 // Will calculate percentages after getting all revenues
+          percentage: 0 // Calcularemos as porcentagens depois de obter todas as receitas
         };
       })
     );
     
-    // Calculate total revenue
+    // Calcular receita total
     const totalRevenue = revenueByPlanData.reduce((sum, item) => sum + item.revenue, 0);
     
-    // Calculate percentages
+    // Calcular porcentagens
     if (totalRevenue > 0) {
       revenueByPlanData.forEach(item => {
         item.percentage = parseFloat(((item.revenue / totalRevenue) * 100).toFixed(1));
       });
     }
     
-    // Sort by revenue (descending)
+    // Classificar por receita (decrescente)
     return revenueByPlanData.sort((a, b) => b.revenue - a.revenue);
   } catch (error) {
     console.error("Error generating revenue by plan report:", error);
@@ -299,13 +300,13 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
   }
 }
 
-// Generate monthly trend report
+// Gerar relatório de tendência mensal
 export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTrendItemData[]> {
   try {
     const result: MonthlyTrendItemData[] = [];
     const currentDate = new Date();
     
-    // Calculate for the last X months
+    // Calcular para os últimos X meses
     for (let i = 0; i < months; i++) {
       const monthDate = new Date(currentDate);
       monthDate.setMonth(currentDate.getMonth() - i);
@@ -341,7 +342,7 @@ export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTre
   }
 }
 
-// Generate a complete financial report
+// Gerar um relatório financeiro completo
 export async function generateCompleteFinancialReport(): Promise<FinancialReportCompleteData> {
   try {
     const overview = await generateFinancialOverviewReport();
@@ -359,44 +360,44 @@ export async function generateCompleteFinancialReport(): Promise<FinancialReport
   }
 }
 
-// React Query Hooks
+// React Query Hooks com tipos explícitos
 export function useFinancialReports() {
-  return useQuery({
+  return useQuery<FinancialReport[], Error>({
     queryKey: ['financial-reports'],
     queryFn: fetchFinancialReports,
   });
 }
 
 export function useFinancialReportsByType(type: string) {
-  return useQuery({
+  return useQuery<FinancialReport[], Error>({
     queryKey: ['financial-reports', type],
     queryFn: () => fetchFinancialReportsByType(type),
   });
 }
 
 export function useLatestFinancialReport(type: string) {
-  return useQuery({
+  return useQuery<FinancialReport | null, Error>({
     queryKey: ['financial-reports', 'latest', type],
     queryFn: () => fetchLatestFinancialReport(type),
   });
 }
 
 export function useFinancialOverview() {
-  return useQuery({
+  return useQuery<FinancialReportOverviewData, Error>({
     queryKey: ['financial-overview'],
     queryFn: generateFinancialOverviewReport,
   });
 }
 
 export function useRevenueByPlan() {
-  return useQuery({
+  return useQuery<RevenueByPlanItemData[], Error>({
     queryKey: ['revenue-by-plan'],
     queryFn: generateRevenueByPlanReport,
   });
 }
 
 export function useMonthlyTrend() {
-  return useQuery({
+  return useQuery<MonthlyTrendItemData[], Error>({
     queryKey: ['monthly-trend'],
     queryFn: () => generateMonthlyTrendReport(),
   });
@@ -405,7 +406,11 @@ export function useMonthlyTrend() {
 export function useCreateFinancialReport() {
   const queryClient = useQueryClient();
   
-  return useMutation({
+  return useMutation<
+    FinancialReport, 
+    Error, 
+    Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>
+  >({
     mutationFn: createFinancialReport,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
@@ -413,7 +418,7 @@ export function useCreateFinancialReport() {
       queryClient.invalidateQueries({ queryKey: ['financial-reports', 'latest', data.report_type] });
       toast({ title: "Relatório financeiro criado com sucesso" });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({ 
         title: "Erro ao criar relatório financeiro", 
         description: error.message || "Ocorreu um erro ao criar o relatório",
@@ -426,16 +431,19 @@ export function useCreateFinancialReport() {
 export function useUpdateFinancialReport() {
   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: ({ id, updates }: { id: string, updates: Partial<FinancialReport> }) => 
-      updateFinancialReport(id, updates),
+  return useMutation<
+    FinancialReport, 
+    Error, 
+    { id: string, updates: Partial<FinancialReport> }
+  >({
+    mutationFn: ({ id, updates }) => updateFinancialReport(id, updates),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
       queryClient.invalidateQueries({ queryKey: ['financial-reports', data.report_type] });
       queryClient.invalidateQueries({ queryKey: ['financial-reports', 'latest', data.report_type] });
       toast({ title: "Relatório financeiro atualizado com sucesso" });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({ 
         title: "Erro ao atualizar relatório financeiro", 
         description: error.message || "Ocorreu um erro ao atualizar o relatório",
@@ -448,13 +456,13 @@ export function useUpdateFinancialReport() {
 export function useDeleteFinancialReport() {
   const queryClient = useQueryClient();
   
-  return useMutation({
+  return useMutation<boolean, Error, string>({
     mutationFn: deleteFinancialReport,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
       toast({ title: "Relatório financeiro removido com sucesso" });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({ 
         title: "Erro ao remover relatório financeiro", 
         description: error.message || "Ocorreu um erro ao remover o relatório",
