@@ -21,23 +21,51 @@ export type UserProfile = {
 // Fetch all user profiles
 export async function fetchUserProfiles() {
   try {
+    // First, fetch profiles without the school join
     const { data, error } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        school:schools(name)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    // Transform the data to ensure it matches the UserProfile type
-    const transformedData = data.map(profile => ({
-      ...profile,
-      school: profile.school || null
-    }));
+    // Transform the data and handle schools separately if needed
+    const transformedData = data.map(profile => {
+      return {
+        ...profile,
+        school: null // Default to null
+      };
+    }) as UserProfile[];
     
-    return transformedData as UserProfile[];
+    // For profiles with school_id, try to fetch the school names
+    const profilesWithSchoolId = transformedData.filter(profile => profile.school_id);
+    
+    if (profilesWithSchoolId.length > 0) {
+      // Get unique school IDs
+      const schoolIds = [...new Set(profilesWithSchoolId.map(profile => profile.school_id))];
+      
+      // Fetch schools data
+      const { data: schoolsData, error: schoolsError } = await supabase
+        .from('schools')
+        .select('id, name')
+        .in('id', schoolIds);
+      
+      if (!schoolsError && schoolsData) {
+        // Create a map for quick school lookup
+        const schoolsMap = new Map(schoolsData.map(school => [school.id, school]));
+        
+        // Update profiles with school data
+        transformedData.forEach(profile => {
+          if (profile.school_id && schoolsMap.has(profile.school_id)) {
+            profile.school = { name: schoolsMap.get(profile.school_id)!.name };
+          }
+        });
+      } else {
+        console.error("Error fetching schools:", schoolsError);
+      }
+    }
+    
+    return transformedData;
   } catch (error) {
     console.error("Error fetching user profiles:", error);
     throw error;
@@ -47,24 +75,37 @@ export async function fetchUserProfiles() {
 // Fetch a single user profile by ID
 export async function fetchUserProfileById(id: string) {
   try {
-    const { data, error } = await supabase
+    // Fetch the profile first
+    const { data: profile, error } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        school:schools(name)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
     if (error) throw error;
     
-    // Transform the data to ensure it matches the UserProfile type
-    const transformedData = {
-      ...data,
-      school: data.school || null
+    // Initialize result with profile data
+    const result: UserProfile = {
+      ...profile,
+      school: null
     };
     
-    return transformedData as UserProfile;
+    // If profile has a school_id, fetch the school
+    if (profile.school_id) {
+      const { data: schoolData, error: schoolError } = await supabase
+        .from('schools')
+        .select('name')
+        .eq('id', profile.school_id)
+        .single();
+      
+      if (!schoolError && schoolData) {
+        result.school = { name: schoolData.name };
+      } else {
+        console.error(`Error fetching school for profile ${id}:`, schoolError);
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error(`Error fetching user profile ${id}:`, error);
     throw error;
@@ -86,7 +127,7 @@ export async function updateUserProfile(id: string, updates: Partial<UserProfile
       .single();
     
     if (error) throw error;
-    return data as UserProfile;
+    return { ...data, school: null } as UserProfile;
   } catch (error) {
     console.error(`Error updating user profile ${id}:`, error);
     throw error;
