@@ -1,21 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
-// Define basic types
-export type FinancialReport = {
-  id: string;
-  report_type: string;
-  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  start_date: string;
-  end_date: string;
-  data: any;
-  created_at?: string;
-  updated_at?: string;
-};
-
-// Define primitive data types first to avoid circular references
+// Defina interfaces simples primeiro (sem auto-referência)
 export interface FinancialReportOverviewData {
   totalActiveSchools: number;
   totalRevenueMonth: number;
@@ -36,15 +23,27 @@ export interface MonthlyTrendItemData {
   revenue: number;
 }
 
-// Define the comprehensive report interface using the primitive types
+// Defina a interface completa usando os tipos primitivos
 export interface FinancialReportCompleteData {
   overview: FinancialReportOverviewData;
   revenueByPlan: RevenueByPlanItemData[];
   monthlyTrend: MonthlyTrendItemData[];
 }
 
+// Defina o tipo FinancialReport separadamente
+export interface FinancialReport {
+  id: string;
+  report_type: string;
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date: string;
+  end_date: string;
+  data: any;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Fetch all financial reports
-export async function fetchFinancialReports() {
+export async function fetchFinancialReports(): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -60,7 +59,7 @@ export async function fetchFinancialReports() {
 }
 
 // Fetch financial reports by type
-export async function fetchFinancialReportsByType(type: string) {
+export async function fetchFinancialReportsByType(type: string): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -77,7 +76,7 @@ export async function fetchFinancialReportsByType(type: string) {
 }
 
 // Fetch the latest financial report by type
-export async function fetchLatestFinancialReport(type: string) {
+export async function fetchLatestFinancialReport(type: string): Promise<FinancialReport | null> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -101,7 +100,7 @@ export async function fetchLatestFinancialReport(type: string) {
 }
 
 // Create a new financial report
-export async function createFinancialReport(report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>) {
+export async function createFinancialReport(report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -118,7 +117,7 @@ export async function createFinancialReport(report: Omit<FinancialReport, 'id' |
 }
 
 // Update a financial report
-export async function updateFinancialReport(id: string, updates: Partial<FinancialReport>) {
+export async function updateFinancialReport(id: string, updates: Partial<FinancialReport>): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -136,7 +135,7 @@ export async function updateFinancialReport(id: string, updates: Partial<Financi
 }
 
 // Delete a financial report
-export async function deleteFinancialReport(id: string) {
+export async function deleteFinancialReport(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('financial_reports')
@@ -303,7 +302,7 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
 // Generate monthly trend report
 export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTrendItemData[]> {
   try {
-    const result = [];
+    const result: MonthlyTrendItemData[] = [];
     const currentDate = new Date();
     
     // Calculate for the last X months
