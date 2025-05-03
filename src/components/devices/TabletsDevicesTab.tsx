@@ -42,7 +42,7 @@ export const TabletsDevicesTab = () => {
           <Badge variant={tabletStats.offline > 0 ? "destructive" : "outline"} className="gap-1">
             {tabletStats.offline} offline
           </Badge>
-          <Badge variant={tabletStats.batteryLow > 0 ? "warning" : "outline"} className="gap-1 bg-amber-500 hover:bg-amber-600">
+          <Badge variant="outline" className="gap-1 bg-amber-500 hover:bg-amber-600 text-white">
             {tabletStats.batteryLow} bateria baixa
           </Badge>
           <Button 
