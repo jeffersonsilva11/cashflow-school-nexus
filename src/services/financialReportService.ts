@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
-// Interfaces base sem dependências circulares
+// Basic data type definitions
 export interface FinancialReportOverviewData {
   totalActiveSchools: number;
   totalRevenueMonth: number;
@@ -24,26 +24,26 @@ export interface MonthlyTrendItemData {
   revenue: number;
 }
 
-// Interface composta usando os tipos base
+// Composite data type
 export interface FinancialReportCompleteData {
   overview: FinancialReportOverviewData;
   revenueByPlan: RevenueByPlanItemData[];
   monthlyTrend: MonthlyTrendItemData[];
 }
 
-// Interface para relatórios financeiros
+// Report type
 export interface FinancialReport {
   id: string;
   report_type: string;
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   start_date: string;
   end_date: string;
-  data: any; // Usando any para evitar problemas de inferência profunda
+  data: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
 
-// Buscar todos os relatórios financeiros
+// Function to fetch all financial reports
 export async function fetchFinancialReports(): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
@@ -59,7 +59,7 @@ export async function fetchFinancialReports(): Promise<FinancialReport[]> {
   }
 }
 
-// Buscar relatórios financeiros por tipo
+// Function to fetch financial reports by type
 export async function fetchFinancialReportsByType(type: string): Promise<FinancialReport[]> {
   try {
     const { data, error } = await supabase
@@ -76,7 +76,7 @@ export async function fetchFinancialReportsByType(type: string): Promise<Financi
   }
 }
 
-// Buscar o último relatório financeiro por tipo
+// Function to fetch the latest financial report by type
 export async function fetchLatestFinancialReport(type: string): Promise<FinancialReport | null> {
   try {
     const { data, error } = await supabase
@@ -88,7 +88,7 @@ export async function fetchLatestFinancialReport(type: string): Promise<Financia
       .maybeSingle();
     
     if (error) {
-      if (error.code === 'PGRST116') { // Nenhuma linha retornada
+      if (error.code === 'PGRST116') { // No rows returned
         return null;
       }
       throw error;
@@ -100,8 +100,10 @@ export async function fetchLatestFinancialReport(type: string): Promise<Financia
   }
 }
 
-// Criar um novo relatório financeiro
-export async function createFinancialReport(report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>): Promise<FinancialReport> {
+// Function to create a new financial report
+export async function createFinancialReport(
+  report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>
+): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -117,8 +119,11 @@ export async function createFinancialReport(report: Omit<FinancialReport, 'id' |
   }
 }
 
-// Atualizar um relatório financeiro
-export async function updateFinancialReport(id: string, updates: Partial<FinancialReport>): Promise<FinancialReport> {
+// Function to update a financial report
+export async function updateFinancialReport(
+  id: string, 
+  updates: Partial<FinancialReport>
+): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
       .from('financial_reports')
@@ -135,7 +140,7 @@ export async function updateFinancialReport(id: string, updates: Partial<Financi
   }
 }
 
-// Excluir um relatório financeiro
+// Function to delete a financial report
 export async function deleteFinancialReport(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -151,10 +156,10 @@ export async function deleteFinancialReport(id: string): Promise<boolean> {
   }
 }
 
-// Gerar relatório de visão geral financeira
+// Function to generate a financial overview report
 export async function generateFinancialOverviewReport(): Promise<FinancialReportOverviewData> {
   try {
-    // Obter contagem de escolas ativas
+    // Get count of active schools
     const { count: totalActiveSchools, error: schoolsError } = await supabase
       .from('schools')
       .select('*', { count: 'exact', head: true })
@@ -162,7 +167,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     if (schoolsError) throw schoolsError;
     
-    // Obter receita total das transações do mês atual
+    // Get total revenue from transactions for the current month
     const firstDayOfMonth = new Date();
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
@@ -176,7 +181,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const totalRevenueMonth = monthTransactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
     
-    // Obter contagem de assinaturas ativas
+    // Get count of active subscriptions
     const { count: totalActiveSubscriptions, error: subsError } = await supabase
       .from('subscriptions')
       .select('*', { count: 'exact', head: true })
@@ -184,7 +189,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     if (subsError) throw subsError;
     
-    // Obter pagamentos pendentes
+    // Get pending payments
     const { data: pendingInvoices, error: invoicesError } = await supabase
       .from('invoices')
       .select('amount')
@@ -194,12 +199,12 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const totalPendingPayments = pendingInvoices?.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) || 0;
     
-    // Calcular receita média por escola
+    // Calculate average revenue per school
     const averageRevenuePerSchool = totalActiveSchools > 0 
       ? totalRevenueMonth / totalActiveSchools 
       : 0;
     
-    // Obter receita do mês anterior para cálculo de taxa de crescimento
+    // Get previous month's revenue for growth rate calculation
     const previousMonth = new Date(firstDayOfMonth);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
     
@@ -213,7 +218,7 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
     
     const prevMonthRevenue = prevMonthTransactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
     
-    // Calcular taxa de crescimento
+    // Calculate growth rate
     const growthRate = prevMonthRevenue > 0 
       ? ((totalRevenueMonth - prevMonthRevenue) / prevMonthRevenue) * 100 
       : 0;
@@ -232,20 +237,20 @@ export async function generateFinancialOverviewReport(): Promise<FinancialReport
   }
 }
 
-// Gerar relatório de receita por plano
+// Function to generate a revenue by plan report
 export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemData[]> {
   try {
-    // Obter todos os planos
+    // Get all plans
     const { data: plans, error: plansError } = await supabase
       .from('plans')
       .select('id, name');
     
     if (plansError) throw plansError;
     
-    // Para cada plano, calcular a receita
+    // For each plan, calculate revenue
     const revenueByPlanData: RevenueByPlanItemData[] = await Promise.all(
       plans.map(async (plan) => {
-        // Obter escolas usando este plano
+        // Get schools using this plan
         const { data: schoolsWithPlan, error: schoolsError } = await supabase
           .from('schools')
           .select('id')
@@ -259,7 +264,7 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
           return { plan: plan.name, revenue: 0, percentage: 0 };
         }
         
-        // Obter transações dessas escolas no mês atual
+        // Get transactions from these schools in the current month
         const firstDayOfMonth = new Date();
         firstDayOfMonth.setDate(1);
         firstDayOfMonth.setHours(0, 0, 0, 0);
@@ -277,22 +282,22 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
         return {
           plan: plan.name,
           revenue,
-          percentage: 0 // Calcularemos as porcentagens depois de obter todas as receitas
+          percentage: 0 // Percentages calculated after all revenue totals are known
         };
       })
     );
     
-    // Calcular receita total
+    // Calculate total revenue
     const totalRevenue = revenueByPlanData.reduce((sum, item) => sum + item.revenue, 0);
     
-    // Calcular porcentagens
+    // Calculate percentages
     if (totalRevenue > 0) {
       revenueByPlanData.forEach(item => {
         item.percentage = parseFloat(((item.revenue / totalRevenue) * 100).toFixed(1));
       });
     }
     
-    // Classificar por receita (decrescente)
+    // Sort by revenue (descending)
     return revenueByPlanData.sort((a, b) => b.revenue - a.revenue);
   } catch (error) {
     console.error("Error generating revenue by plan report:", error);
@@ -300,13 +305,13 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
   }
 }
 
-// Gerar relatório de tendência mensal
+// Function to generate a monthly trend report
 export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTrendItemData[]> {
   try {
     const result: MonthlyTrendItemData[] = [];
     const currentDate = new Date();
     
-    // Calcular para os últimos X meses
+    // Calculate for the last X months
     for (let i = 0; i < months; i++) {
       const monthDate = new Date(currentDate);
       monthDate.setMonth(currentDate.getMonth() - i);
@@ -342,7 +347,7 @@ export async function generateMonthlyTrendReport(months = 4): Promise<MonthlyTre
   }
 }
 
-// Gerar um relatório financeiro completo
+// Function to generate a complete financial report
 export async function generateCompleteFinancialReport(): Promise<FinancialReportCompleteData> {
   try {
     const overview = await generateFinancialOverviewReport();
@@ -360,7 +365,9 @@ export async function generateCompleteFinancialReport(): Promise<FinancialReport
   }
 }
 
-// React Query Hooks com tipos explícitos
+// React Query Hook Types
+
+// Explicitly define the React Query hook return types
 export function useFinancialReports() {
   return useQuery<FinancialReport[], Error>({
     queryKey: ['financial-reports'],
@@ -403,15 +410,18 @@ export function useMonthlyTrend() {
   });
 }
 
+// Define explicit type for the mutation parameters to avoid deep type instantiation
+type CreateFinancialReportParams = Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>;
+type UpdateFinancialReportParams = {
+  id: string;
+  updates: Partial<FinancialReport>;
+};
+
 export function useCreateFinancialReport() {
   const queryClient = useQueryClient();
   
-  return useMutation<
-    FinancialReport, 
-    Error, 
-    Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>
-  >({
-    mutationFn: createFinancialReport,
+  return useMutation<FinancialReport, Error, CreateFinancialReportParams>({
+    mutationFn: (params: CreateFinancialReportParams) => createFinancialReport(params),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
       queryClient.invalidateQueries({ queryKey: ['financial-reports', data.report_type] });
@@ -431,12 +441,8 @@ export function useCreateFinancialReport() {
 export function useUpdateFinancialReport() {
   const queryClient = useQueryClient();
   
-  return useMutation<
-    FinancialReport, 
-    Error, 
-    { id: string, updates: Partial<FinancialReport> }
-  >({
-    mutationFn: ({ id, updates }) => updateFinancialReport(id, updates),
+  return useMutation<FinancialReport, Error, UpdateFinancialReportParams>({
+    mutationFn: ({ id, updates }: UpdateFinancialReportParams) => updateFinancialReport(id, updates),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
       queryClient.invalidateQueries({ queryKey: ['financial-reports', data.report_type] });
@@ -457,7 +463,7 @@ export function useDeleteFinancialReport() {
   const queryClient = useQueryClient();
   
   return useMutation<boolean, Error, string>({
-    mutationFn: deleteFinancialReport,
+    mutationFn: (id: string) => deleteFinancialReport(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
       toast({ title: "Relatório financeiro removido com sucesso" });
