@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get user profile data from the profiles table
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('name, email, role, school_id, avatar_url')
         .eq('id', supaUser.id)
         .single();
 
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw profileError;
       }
       
-      // Determine the user's role with proper normalization and validation
+      // Ensure role is properly formatted
       let userRole: UserRole = 'parent'; // Default role
       
       if (profileData?.role) {
@@ -79,11 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: userRole
       });
 
-      // Ensure role is properly formatted and stored
+      // Create formatted user object
       const formattedUser: User = {
         id: supaUser.id,
         name: profileData?.name || supaUser.email?.split('@')[0] || 'Usuário',
-        email: supaUser.email || '',
+        email: profileData?.email || supaUser.email || '',
         role: userRole,
         schoolId: profileData?.school_id,
         avatar: profileData?.avatar_url
@@ -94,14 +94,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('[AuthContext] Error getting user profile:', error);
       
-      // Return a basic user even without a profile
-      return {
-        id: supaUser.id,
-        name: supaUser.email?.split('@')[0] || 'Usuário',
-        email: supaUser.email || '',
-        role: 'parent', // Default to parent if profile fetching fails
-        avatar: undefined
-      };
+      // If there's an error with the profile, try a direct role check
+      try {
+        // Use a direct RPC call to check if user is admin (using our security definer function)
+        const { data: isAdminData } = await supabase.rpc('is_admin');
+        
+        console.log('[AuthContext] Direct admin check result:', isAdminData);
+        
+        // Return a basic user with the correct role if admin
+        return {
+          id: supaUser.id,
+          name: supaUser.email?.split('@')[0] || 'Usuário',
+          email: supaUser.email || '',
+          role: isAdminData === true ? 'admin' : 'parent',
+          avatar: undefined
+        };
+      } catch (rpcError) {
+        console.error('[AuthContext] Error in direct role check:', rpcError);
+        
+        // Return a basic user with default role as fallback
+        return {
+          id: supaUser.id,
+          name: supaUser.email?.split('@')[0] || 'Usuário',
+          email: supaUser.email || '',
+          role: 'parent', // Default fallback role
+          avatar: undefined
+        };
+      }
     }
   };
 
