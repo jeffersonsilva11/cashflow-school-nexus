@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
+import { Json } from "@/integrations/supabase/types";
 
 // Basic data type definitions
 export interface FinancialReportOverviewData {
@@ -31,14 +32,14 @@ export interface FinancialReportCompleteData {
   monthlyTrend: MonthlyTrendItemData[];
 }
 
-// Report type
+// Report type - Changed data type to Json to match Supabase's expected type
 export interface FinancialReport {
   id: string;
   report_type: string;
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   start_date: string;
   end_date: string;
-  data: Record<string, unknown>;
+  data: Json;
   created_at?: string;
   updated_at?: string;
 }
@@ -100,9 +101,18 @@ export async function fetchLatestFinancialReport(type: string): Promise<Financia
   }
 }
 
+// Definition for create financial report parameters that matches database schema
+type CreateFinancialReportParams = {
+  report_type: string;
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date: string;
+  end_date: string;
+  data: Json;
+}
+
 // Function to create a new financial report
 export async function createFinancialReport(
-  report: Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>
+  report: CreateFinancialReportParams
 ): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
@@ -119,10 +129,19 @@ export async function createFinancialReport(
   }
 }
 
+// Definition for update financial report parameters
+type UpdateFinancialReportFields = {
+  report_type?: string;
+  period?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  start_date?: string;
+  end_date?: string;
+  data?: Json;
+}
+
 // Function to update a financial report
 export async function updateFinancialReport(
   id: string, 
-  updates: Partial<FinancialReport>
+  updates: UpdateFinancialReportFields
 ): Promise<FinancialReport> {
   try {
     const { data, error } = await supabase
@@ -365,7 +384,7 @@ export async function generateCompleteFinancialReport(): Promise<FinancialReport
   }
 }
 
-// React Query Hook Types
+// React Query Hook Types - Fixed with explicit type parameters
 
 // Explicitly define the React Query hook return types
 export function useFinancialReports() {
@@ -410,13 +429,7 @@ export function useMonthlyTrend() {
   });
 }
 
-// Define explicit type for the mutation parameters to avoid deep type instantiation
-type CreateFinancialReportParams = Omit<FinancialReport, 'id' | 'created_at' | 'updated_at'>;
-type UpdateFinancialReportParams = {
-  id: string;
-  updates: Partial<FinancialReport>;
-};
-
+// Define explicit types for the mutation parameters to avoid deep type instantiation
 export function useCreateFinancialReport() {
   const queryClient = useQueryClient();
   
@@ -437,6 +450,12 @@ export function useCreateFinancialReport() {
     }
   });
 }
+
+// Type for update financial report mutation parameters
+type UpdateFinancialReportParams = {
+  id: string;
+  updates: UpdateFinancialReportFields;
+};
 
 export function useUpdateFinancialReport() {
   const queryClient = useQueryClient();
