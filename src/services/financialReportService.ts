@@ -315,24 +315,30 @@ export async function generateMonthlyTrendReport(months = 4) {
 }
 
 // Fixed type instantiation issue by removing recursive type structure
+export type FinancialReportOverview = {
+  totalActiveSchools: number;
+  totalRevenueMonth: number;
+  totalActiveSubscriptions: number;
+  totalPendingPayments: number;
+  averageRevenuePerSchool: number;
+  growthRate: number;
+};
+
+export type RevenueByPlanItem = {
+  plan: string;
+  revenue: number;
+  percentage: number;
+};
+
+export type MonthlyTrendItem = {
+  month: string;
+  revenue: number;
+};
+
 export type FinancialReportComplete = {
-  overview: {
-    totalActiveSchools: number;
-    totalRevenueMonth: number;
-    totalActiveSubscriptions: number;
-    totalPendingPayments: number;
-    averageRevenuePerSchool: number;
-    growthRate: number;
-  };
-  revenueByPlan: Array<{
-    plan: string;
-    revenue: number;
-    percentage: number;
-  }>;
-  monthlyTrend: Array<{
-    month: string;
-    revenue: number;
-  }>;
+  overview: FinancialReportOverview;
+  revenueByPlan: RevenueByPlanItem[];
+  monthlyTrend: MonthlyTrendItem[];
 };
 
 // Generate a complete financial report
