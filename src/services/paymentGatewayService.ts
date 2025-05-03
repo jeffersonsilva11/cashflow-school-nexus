@@ -18,7 +18,7 @@ export interface PaymentGatewayTransaction {
   installments?: number;
   authorization_code?: string;
   nsu?: string; // Transaction NSU (Number Sequence Unique) - specific to some gateways
-  transaction_date: Date;
+  transaction_date: string | Date;
   vendor_id: string;
   student_id?: string;
   school_id: string;
@@ -37,7 +37,7 @@ export interface PaymentTerminal {
   vendor_id: string;
   school_id: string;
   status: 'active' | 'inactive' | 'maintenance';
-  last_sync?: Date | string;
+  last_sync_at?: Date | string;
   firmware_version?: string;
   battery_level?: number;
   connection_status?: 'online' | 'offline';
@@ -250,6 +250,11 @@ export class PaymentGatewayService {
   // Save a transaction from a payment terminal to our database
   async saveTransaction(transaction: Omit<PaymentGatewayTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<PaymentGatewayTransaction | null> {
     try {
+      // Convert Date objects to ISO strings for Supabase
+      const transactionDate = transaction.transaction_date instanceof Date 
+        ? transaction.transaction_date.toISOString() 
+        : transaction.transaction_date;
+
       // Convert data for Supabase
       const { data, error } = await supabase
         .from('payment_gateway_transactions')
@@ -266,7 +271,7 @@ export class PaymentGatewayService {
           installments: transaction.installments,
           authorization_code: transaction.authorization_code,
           nsu: transaction.nsu,
-          transaction_date: transaction.transaction_date,
+          transaction_date: transactionDate,
           vendor_id: transaction.vendor_id,
           student_id: transaction.student_id,
           school_id: transaction.school_id,
@@ -281,8 +286,8 @@ export class PaymentGatewayService {
       }
       
       // Update related systems (student balance, vendor financials)
-      if (data && transaction.status === 'completed') {
-        await this.updateRelatedSystems(data);
+      if (data && data.status === 'completed') {
+        await this.updateRelatedSystems(data as unknown as PaymentGatewayTransaction);
       }
       
       return data as unknown as PaymentGatewayTransaction;
@@ -295,6 +300,11 @@ export class PaymentGatewayService {
   // Register a new payment terminal
   async registerTerminal(terminal: Omit<PaymentTerminal, 'id' | 'created_at' | 'updated_at'>): Promise<PaymentTerminal | null> {
     try {
+      // Convert last_sync to ISO string if it's a Date
+      const lastSync = terminal.last_sync_at instanceof Date 
+        ? terminal.last_sync_at.toISOString() 
+        : terminal.last_sync_at;
+
       const { data, error } = await supabase
         .from('payment_terminals')
         .insert({
@@ -305,8 +315,10 @@ export class PaymentGatewayService {
           vendor_id: terminal.vendor_id,
           school_id: terminal.school_id,
           status: terminal.status,
-          last_sync_at: terminal.last_sync instanceof Date ? terminal.last_sync.toISOString() : terminal.last_sync,
-          firmware_version: terminal.firmware_version
+          last_sync_at: lastSync,
+          firmware_version: terminal.firmware_version,
+          battery_level: terminal.battery_level,
+          connection_status: terminal.connection_status
         })
         .select()
         .single();
@@ -326,13 +338,19 @@ export class PaymentGatewayService {
   // Update terminal status
   async updateTerminalStatus(terminalId: string, status: PaymentTerminal['status'], metadata?: Partial<PaymentTerminal>): Promise<boolean> {
     try {
+      const updateData: Record<string, any> = {
+        status: status,
+        last_sync_at: new Date().toISOString()
+      };
+      
+      // Add optional fields if provided
+      if (metadata?.firmware_version) updateData.firmware_version = metadata.firmware_version;
+      if (metadata?.battery_level !== undefined) updateData.battery_level = metadata.battery_level;
+      if (metadata?.connection_status) updateData.connection_status = metadata.connection_status;
+      
       const { error } = await supabase
         .from('payment_terminals')
-        .update({
-          status: status,
-          last_sync_at: new Date().toISOString(),
-          ...metadata
-        })
+        .update(updateData)
         .eq('terminal_id', terminalId);
       
       if (error) {
@@ -351,24 +369,24 @@ export class PaymentGatewayService {
   async processRefund(originalTransactionId: string, amount?: number): Promise<PaymentGatewayTransaction | null> {
     try {
       // First, find the original transaction
-      const { data: originalTransaction, error: findError } = await supabase
+      const { data: originalTransactionData, error: findError } = await supabase
         .from('payment_gateway_transactions')
         .select('*')
         .eq('transaction_id', originalTransactionId)
         .single();
       
-      if (findError || !originalTransaction) {
+      if (findError || !originalTransactionData) {
         console.error('Original transaction not found:', originalTransactionId);
         return null;
       }
       
-      const transaction = originalTransaction as unknown as PaymentGatewayTransaction;
+      const originalTransaction = originalTransactionData as unknown as PaymentGatewayTransaction;
       
       // Create the gateway based on the original transaction
-      const gateway = PaymentGatewayFactory.createGateway(transaction.payment_gateway);
+      const gateway = PaymentGatewayFactory.createGateway(originalTransaction.payment_gateway);
       
       // Process the refund with the gateway
-      const refundResult = await gateway.refundPayment(originalTransactionId, amount || transaction.amount);
+      const refundResult = await gateway.refundPayment(originalTransactionId, amount || originalTransaction.amount);
       
       if (refundResult.status !== 'completed') {
         console.error('Refund failed at gateway level:', refundResult);
@@ -378,20 +396,20 @@ export class PaymentGatewayService {
       // Save the refund transaction
       return await this.saveTransaction({
         transaction_id: refundResult.refund_id || `RF-${originalTransactionId}`,
-        payment_gateway: transaction.payment_gateway,
-        terminal_id: transaction.terminal_id,
-        device_id: transaction.device_id,
-        amount: -(amount || transaction.amount), // Negative amount for refunds
+        payment_gateway: originalTransaction.payment_gateway,
+        terminal_id: originalTransaction.terminal_id,
+        device_id: originalTransaction.device_id,
+        amount: -(amount || originalTransaction.amount), // Negative amount for refunds
         status: 'completed',
         type: 'refund',
-        payment_method: transaction.payment_method,
-        card_brand: transaction.card_brand,
+        payment_method: originalTransaction.payment_method,
+        card_brand: originalTransaction.card_brand,
         authorization_code: refundResult.authorization_code,
         nsu: refundResult.nsu,
-        transaction_date: new Date(),
-        vendor_id: transaction.vendor_id,
-        student_id: transaction.student_id,
-        school_id: transaction.school_id,
+        transaction_date: new Date().toISOString(),
+        vendor_id: originalTransaction.vendor_id,
+        student_id: originalTransaction.student_id,
+        school_id: originalTransaction.school_id,
         metadata: {
           original_transaction_id: originalTransactionId,
           refund_reason: 'Customer requested'
@@ -418,22 +436,35 @@ export class PaymentGatewayService {
         if (!transaction.transaction_id) continue;
         
         // Check if transaction already exists
-        const { data: existingTransaction } = await supabase
+        const { data: existingTransactionData } = await supabase
           .from('payment_gateway_transactions')
           .select('*')
           .eq('transaction_id', transaction.transaction_id)
           .single();
+        
+        const existingTransaction = existingTransactionData as unknown as PaymentGatewayTransaction | null;
         
         if (!existingTransaction) {
           // New transaction, save it
           if (transaction.amount && transaction.terminal_id && transaction.payment_method && 
               transaction.vendor_id && transaction.school_id) {
             const saved = await this.saveTransaction({
-              ...transaction as any,
-              transaction_date: transaction.transaction_date || new Date(),
+              transaction_id: transaction.transaction_id,
+              payment_gateway: transaction.payment_gateway || 'stone',
+              terminal_id: transaction.terminal_id,
+              amount: transaction.amount,
               status: transaction.status || 'completed',
               type: transaction.type || 'purchase',
-              payment_gateway: transaction.payment_gateway || 'stone'
+              payment_method: transaction.payment_method,
+              card_brand: transaction.card_brand,
+              installments: transaction.installments,
+              authorization_code: transaction.authorization_code,
+              nsu: transaction.nsu,
+              transaction_date: transaction.transaction_date || new Date().toISOString(),
+              vendor_id: transaction.vendor_id,
+              student_id: transaction.student_id,
+              school_id: transaction.school_id,
+              metadata: transaction.metadata
             });
             if (saved) processed.push(saved);
           } else {
@@ -462,7 +493,7 @@ export class PaymentGatewayService {
       }
       
       // Update terminal last sync time
-      await this.updateTerminalStatus(terminalId, 'active', { last_sync: new Date() });
+      await this.updateTerminalStatus(terminalId, 'active');
       
       return {
         success: true,
@@ -567,9 +598,7 @@ export class PaymentGatewayService {
   // Get all terminals for a vendor or school
   async getTerminals(filter: { vendorId?: string, schoolId?: string }): Promise<PaymentTerminal[]> {
     try {
-      let query = supabase
-        .from('payment_terminals')
-        .select('*');
+      let query = supabase.from('payment_terminals').select('*');
       
       if (filter.vendorId) {
         query = query.eq('vendor_id', filter.vendorId);
@@ -586,10 +615,7 @@ export class PaymentGatewayService {
         return [];
       }
       
-      return data.map(terminal => ({
-        ...terminal,
-        last_sync: terminal.last_sync_at
-      })) as unknown as PaymentTerminal[];
+      return data as unknown as PaymentTerminal[];
     } catch (error) {
       console.error('Error in getTerminals:', error);
       return [];
@@ -641,7 +667,7 @@ export const simulateTerminalPayment = async (
     // Save transaction to our system
     return await paymentGatewayService.saveTransaction({
       transaction_id: paymentResult.transaction_id,
-      payment_gateway: terminal.gateway as any,
+      payment_gateway: terminal.gateway as 'stone' | 'mercadopago' | 'pagseguro' | 'other',
       terminal_id: terminalId,
       amount,
       status: 'completed',
@@ -649,7 +675,7 @@ export const simulateTerminalPayment = async (
       payment_method: paymentMethod,
       authorization_code: paymentResult.authorization_code,
       nsu: paymentResult.nsu,
-      transaction_date: new Date(),
+      transaction_date: new Date().toISOString(),
       vendor_id: vendorId,
       student_id: studentId,
       school_id: schoolId,
