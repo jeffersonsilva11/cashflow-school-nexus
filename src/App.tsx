@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -109,7 +108,7 @@ function App() {
               <Route path="/students/edit/:studentId" element={<StudentEdit />} />
               <Route path="/students/import" element={<StudentsImport />} />
               <Route path="/students/bind/:studentId" element={<StudentParentBinding />} />
-
+              
               <Route path="/parents" element={<Parents />} />
               <Route path="/parents/:parentId" element={<ParentDetails />} />
               <Route path="/parents/add" element={<ParentForm />} />

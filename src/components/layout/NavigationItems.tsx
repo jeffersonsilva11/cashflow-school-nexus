@@ -70,7 +70,7 @@ export const deviceItems = [
 export const reportItems = [
   { to: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
   { to: "/reports/financial", icon: <FileBarChart size={20} />, label: "Financeiros" },
-  { to: "/reports/devices", icon: <Database size={20} />, label: "Dispositivos" },
+  { to: "/reports/device-usage", icon: <Database size={20} />, label: "Dispositivos" },
   { to: "/reports/students", icon: <BookOpen size={20} />, label: "Alunos" },
   { to: "/reports/export", icon: <Download size={20} />, label: "Exportar Dados" },
 ];
@@ -150,6 +150,11 @@ export const navigationItems = [
         title: "Uso de Dispositivos",
         href: "/reports/device-usage",
         icon: <FileBarChart className="h-4 w-4" />,
+      },
+      {
+        title: "Relatórios de Alunos",
+        href: "/reports/students",
+        icon: <FileSpreadsheet className="h-4 w-4" />,
       },
     ],
   },
