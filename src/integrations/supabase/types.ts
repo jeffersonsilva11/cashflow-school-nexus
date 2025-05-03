@@ -130,6 +130,48 @@ export type Database = {
           },
         ]
       }
+      payment_gateway_configs: {
+        Row: {
+          api_key: string | null
+          app_id: string | null
+          app_key: string | null
+          config: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          environment: string | null
+          gateway: string
+          id: string
+          stone_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          app_id?: string | null
+          app_key?: string | null
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          environment?: string | null
+          gateway: string
+          id?: string
+          stone_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          app_id?: string | null
+          app_key?: string | null
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          environment?: string | null
+          gateway?: string
+          id?: string
+          stone_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payment_gateway_transactions: {
         Row: {
           amount: number
@@ -220,6 +262,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_provider_configs: {
+        Row: {
+          api_key: string | null
+          config: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          environment: string | null
+          id: string
+          provider: string
+          publishable_key: string | null
+          updated_at: string | null
+          webhook_secret: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          environment?: string | null
+          id?: string
+          provider: string
+          publishable_key?: string | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          environment?: string | null
+          id?: string
+          provider?: string
+          publishable_key?: string | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+        }
+        Relationships: []
       }
       payment_terminals: {
         Row: {
@@ -486,6 +567,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_configs: {
+        Row: {
+          auto_read: boolean | null
+          buffer_time: number | null
+          card_protocols: string[] | null
+          company_name: string | null
+          config: Json | null
+          config_key: string
+          created_at: string | null
+          date_format: string | null
+          debug_mode: boolean | null
+          default_currency: string | null
+          enabled: boolean | null
+          id: string
+          logo_url: string | null
+          map_style: string | null
+          mapbox_token: string | null
+          privacy_url: string | null
+          support_email: string | null
+          support_phone: string | null
+          terms_url: string | null
+          time_format: string | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_read?: boolean | null
+          buffer_time?: number | null
+          card_protocols?: string[] | null
+          company_name?: string | null
+          config?: Json | null
+          config_key: string
+          created_at?: string | null
+          date_format?: string | null
+          debug_mode?: boolean | null
+          default_currency?: string | null
+          enabled?: boolean | null
+          id?: string
+          logo_url?: string | null
+          map_style?: string | null
+          mapbox_token?: string | null
+          privacy_url?: string | null
+          support_email?: string | null
+          support_phone?: string | null
+          terms_url?: string | null
+          time_format?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_read?: boolean | null
+          buffer_time?: number | null
+          card_protocols?: string[] | null
+          company_name?: string | null
+          config?: Json | null
+          config_key?: string
+          created_at?: string | null
+          date_format?: string | null
+          debug_mode?: boolean | null
+          default_currency?: string | null
+          enabled?: boolean | null
+          id?: string
+          logo_url?: string | null
+          map_style?: string | null
+          mapbox_token?: string | null
+          privacy_url?: string | null
+          support_email?: string | null
+          support_phone?: string | null
+          terms_url?: string | null
+          time_format?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       transactions: {
         Row: {

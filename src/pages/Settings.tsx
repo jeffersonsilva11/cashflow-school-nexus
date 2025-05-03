@@ -35,26 +35,38 @@ const Settings = () => {
   const { data: tableExists } = useQuery({
     queryKey: ['check-settings-tables'],
     queryFn: async () => {
-      // Check if the system_configs table exists
-      const { data: systemConfigTable, error: systemConfigError } = await supabase
-        .from('system_configs')
-        .select('count(*)');
-      
-      // Check if the payment_gateway_configs table exists
-      const { data: gatewayConfigTable, error: gatewayConfigError } = await supabase
-        .from('payment_gateway_configs')
-        .select('count(*)');
-      
-      // Check if the payment_provider_configs table exists
-      const { data: providerConfigTable, error: providerConfigError } = await supabase
-        .from('payment_provider_configs')
-        .select('count(*)');
-      
-      return {
-        systemConfigExists: !systemConfigError,
-        gatewayConfigExists: !gatewayConfigError,
-        providerConfigExists: !providerConfigError,
-      };
+      try {
+        // Check if the system_configs table exists
+        const { data: systemConfigTable, error: systemConfigError } = await supabase
+          .from('system_configs')
+          .select('count(*)')
+          .limit(1);
+        
+        // Check if the payment_gateway_configs table exists
+        const { data: gatewayConfigTable, error: gatewayConfigError } = await supabase
+          .from('payment_gateway_configs')
+          .select('count(*)')
+          .limit(1);
+        
+        // Check if the payment_provider_configs table exists
+        const { data: providerConfigTable, error: providerConfigError } = await supabase
+          .from('payment_provider_configs')
+          .select('count(*)')
+          .limit(1);
+        
+        return {
+          systemConfigExists: !systemConfigError && systemConfigTable !== null,
+          gatewayConfigExists: !gatewayConfigError && gatewayConfigTable !== null,
+          providerConfigExists: !providerConfigError && providerConfigTable !== null,
+        };
+      } catch (error) {
+        console.error("Error checking settings tables:", error);
+        return {
+          systemConfigExists: false,
+          gatewayConfigExists: false,
+          providerConfigExists: false
+        };
+      }
     },
     retry: false,
   });

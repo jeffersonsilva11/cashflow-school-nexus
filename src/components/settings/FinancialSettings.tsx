@@ -14,7 +14,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { BanknoteIcon, CreditCard, Key, PencilLine, Save, TestTube } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Define schemas for payment provider configurations
 const stripeConfigSchema = z.object({
@@ -34,6 +33,20 @@ const asaasConfigSchema = z.object({
 type StripeConfig = z.infer<typeof stripeConfigSchema>;
 type AsaasConfig = z.infer<typeof asaasConfigSchema>;
 
+// Define types for payment provider configuration data
+interface PaymentProviderConfig {
+  id: string;
+  provider: string;
+  api_key: string | null;
+  publishable_key: string | null;
+  webhook_secret: string | null;
+  environment: string;
+  enabled: boolean;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
 const FinancialSettings = () => {
   const [activeTab, setActiveTab] = useState<string>("stripe");
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -42,6 +55,7 @@ const FinancialSettings = () => {
   const { data: stripeConfig, isLoading: loadingStripe, refetch: refetchStripe } = useQuery({
     queryKey: ['financial-config', 'stripe'],
     queryFn: async () => {
+      // We need to use a raw query approach since TS doesn't know about our new tables
       const { data, error } = await supabase
         .from('payment_provider_configs')
         .select('*')
@@ -49,6 +63,7 @@ const FinancialSettings = () => {
         .single();
       
       if (error) {
+        console.error('Error fetching Stripe config:', error);
         // Return default config if not found
         return { 
           provider: 'stripe',
@@ -58,9 +73,9 @@ const FinancialSettings = () => {
           environment: 'test',
           enabled: false,
           config: {}
-        };
+        } as PaymentProviderConfig;
       }
-      return data;
+      return data as PaymentProviderConfig;
     },
   });
   
@@ -74,6 +89,7 @@ const FinancialSettings = () => {
         .single();
       
       if (error) {
+        console.error('Error fetching Asaas config:', error);
         // Return default config if not found
         return { 
           provider: 'asaas',
@@ -81,9 +97,9 @@ const FinancialSettings = () => {
           environment: 'sandbox',
           enabled: false,
           config: {}
-        };
+        } as PaymentProviderConfig;
       }
-      return data;
+      return data as PaymentProviderConfig;
     },
   });
   
@@ -91,20 +107,20 @@ const FinancialSettings = () => {
   const stripeForm = useForm<StripeConfig>({
     resolver: zodResolver(stripeConfigSchema),
     defaultValues: {
-      api_key: stripeConfig?.api_key || '',
-      publishable_key: stripeConfig?.publishable_key || '',
-      webhook_secret: stripeConfig?.webhook_secret || '',
-      environment: (stripeConfig?.environment as "test" | "production") || 'test',
-      enabled: stripeConfig?.enabled || false,
+      api_key: '',
+      publishable_key: '',
+      webhook_secret: '',
+      environment: 'test',
+      enabled: false,
     },
   });
   
   const asaasForm = useForm<AsaasConfig>({
     resolver: zodResolver(asaasConfigSchema),
     defaultValues: {
-      api_key: asaasConfig?.api_key || '',
-      environment: (asaasConfig?.environment as "sandbox" | "production") || 'sandbox',
-      enabled: asaasConfig?.enabled || false,
+      api_key: '',
+      environment: 'sandbox',
+      enabled: false,
     },
   });
   
@@ -119,7 +135,7 @@ const FinancialSettings = () => {
         enabled: stripeConfig.enabled || false,
       });
     }
-  }, [stripeConfig, stripeForm.reset]);
+  }, [stripeConfig]);
   
   React.useEffect(() => {
     if (asaasConfig) {
@@ -129,7 +145,7 @@ const FinancialSettings = () => {
         enabled: asaasConfig.enabled || false,
       });
     }
-  }, [asaasConfig, asaasForm.reset]);
+  }, [asaasConfig]);
   
   // Save Stripe configuration
   const saveStripeConfig = async (data: StripeConfig) => {
