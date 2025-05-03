@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMigrateData } from '@/services/dataMigrationService';
-import { Loader2, CheckCircle, AlertCircle, Database } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, Database, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 
 export function DataMigrationTool() {
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<{
     success?: boolean;
     message?: string;
@@ -23,7 +25,21 @@ export function DataMigrationTool() {
     
     try {
       setIsLoading(true);
+      setProgress(10);
+      
+      // Usamos uma abordagem progressiva para atualização do progresso
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          // Não ultrapassa 90% até que a migração seja concluída
+          if (prev < 90) return prev + 5;
+          return prev;
+        });
+      }, 500);
+      
       const migrationResult = await migrateAllData();
+      clearInterval(progressInterval);
+      setProgress(100);
+      
       setResult(migrationResult);
     } catch (error) {
       setResult({
@@ -34,6 +50,11 @@ export function DataMigrationTool() {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleReset = () => {
+    setResult(null);
+    setProgress(0);
   };
   
   return (
@@ -53,6 +74,16 @@ export function DataMigrationTool() {
           Esta ferramenta migrará todos os dados mockados para o banco de dados.
           Isto incluirá escolas, planos, assinaturas, faturas e relatórios financeiros.
         </p>
+        
+        {isLoading && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Migrando dados...</span>
+              <span>{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        )}
         
         {result && (
           <Alert variant={result.success ? "default" : "destructive"}>
@@ -80,7 +111,7 @@ export function DataMigrationTool() {
         )}
       </CardContent>
       
-      <CardFooter>
+      <CardFooter className="flex flex-col sm:flex-row gap-3">
         <Button 
           onClick={handleMigration} 
           disabled={isLoading || result?.success}
@@ -100,6 +131,17 @@ export function DataMigrationTool() {
             "Iniciar Migração de Dados"
           )}
         </Button>
+        
+        {result && (
+          <Button 
+            variant="outline"
+            onClick={handleReset}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reiniciar
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
