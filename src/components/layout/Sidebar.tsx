@@ -38,8 +38,8 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
       return false;
     }
     
-    // Admin always has access to everything
-    if (user.role === 'admin') {
+    // Admin always has access to everything - use lowercase comparison for case insensitivity
+    if (user.role.toLowerCase() === 'admin') {
       console.log(`[Sidebar] User ${user.name} has admin role, granting access to all items`);
       return true;
     }
@@ -52,18 +52,22 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
 
   // Debug logging for menu filtering
   console.log(`[Sidebar] Current user:`, user);
-  console.log('[Sidebar] Admin check:', user?.role === 'admin' ? 'Is admin' : 'Not admin');
+  console.log(`[Sidebar] User role:`, user?.role);
+  console.log(`[Sidebar] Admin check (case-insensitive):`, user?.role?.toLowerCase() === 'admin' ? 'Is admin' : 'Not admin');
   
   // When admin user, show all menu items without filtering
   let filteredMainNavItems = mainNavItems;
   let filteredFinancialNavItems = financialNavItems;
   let filteredReportsAndAdminItems = reportsAndAdminItems;
   
-  // Apply filtering only for non-admin users
-  if (!user || user.role !== 'admin') {
+  // Apply filtering only for non-admin users - use lowercase comparison for case insensitivity
+  if (!user || !user.role || user.role.toLowerCase() !== 'admin') {
+    console.log('[Sidebar] Not an admin user, filtering menu items');
     filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
     filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
     filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+  } else {
+    console.log('[Sidebar] Admin user detected, showing all menu items');
   }
 
   console.log(`[Sidebar] Filtered items counts: Main: ${filteredMainNavItems.length}, Financial: ${filteredFinancialNavItems.length}, Reports/Admin: ${filteredReportsAndAdminItems.length}`);

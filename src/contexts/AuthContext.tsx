@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: userRole
       });
 
-      return {
+      // Ensure role is properly formatted and stored
+      const formattedUser: User = {
         id: supaUser.id,
         name: profileData?.name || supaUser.email?.split('@')[0] || 'Usuário',
         email: supaUser.email || '',
@@ -82,6 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         schoolId: profileData?.school_id,
         avatar: profileData?.avatar_url
       };
+
+      console.log('[AuthContext] Formatted user object:', formattedUser);
+      return formattedUser;
     } catch (error) {
       console.error('Error getting user profile:', error);
       
@@ -209,8 +213,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Log de depuração para verificação de permissões
     console.log(`[AuthContext] Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
     
-    // Admin always has access
-    if (user.role === 'admin') {
+    // Admin always has access - use lowercase for case insensitivity
+    if (user.role.toLowerCase() === 'admin') {
       console.log('[AuthContext] Admin tem permissão para todas as funcionalidades');
       return true;
     }
