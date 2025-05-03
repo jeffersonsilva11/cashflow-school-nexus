@@ -1,17 +1,43 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, MapPin, School, Users, CreditCard } from 'lucide-react';
+import { Search, MapPin, School, Users, CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSchools } from '@/services/schoolService';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 export default function SchoolsMap() {
   const [mapboxToken, setMapboxToken] = useState('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
   const { toast } = useToast();
+  const { data: schools, isLoading: schoolsLoading } = useSchools();
+
+  // Check if mapbox token exists in system configs
+  useEffect(() => {
+    const checkMapboxToken = async () => {
+      try {
+        // Here we would ideally fetch the token from system_configs
+        // For now we'll just check localStorage as a fallback
+        const savedToken = localStorage.getItem('mapbox_token');
+        if (savedToken) {
+          setMapboxToken(savedToken);
+          setIsMapLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error checking for Mapbox token:", error);
+      }
+    };
+    
+    checkMapboxToken();
+  }, []);
 
   const handleLoadMap = () => {
     if (!mapboxToken) {
@@ -23,56 +49,86 @@ export default function SchoolsMap() {
       return;
     }
     
-    // Simular carregamento do mapa
-    toast({
-      title: "Mapa carregado",
-      description: "O mapa de escolas foi carregado com sucesso."
-    });
-    setIsMapLoaded(true);
+    setLoading(true);
+    
+    // Save token to localStorage for persistence
+    localStorage.setItem('mapbox_token', mapboxToken);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setIsMapLoaded(true);
+      setLoading(false);
+      toast({
+        title: "Mapa carregado",
+        description: "O mapa de escolas foi carregado com sucesso."
+      });
+    }, 1000);
   };
 
-  const mockSchools = [
-    { 
-      id: 'SCH001', 
-      name: 'Colégio São Paulo', 
-      address: 'Rua das Flores, 123, São Paulo, SP',
-      students: 850,
-      devices: 780, 
-      status: 'active' 
-    },
-    { 
-      id: 'SCH002', 
-      name: 'Escola Maria Eduarda', 
-      address: 'Av. Principal, 456, São Paulo, SP',
-      students: 650,
-      devices: 590,
-      status: 'active' 
-    },
-    { 
-      id: 'SCH003', 
-      name: 'Colégio São Pedro', 
-      address: 'Rua dos Pinheiros, 789, Campinas, SP',
-      students: 720,
-      devices: 650,
-      status: 'active' 
-    },
-    { 
-      id: 'SCH004', 
-      name: 'Instituto Educação', 
-      address: 'Av. Brasil, 1000, Rio de Janeiro, RJ',
-      students: 520,
-      devices: 470,
-      status: 'pending' 
-    },
-    { 
-      id: 'SCH005', 
-      name: 'Escola Nova Geração', 
-      address: 'Rua das Palmeiras, 321, Belo Horizonte, MG',
-      students: 430,
-      devices: 380,
-      status: 'inactive' 
-    },
-  ];
+  // Initialize and load the map
+  useEffect(() => {
+    if (!isMapLoaded || !mapboxToken || !mapContainer.current) return;
+
+    mapboxgl.accessToken = mapboxToken;
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [-47.9292, -15.7801], // Brazil centered
+      zoom: 3
+    });
+
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    // Load schools on the map
+    map.current.on('load', () => {
+      if (!map.current || !schools) return;
+      
+      // Add markers for each school
+      schools.forEach(school => {
+        // In a real implementation, we'd use geocoding to get coordinates
+        // For this demo, we're using random coordinates around Brazil
+        const lat = -15.7801 + (Math.random() - 0.5) * 10;
+        const lng = -47.9292 + (Math.random() - 0.5) * 10;
+        
+        // Create custom marker element
+        const markerElement = document.createElement('div');
+        markerElement.className = 'school-marker';
+        markerElement.style.width = '30px';
+        markerElement.style.height = '30px';
+        markerElement.style.borderRadius = '50%';
+        markerElement.style.backgroundColor = school.active ? '#4ade80' : '#a1a1aa';
+        markerElement.style.display = 'flex';
+        markerElement.style.alignItems = 'center';
+        markerElement.style.justifyContent = 'center';
+        markerElement.style.color = 'white';
+        markerElement.style.fontWeight = 'bold';
+        markerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        markerElement.innerHTML = school.name.substring(0, 1);
+        
+        // Create popup
+        const popup = new mapboxgl.Popup({ offset: 25 })
+          .setHTML(`
+            <div style="padding: 10px;">
+              <h3 style="margin: 0 0 5px; font-weight: bold;">${school.name}</h3>
+              <p style="margin: 0; font-size: 12px;">${school.address || 'Endereço não cadastrado'}</p>
+              <p style="margin: 5px 0 0; font-size: 12px;">Status: ${school.active ? 'Ativo' : 'Inativo'}</p>
+            </div>
+          `);
+        
+        // Add marker to map
+        new mapboxgl.Marker(markerElement)
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(map.current!);
+      });
+    });
+
+    // Cleanup on unmount
+    return () => {
+      map.current?.remove();
+    };
+  }, [isMapLoaded, mapboxToken, schools]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -107,7 +163,16 @@ export default function SchoolsMap() {
               </p>
             </div>
             <div className="pt-2">
-              <Button onClick={handleLoadMap}>Carregar Mapa</Button>
+              <Button onClick={handleLoadMap} disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  'Carregar Mapa'
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -129,16 +194,7 @@ export default function SchoolsMap() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[500px] w-full bg-slate-100 rounded-md flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <MapPin className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    Visualização do mapa será implementada em breve.
-                    <br />
-                    Esta tela demonstra como será a interface quando conectada à API do Mapbox.
-                  </p>
-                </div>
-              </div>
+              <div ref={mapContainer} className="h-[500px] w-full bg-slate-100 rounded-md" />
             </CardContent>
           </Card>
 
@@ -149,43 +205,41 @@ export default function SchoolsMap() {
                 <CardDescription>Instituições cadastradas no sistema</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockSchools.map((school) => (
-                  <div key={school.id} className="border rounded-md p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{school.name}</h3>
-                        <p className="text-sm text-muted-foreground">{school.address}</p>
-                      </div>
-                      <Badge 
-                        variant={
-                          school.status === 'active' ? 'default' : 
-                          school.status === 'pending' ? 'outline' : 
-                          'secondary'
-                        }
-                      >
-                        {
-                          school.status === 'active' ? 'Ativo' : 
-                          school.status === 'pending' ? 'Pendente' : 
-                          'Inativo'
-                        }
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <School className="h-4 w-4 text-muted-foreground" />
-                        <span>ID: {school.id}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span>{school.students} alunos</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span>{school.devices} dispositivos</span>
-                      </div>
-                    </div>
+                {schoolsLoading ? (
+                  <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ))}
+                ) : schools && schools.length > 0 ? (
+                  schools.slice(0, 5).map((school) => (
+                    <div key={school.id} className="border rounded-md p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{school.name}</h3>
+                          <p className="text-sm text-muted-foreground">{school.address || 'Endereço não cadastrado'}</p>
+                        </div>
+                        <Badge 
+                          variant={school.active ? 'default' : 'secondary'}
+                        >
+                          {school.active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <School className="h-4 w-4 text-muted-foreground" />
+                          <span>ID: {school.id.substring(0, 8)}...</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                          <span>{school.subscription_plan || 'Plano Básico'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center p-8 text-muted-foreground">
+                    Nenhuma escola cadastrada
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -206,26 +260,32 @@ export default function SchoolsMap() {
                       <div className="grid grid-cols-2 gap-4">
                         <Card>
                           <CardContent className="pt-6">
-                            <div className="text-2xl font-bold">{mockSchools.length}</div>
+                            <div className="text-2xl font-bold">{schools?.length || 0}</div>
                             <p className="text-xs text-muted-foreground mt-1">Total de Escolas</p>
                           </CardContent>
                         </Card>
                         <Card>
                           <CardContent className="pt-6">
-                            <div className="text-2xl font-bold">3</div>
+                            <div className="text-2xl font-bold">
+                              {schools?.filter(s => s.active).length || 0}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Escolas Ativas</p>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="text-2xl font-bold">
+                              {Array.from(new Set(schools?.map(s => s.state) || [])).filter(Boolean).length}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">Estados</p>
                           </CardContent>
                         </Card>
                         <Card>
                           <CardContent className="pt-6">
-                            <div className="text-2xl font-bold">4</div>
+                            <div className="text-2xl font-bold">
+                              {Array.from(new Set(schools?.map(s => s.city) || [])).filter(Boolean).length}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">Cidades</p>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="text-2xl font-bold">80%</div>
-                            <p className="text-xs text-muted-foreground mt-1">Escolas Ativas</p>
                           </CardContent>
                         </Card>
                       </div>
@@ -234,34 +294,26 @@ export default function SchoolsMap() {
                   
                   <TabsContent value="regions">
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>São Paulo, SP</span>
+                      {!schoolsLoading ? 
+                        Array.from(new Set(schools?.map(s => `${s.city}, ${s.state}`) || []))
+                          .filter(location => location !== ", ")
+                          .slice(0, 5)
+                          .map((location, index) => (
+                            <div key={index} className="flex justify-between items-center p-3 border rounded-md">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4" />
+                                <span>{location || "Local não especificado"}</span>
+                              </div>
+                              <Badge>
+                                {schools?.filter(s => `${s.city}, ${s.state}` === location).length || 0} escolas
+                              </Badge>
+                            </div>
+                          ))
+                        : 
+                        <div className="flex justify-center p-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
-                        <Badge>2 escolas</Badge>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>Campinas, SP</span>
-                        </div>
-                        <Badge>1 escola</Badge>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>Rio de Janeiro, RJ</span>
-                        </div>
-                        <Badge>1 escola</Badge>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-md">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>Belo Horizonte, MG</span>
-                        </div>
-                        <Badge>1 escola</Badge>
-                      </div>
+                      }
                     </div>
                   </TabsContent>
                 </Tabs>
