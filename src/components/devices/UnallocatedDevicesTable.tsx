@@ -10,12 +10,17 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
+import { Device } from '@/services/deviceService';
 
 interface UnallocatedDevice {
-  serial: string;
-  type: string;
-  status: string;
+  id?: string;
+  serial?: string;
+  type?: string;
+  status?: string;
   batch?: string;
+  serial_number?: string;
+  device_type?: string;
+  batch_id?: string;
 }
 
 interface UnallocatedDevicesTableProps {
@@ -56,9 +61,9 @@ export const UnallocatedDevicesTable = ({
             </TableRow>
           ) : devices.length > 0 ? (
             devices.map((device, index) => (
-              <TableRow key={device.serial || index}>
-                <TableCell>{device.serial}</TableCell>
-                <TableCell>{device.type}</TableCell>
+              <TableRow key={device.id || device.serial || index}>
+                <TableCell>{device.serial_number || device.serial || '-'}</TableCell>
+                <TableCell>{device.device_type || device.type || '-'}</TableCell>
                 <TableCell>
                   <Badge
                     variant={
@@ -72,7 +77,7 @@ export const UnallocatedDevicesTable = ({
                      device.status === 'pending' ? 'Pendente' : 'Erro'}
                   </Badge>
                 </TableCell>
-                <TableCell>{device.batch || 'N/A'}</TableCell>
+                <TableCell>{device.batch_id || device.batch || 'N/A'}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">Alocar</Button>
                 </TableCell>

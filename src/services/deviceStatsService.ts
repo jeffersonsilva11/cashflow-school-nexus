@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Device } from "@/services/deviceService";
@@ -130,8 +129,20 @@ export async function fetchRecentBatches(): Promise<DeviceBatchData[]> {
   }
 }
 
+// Interface para dispositivos não alocados que seja compatível com UnallocatedDevice
+export interface UnallocatedDeviceData {
+  id?: string;
+  serial?: string;
+  type?: string;
+  status?: string;
+  batch?: string;
+  serial_number?: string;
+  device_type?: string;
+  batch_id?: string;
+}
+
 // Função para buscar dispositivos não alocados
-export async function fetchUnallocatedDevices(): Promise<Partial<Device>[]> {
+export async function fetchUnallocatedDevices(): Promise<UnallocatedDeviceData[]> {
   try {
     const { data, error } = await supabase
       .from('devices')
@@ -144,9 +155,12 @@ export async function fetchUnallocatedDevices(): Promise<Partial<Device>[]> {
     return data.map(device => ({
       id: device.id,
       serial: device.serial_number,
+      serial_number: device.serial_number,
       type: device.device_type,
+      device_type: device.device_type,
       status: device.status,
-      batch: device.batch_id
+      batch: device.batch_id,
+      batch_id: device.batch_id
     }));
   } catch (error) {
     console.error("Error fetching unallocated devices:", error);
