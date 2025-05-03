@@ -10,11 +10,15 @@ import { Separator } from '@/components/ui/separator';
 export default function AccessDenied() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   
   // Informações de depuração
   const currentPath = location.pathname;
   const currentTime = new Date().toLocaleString();
+  
+  // Additional testing for admin permissions
+  const isValidAdmin = user?.role === 'admin';
+  const adminPermissionTest = hasPermission(['admin']);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -45,6 +49,8 @@ export default function AccessDenied() {
                   user.role === 'parent' ? 'Responsável' :
                   'Funcionário'
                 }</p>
+                <p><span className="font-medium">É Admin válido:</span> {isValidAdmin ? 'Sim' : 'Não'}</p>
+                <p><span className="font-medium">Teste de Permissão Admin:</span> {adminPermissionTest ? 'Passou' : 'Falhou'}</p>
                 {user.schoolId && <p><span className="font-medium">ID da Escola:</span> {user.schoolId}</p>}
               </div>
               

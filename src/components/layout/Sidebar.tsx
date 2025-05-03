@@ -33,8 +33,18 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   // Função para verificar se o usuário tem permissão para ver um item do menu
   const hasPermission = (requiredPermissions: string[]) => {
     if (!user || !user.role) return false;
+    
+    // Admin always has access to everything
+    if (user.role === 'admin') return true;
+    
+    // For non-admins, check specific permissions
     return requiredPermissions.includes(user.role);
   };
+
+  // Log para debug
+  if (user) {
+    console.log(`[Sidebar] User: ${user.name}, role: ${user.role}, checking menu permissions`);
+  }
 
   // Filtra os itens de navegação com base nas permissões do usuário
   const filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
