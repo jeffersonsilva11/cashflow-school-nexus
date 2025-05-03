@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './contexts/ProtectedRoute';
@@ -53,6 +54,17 @@ import AccessDenied from './pages/AccessDenied';
 import NotFound from './pages/NotFound';
 import SecurityCompliance from "./pages/SecurityCompliance";
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -72,78 +84,80 @@ function App() {
   }, [isOnline]);
 
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/schools" element={<Schools />} />
-            <Route path="/new-school" element={<NewSchool />} />
-            
-            <Route path="/students" element={<Students />} />
-            <Route path="/students/:studentId" element={<StudentDetails />} />
-            <Route path="/students/add" element={<StudentForm />} />
-            <Route path="/students/edit/:studentId" element={<StudentEdit />} />
-            <Route path="/students/import" element={<StudentsImport />} />
-            <Route path="/students/bind/:studentId" element={<StudentParentBinding />} />
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/schools" element={<Schools />} />
+              <Route path="/new-school" element={<NewSchool />} />
+              
+              <Route path="/students" element={<Students />} />
+              <Route path="/students/:studentId" element={<StudentDetails />} />
+              <Route path="/students/add" element={<StudentForm />} />
+              <Route path="/students/edit/:studentId" element={<StudentEdit />} />
+              <Route path="/students/import" element={<StudentsImport />} />
+              <Route path="/students/bind/:studentId" element={<StudentParentBinding />} />
 
-            <Route path="/parents" element={<Parents />} />
-            <Route path="/parents/:parentId" element={<ParentDetails />} />
-            <Route path="/parents/add" element={<ParentForm />} />
-            <Route path="/parents/edit/:parentId" element={<ParentEdit />} />
-            
-            <Route path="/devices" element={<Devices />} />
-            <Route path="/devices/:deviceId" element={<DeviceDetails />} />
-            <Route path="/device-batches" element={<DeviceBatches />} />
-            <Route path="/device/register" element={<RegisterDevice />} />
-            <Route path="/device/edit/:deviceId" element={<EditDevice />} />
-            <Route path="/device/replace/:deviceId" element={<ReplaceDevice />} />
-            <Route path="/device/bind-students/:deviceId" element={<BindToStudents />} />
-            <Route path="/device/allocate-school/:deviceId" element={<AllocateToSchool />} />
-            
-            <Route path="/transactions" element={<Transactions />} />
-            
-            <Route path="/financial" element={<Financial />} />
-            <Route path="/financial/invoices" element={<Invoices />} />
-            <Route path="/financial/invoices/create" element={<CreateInvoice />} />
-            <Route path="/financial/invoices/:invoiceId" element={<InvoiceDetails />} />
-            <Route path="/financial/subscriptions" element={<Subscriptions />} />
-            <Route path="/financial/subscriptions/:subscriptionId" element={<SubscriptionDetails />} />
-            <Route path="/financial/billing" element={<Billing />} />
-            <Route path="/financial/billing/:billingId" element={<BillingDetails />} />
-            
-            <Route path="/payment" element={<PaymentManager />} />
-            <Route path="/payment/new" element={<NewPayment />} />
-            <Route path="/payment/:paymentId" element={<PaymentDetail />} />
-            
-            <Route path="/vendors" element={<Vendors />} />
-            <Route path="/vendors/:vendorId" element={<VendorDetails />} />
-            <Route path="/vendors/add" element={<VendorForm />} />
-            
-            <Route path="/users" element={<Users />} />
-            
-            <Route path="/settings" element={<Settings />} />
-            
-            <Route path="/third-party-dashboard" element={<ThirdPartyDashboard />} />
-            
-            <Route path="/reports/financial" element={<FinancialReports />} />
-            <Route path="/reports/device-usage" element={<DeviceUsageReport />} />
-            
-            {/* Nova rota para Segurança e Compliance */}
-            <Route path="/security-compliance" element={<SecurityCompliance />} />
-            
-            {/* Fallback routes */}
-            <Route path="/access-denied" element={<AccessDenied />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-      <Toaster />
-    </BrowserRouter>
+              <Route path="/parents" element={<Parents />} />
+              <Route path="/parents/:parentId" element={<ParentDetails />} />
+              <Route path="/parents/add" element={<ParentForm />} />
+              <Route path="/parents/edit/:parentId" element={<ParentEdit />} />
+              
+              <Route path="/devices" element={<Devices />} />
+              <Route path="/devices/:deviceId" element={<DeviceDetails />} />
+              <Route path="/device-batches" element={<DeviceBatches />} />
+              <Route path="/device/register" element={<RegisterDevice />} />
+              <Route path="/device/edit/:deviceId" element={<EditDevice />} />
+              <Route path="/device/replace/:deviceId" element={<ReplaceDevice />} />
+              <Route path="/device/bind-students/:deviceId" element={<BindToStudents />} />
+              <Route path="/device/allocate-school/:deviceId" element={<AllocateToSchool />} />
+              
+              <Route path="/transactions" element={<Transactions />} />
+              
+              <Route path="/financial" element={<Financial />} />
+              <Route path="/financial/invoices" element={<Invoices />} />
+              <Route path="/financial/invoices/create" element={<CreateInvoice />} />
+              <Route path="/financial/invoices/:invoiceId" element={<InvoiceDetails />} />
+              <Route path="/financial/subscriptions" element={<Subscriptions />} />
+              <Route path="/financial/subscriptions/:subscriptionId" element={<SubscriptionDetails />} />
+              <Route path="/financial/billing" element={<Billing />} />
+              <Route path="/financial/billing/:billingId" element={<BillingDetails />} />
+              
+              <Route path="/payment" element={<PaymentManager />} />
+              <Route path="/payment/new" element={<NewPayment />} />
+              <Route path="/payment/:paymentId" element={<PaymentDetail />} />
+              
+              <Route path="/vendors" element={<Vendors />} />
+              <Route path="/vendors/:vendorId" element={<VendorDetails />} />
+              <Route path="/vendors/add" element={<VendorForm />} />
+              
+              <Route path="/users" element={<Users />} />
+              
+              <Route path="/settings" element={<Settings />} />
+              
+              <Route path="/third-party-dashboard" element={<ThirdPartyDashboard />} />
+              
+              <Route path="/reports/financial" element={<FinancialReports />} />
+              <Route path="/reports/device-usage" element={<DeviceUsageReport />} />
+              
+              {/* Nova rota para Segurança e Compliance */}
+              <Route path="/security-compliance" element={<SecurityCompliance />} />
+              
+              {/* Fallback routes */}
+              <Route path="/access-denied" element={<AccessDenied />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+        <Toaster />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
