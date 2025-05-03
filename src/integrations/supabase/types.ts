@@ -1052,6 +1052,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      log_profile_access: {
+        Args: { profile_id: string; profile_role: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

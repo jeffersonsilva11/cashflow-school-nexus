@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, Menu, ChevronDown, LogOut } from 'lucide-react';
@@ -30,7 +29,7 @@ type SidebarProps = {
 const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   const { user, logout } = useAuth();
 
-  // Function to check if user has permission to see a menu item
+  // Function to check if user has permission to see a menu item - with improved case-insensitive checking
   const hasPermission = (requiredPermissions: string[]) => {
     // If no user or no role, deny access
     if (!user || !user.role) {
@@ -38,14 +37,14 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
       return false;
     }
     
-    // Admin always has access to everything - always use lowercase comparison
-    if (user.role.toLowerCase() === 'admin') {
+    // Admin always has access to everything - ensure case-insensitive comparison
+    const userRoleLower = user.role.toLowerCase();
+    if (userRoleLower === 'admin') {
       console.log(`[Sidebar] User ${user.name} has admin role, granting access to all items`);
       return true;
     }
     
     // For non-admins, check specific permissions (case-insensitive)
-    const userRoleLower = user.role.toLowerCase();
     const hasAccess = requiredPermissions.some(role => role.toLowerCase() === userRoleLower);
     console.log(`[Sidebar] User ${user.name} with role ${user.role} access to ${requiredPermissions.join(', ')}: ${hasAccess}`);
     return hasAccess;
@@ -56,12 +55,12 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   console.log(`[Sidebar] User role:`, user?.role);
   console.log(`[Sidebar] Admin check (case-insensitive):`, user?.role?.toLowerCase() === 'admin' ? 'Is admin' : 'Not admin');
   
-  // Filter menu items based on user role
+  // Filter menu items based on user role - ensuring case-insensitive comparison
   let filteredMainNavItems = mainNavItems;
   let filteredFinancialNavItems = financialNavItems;
   let filteredReportsAndAdminItems = reportsAndAdminItems;
   
-  // Apply filtering only for non-admin users - always use lowercase comparison
+  // Apply filtering only for non-admin users - ensure case-insensitive comparison
   if (!user || !user.role || user.role.toLowerCase() !== 'admin') {
     console.log('[Sidebar] Not an admin user, filtering menu items');
     filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));

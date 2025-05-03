@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) {
-        console.error('[AuthContext] Erro ao buscar perfil:', profileError);
+        console.error('[AuthContext] Error fetching profile:', profileError);
         throw profileError;
       }
       
@@ -71,8 +71,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Log para depuração
-      console.log('[AuthContext] Dados do usuário carregados:', {
+      // Debug logging
+      console.log('[AuthContext] User data loaded:', {
         id: supaUser.id,
         email: supaUser.email,
         profileData: profileData,
@@ -107,23 +107,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check if the user is already authenticated when loading
   useEffect(() => {
-    console.log('[AuthContext] Iniciando verificação de autenticação');
+    console.log('[AuthContext] Starting authentication check');
     
     // First, set up a listener for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[AuthContext] Evento de autenticação: ${event}`);
+        console.log(`[AuthContext] Auth event: ${event}`);
         setSession(session);
         
         // Don't make direct Supabase calls in the callback to avoid deadlocks
         setTimeout(async () => {
           if (session?.user) {
-            console.log(`[AuthContext] Usuário autenticado: ${session.user.email}`);
+            console.log(`[AuthContext] User authenticated: ${session.user.email}`);
             const formattedUser = await formatUserData(session.user);
-            console.log(`[AuthContext] Perfil formatado: ${formattedUser?.role}`);
+            console.log(`[AuthContext] Formatted profile: ${formattedUser?.role}`);
             setUser(formattedUser);
           } else {
-            console.log('[AuthContext] Nenhum usuário autenticado');
+            console.log('[AuthContext] No user authenticated');
             setUser(null);
           }
           setLoading(false);
@@ -133,17 +133,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check the current session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log(`[AuthContext] Sessão atual: ${session ? 'Existe' : 'Não existe'}`);
+      console.log(`[AuthContext] Current session: ${session ? 'Exists' : 'Does not exist'}`);
       setSession(session);
       
       if (session?.user) {
         try {
           const formattedUser = await formatUserData(session.user);
-          console.log(`[AuthContext] Usuário da sessão formatado: ${formattedUser?.role}`);
+          console.log(`[AuthContext] Session user formatted: ${formattedUser?.role}`);
           setUser(formattedUser);
         } catch (error) {
-          console.error('[AuthContext] Erro ao formatar dados do usuário:', error);
-          // Garantir que o loading é desligado mesmo em caso de erro
+          console.error('[AuthContext] Error formatting user data:', error);
+          // Ensure loading is turned off even on error
           setUser(null);
         }
       }
@@ -168,8 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const formattedUser = await formatUserData(data.user);
       
-      // Log de depuração do login
-      console.log('[AuthContext] Login bem-sucedido:', {
+      // Debug login logging
+      console.log('[AuthContext] Successful login:', {
         userId: data.user?.id,
         email: data.user?.email,
         formattedUser
@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('[AuthContext] Erro no login:', error);
+      console.error('[AuthContext] Login error:', error);
       toast({
         title: "Erro ao realizar login",
         description: error.message || "Ocorreu um erro durante o login",
@@ -217,23 +217,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if the user has permission based on their role
   const hasPermission = (requiredRoles: UserRole[]): boolean => {
     if (!user) {
-      console.log('[AuthContext] hasPermission: Nenhum usuário logado');
+      console.log('[AuthContext] hasPermission: No user logged in');
       return false;
     }
     
-    // Log de depuração para verificação de permissões
-    console.log(`[AuthContext] Verificando permissão: usuário tem role ${user.role}, precisa de uma das seguintes: ${requiredRoles.join(', ')}`);
+    // Debug logging for permission checking
+    console.log(`[AuthContext] Checking permission: user has role ${user.role}, needs one of: ${requiredRoles.join(', ')}`);
     
-    // Admin always has access - always use lowercase comparison
+    // Admin always has access - ensure case-insensitive comparison
     if (user.role.toLowerCase() === 'admin') {
-      console.log('[AuthContext] Admin tem permissão para todas as funcionalidades');
+      console.log('[AuthContext] Admin has permission for all features');
       return true;
     }
     
     // Check for specific role - normalize both sides for case-insensitive comparison
     const userRoleLower = user.role.toLowerCase();
     const hasAccess = requiredRoles.some(role => role.toLowerCase() === userRoleLower);
-    console.log(`[AuthContext] Usuário tem acesso: ${hasAccess}`);
+    console.log(`[AuthContext] User has access: ${hasAccess}`);
     return hasAccess;
   };
 
