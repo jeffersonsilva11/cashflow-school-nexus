@@ -99,7 +99,7 @@ export const PaymentTerminals = ({ terminals, isLoading }: PaymentTerminalsProps
                     <TableCell>{terminal.model}</TableCell>
                     <TableCell>{getGatewayBadge(terminal.gateway)}</TableCell>
                     <TableCell>{getStatusBadge(terminal.status)}</TableCell>
-                    <TableCell>{formatDate(terminal.last_sync)}</TableCell>
+                    <TableCell>{formatDate(terminal.last_sync_at)}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {terminal.connection_status === 'online' ? (

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -71,7 +70,7 @@ const VendorDetails = () => {
               vendor_id: vendorId,
               school_id: vendor?.school_id || '',
               status: 'active',
-              last_sync: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+              last_sync_at: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
               firmware_version: '2.5.1',
               battery_level: 85,
               connection_status: 'online'
@@ -85,7 +84,7 @@ const VendorDetails = () => {
               vendor_id: vendorId,
               school_id: vendor?.school_id || '',
               status: 'inactive',
-              last_sync: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+              last_sync_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
               firmware_version: '2.4.9',
               connection_status: 'offline'
             }
