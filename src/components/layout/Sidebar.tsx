@@ -53,11 +53,18 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   // Debug logging for menu filtering
   console.log(`[Sidebar] Current user:`, user);
   console.log('[Sidebar] Admin check:', user?.role === 'admin' ? 'Is admin' : 'Not admin');
-
-  // Filter navigation items based on user permissions
-  const filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
-  const filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
-  const filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+  
+  // When admin user, show all menu items without filtering
+  let filteredMainNavItems = mainNavItems;
+  let filteredFinancialNavItems = financialNavItems;
+  let filteredReportsAndAdminItems = reportsAndAdminItems;
+  
+  // Apply filtering only for non-admin users
+  if (!user || user.role !== 'admin') {
+    filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
+    filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
+    filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+  }
 
   console.log(`[Sidebar] Filtered items counts: Main: ${filteredMainNavItems.length}, Financial: ${filteredFinancialNavItems.length}, Reports/Admin: ${filteredReportsAndAdminItems.length}`);
   console.log('[Sidebar] Filtered items:', {

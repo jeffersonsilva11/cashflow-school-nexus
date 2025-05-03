@@ -30,8 +30,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   console.log(`[ProtectedRoute] User details: ${user.name} (${user.email}), role: ${user.role}`);
   console.log(`[ProtectedRoute] Required roles: ${allowedRoles.length ? allowedRoles.join(', ') : 'none'}`);
 
-  // Always allow admin users to access any route
-  if (user.role === 'admin') {
+  // Always allow admin users to access any route (compare role as lowercase for case insensitivity)
+  if (user.role.toLowerCase() === 'admin') {
     console.log(`[ProtectedRoute] Admin user ${user.name} (${user.email}) detected - granting access to all routes`);
     return <>{children}</>;
   }
