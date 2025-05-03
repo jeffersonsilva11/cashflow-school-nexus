@@ -24,6 +24,7 @@ import BillingDetails from "@/pages/financial/BillingDetails";
 import FinancialReports from "@/pages/reports/FinancialReports";
 import { Toaster } from "@/components/ui/toaster";
 import DataMigration from "@/pages/admin/DataMigration"; 
+import StudentsImport from "@/pages/school/StudentsImport";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
             
             {/* Schools */}
             <Route path="/schools" element={<SchoolsPage />} />
+            <Route path="/schools/students-import" element={<StudentsImport />} />
             
             {/* Students */}
             <Route path="/students" element={<Students />} />
