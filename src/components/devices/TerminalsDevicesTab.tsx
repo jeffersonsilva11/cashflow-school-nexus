@@ -2,6 +2,7 @@
 import React from 'react';
 import { TerminalDeviceStats } from './DeviceStatsCards';
 import { TerminalsMonitoring } from './TerminalsMonitoring';
+import { DeviceAlertsDashboard } from './DeviceAlertsDashboard';
 
 export const TerminalsDevicesTab = () => {
   // Dados mockados para maquininhas
@@ -15,6 +16,7 @@ export const TerminalsDevicesTab = () => {
     <div className="space-y-6">
       <TerminalDeviceStats terminalStats={terminalStats} />
       <TerminalsMonitoring />
+      <DeviceAlertsDashboard />
     </div>
   );
 };
