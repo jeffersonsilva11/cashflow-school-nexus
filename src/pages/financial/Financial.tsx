@@ -44,11 +44,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from '@/components/ui/use-toast';
-import { schoolFinancials, financialReports } from '@/services/financialMockData';
+import { useToast } from '@/hooks/use-toast';
 import { FinancialOverviewChart } from '@/components/financial/FinancialOverviewChart';
 import { RevenueByPlanChart } from '@/components/financial/RevenueByPlanChart';
 import { FinancialTrendChart } from '@/components/financial/FinancialTrendChart';
+import { 
+  useSchoolsFinancial, 
+  useFinancialTrends, 
+  useRevenueByPlan 
+} from '@/services/schoolFinancialService';
+import { formatCurrency } from '@/lib/format';
 
 export default function Financial() {
   const navigate = useNavigate();
@@ -56,19 +61,28 @@ export default function Financial() {
   const [searchTerm, setSearchTerm] = useState('');
   const [periodFilter, setPeriodFilter] = useState('month');
 
+  const { data: schoolsFinancial = [], isLoading: isSchoolsLoading } = useSchoolsFinancial();
+  const { data: financialTrends = [], isLoading: isTrendsLoading } = useFinancialTrends();
+  const { data: revenueByPlan = [], isLoading: isPlanRevenueLoading } = useRevenueByPlan();
+
+  // Calcular estatísticas gerais
+  const totalSchools = schoolsFinancial.length;
+  const activeSchools = schoolsFinancial.filter(s => s.status === 'active').length;
+  const totalActiveSubscriptions = schoolsFinancial.filter(s => s.status === 'active').length;
+  const totalRevenue = schoolsFinancial.reduce((sum, school) => sum + school.monthlyFee, 0);
+  const averageRevenuePerSchool = totalSchools > 0 ? totalRevenue / totalSchools : 0;
+  const totalPendingPayments = schoolsFinancial
+    .filter(s => s.status === 'pending' || s.status === 'overdue')
+    .reduce((sum, school) => sum + school.monthlyFee, 0);
+
+  // Calcular taxa de crescimento (simulado)
+  const growthRate = 12.5;
+
   // Filtrar escolas pelo termo de busca
-  const filteredSchools = schoolFinancials.filter(school => 
+  const filteredSchools = schoolsFinancial.filter(school => 
     school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     school.id.toString().includes(searchTerm)
   );
-
-  // Função para formatar valores monetários
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
 
   const handleGenerateInvoice = () => {
     navigate('/financial/invoices/create');
@@ -93,6 +107,15 @@ export default function Financial() {
   const handleViewBilling = () => {
     navigate('/financial/billing');
   };
+
+  if (isSchoolsLoading || isTrendsLoading || isPlanRevenueLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        <span className="ml-3 text-lg">Carregando dados financeiros...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -125,11 +148,11 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(financialReports.overview.totalRevenueMonth)}
+              {formatCurrency(totalRevenue)}
             </div>
             <div className="flex items-center text-xs text-green-600 mt-1">
               <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>{financialReports.overview.growthRate}% em relação ao período anterior</span>
+              <span>{growthRate}% em relação ao período anterior</span>
             </div>
           </CardContent>
         </Card>
@@ -142,10 +165,10 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {financialReports.overview.totalActiveSchools}
+              {activeSchools}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {financialReports.overview.totalActiveSubscriptions} assinaturas ativas
+              {totalActiveSubscriptions} assinaturas ativas
             </div>
           </CardContent>
         </Card>
@@ -158,7 +181,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(financialReports.overview.averageRevenuePerSchool)}
+              {formatCurrency(averageRevenuePerSchool)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Receita média mensal por escola
@@ -174,7 +197,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(financialReports.overview.totalPendingPayments)}
+              {formatCurrency(totalPendingPayments)}
             </div>
             <div className="text-xs text-red-500 mt-1">
               Cobranças a receber
@@ -191,7 +214,10 @@ export default function Financial() {
             <CardDescription>Evolução de receitas no período</CardDescription>
           </CardHeader>
           <CardContent>
-            <FinancialTrendChart data={financialReports.monthlyTrend} />
+            <FinancialTrendChart data={financialTrends.map(item => ({
+              month: item.month,
+              revenue: Number(item.revenue)
+            }))} />
           </CardContent>
         </Card>
         
@@ -201,14 +227,24 @@ export default function Financial() {
             <CardDescription>Receita por tipo de plano</CardDescription>
           </CardHeader>
           <CardContent>
-            <RevenueByPlanChart data={financialReports.revenueByPlan} />
+            <RevenueByPlanChart data={revenueByPlan.map(item => {
+              // Calcular a porcentagem de cada plano
+              const total = revenueByPlan.reduce((sum, p) => sum + Number(p.revenue), 0);
+              const percentage = total > 0 ? Math.round((Number(item.revenue) / total) * 100) : 0;
+              
+              return {
+                plan: item.plan,
+                revenue: Number(item.revenue),
+                percentage
+              };
+            })} />
             <div className="mt-4 space-y-3">
-              {financialReports.revenueByPlan.map((item) => (
+              {revenueByPlan.map((item) => (
                 <div key={item.plan} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <span className="font-medium">{item.plan}</span>
                   </div>
-                  <div className="font-medium">{formatCurrency(item.revenue)}</div>
+                  <div className="font-medium">{formatCurrency(Number(item.revenue))}</div>
                 </div>
               ))}
             </div>
@@ -274,46 +310,58 @@ export default function Financial() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSchools.map((school) => (
-                <TableRow key={school.id}>
-                  <TableCell className="font-medium">{school.name}</TableCell>
-                  <TableCell>{school.plan}</TableCell>
-                  <TableCell>{formatCurrency(school.monthlyFee)}</TableCell>
-                  <TableCell>{school.activeStudents}</TableCell>
-                  <TableCell>{school.activeDevices}</TableCell>
-                  <TableCell>{new Date(school.lastPayment).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={
-                        school.status === 'active' ? 'default' : 
-                        school.status === 'pending' ? 'outline' : 
-                        'destructive'
-                      }
-                    >
-                      {school.status === 'active' ? 'Ativo' : 
-                       school.status === 'pending' ? 'Pendente' : 
-                       'Em atraso'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewSchoolFinancial(school.id)}>
-                          Ver Detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleGenerateInvoice}>
-                          Gerar Fatura
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {filteredSchools.length > 0 ? (
+                filteredSchools.map((school) => (
+                  <TableRow key={school.id}>
+                    <TableCell className="font-medium">{school.name}</TableCell>
+                    <TableCell>{school.plan}</TableCell>
+                    <TableCell>{formatCurrency(school.monthlyFee)}</TableCell>
+                    <TableCell>{school.activeStudents}</TableCell>
+                    <TableCell>{school.activeDevices}</TableCell>
+                    <TableCell>{new Date(school.lastPayment).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={
+                          school.status === 'active' ? 'default' : 
+                          school.status === 'pending' ? 'outline' : 
+                          'destructive'
+                        }
+                      >
+                        {school.status === 'active' ? 'Ativo' : 
+                         school.status === 'pending' ? 'Pendente' : 
+                         'Em atraso'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewSchoolFinancial(school.id)}>
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleGenerateInvoice}>
+                            Gerar Fatura
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    {isSchoolsLoading ? (
+                      <span className="text-muted-foreground">Carregando...</span>
+                    ) : (
+                      <span className="text-muted-foreground">Nenhuma escola encontrada</span>
+                    )}
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
