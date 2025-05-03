@@ -15,7 +15,8 @@ interface SchoolUsageReportProps {
   }>;
 }
 
-export function SchoolUsageReport({ schools }: SchoolUsageReportProps) {
+export function SchoolUsageReport({ schools = [] }: SchoolUsageReportProps) {
+  // Add default empty array to prevent undefined errors
   return (
     <div className="space-y-4">
       {schools.length === 0 ? (

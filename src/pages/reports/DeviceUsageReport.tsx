@@ -12,13 +12,15 @@ import { DeviceAllocationChart } from '@/components/devices/DeviceAllocationChar
 import { useToast } from '@/hooks/use-toast';
 import { SchoolUsageReport } from '@/components/reports/SchoolUsageReport';
 import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
+import { schoolFinancials } from '@/services/financialMockData';
 
 // Dados mockados para os gráficos
-const deviceStatusData = [
-  { name: 'Online', value: 245, color: '#10b981' },
-  { name: 'Offline', value: 35, color: '#f43f5e' },
-  { name: 'Inativo', value: 20, color: '#94a3b8' },
-];
+const deviceStatusData = {
+  active: 245,
+  inactive: 20,
+  pending: 10,
+  transit: 25
+};
 
 const deviceTypeData = [
   { name: 'Cartão RFID', value: 185, color: '#3b82f6' },
@@ -54,9 +56,30 @@ const usageByDayData = [
   { day: 'Sexta', transactions: 410 },
 ];
 
-interface DeviceStatusChartProps {
-  data: { name: string; value: number; color: string }[];
-}
+// Mock school usage data
+const getSchoolUsageData = (selectedSchool: string) => {
+  if (selectedSchool === 'all') {
+    return schoolFinancials.map(school => ({
+      id: school.id,
+      name: school.name,
+      activeStudents: school.activeStudents,
+      totalStudents: school.totalStudents,
+      activeDevices: school.activeDevices,
+      totalRevenue: school.totalRevenue
+    }));
+  }
+  
+  const school = schoolFinancials.find(school => school.id === selectedSchool.replace('school-', ''));
+  
+  return school ? [{
+    id: school.id,
+    name: school.name,
+    activeStudents: school.activeStudents,
+    totalStudents: school.totalStudents,
+    activeDevices: school.activeDevices,
+    totalRevenue: school.totalRevenue
+  }] : [];
+};
 
 export default function DeviceUsageReport() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -71,6 +94,9 @@ export default function DeviceUsageReport() {
     });
     setTimeout(() => setIsExportDialogOpen(false), 1500);
   };
+
+  // Get school usage data based on selection
+  const schoolUsageData = getSchoolUsageData(selectedSchool);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -241,7 +267,7 @@ export default function DeviceUsageReport() {
             </Select>
           </div>
           
-          <SchoolUsageReport schoolId={selectedSchool} />
+          <SchoolUsageReport schools={schoolUsageData} />
         </CardContent>
       </Card>
 
