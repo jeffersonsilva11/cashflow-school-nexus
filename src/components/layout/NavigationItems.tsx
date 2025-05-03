@@ -1,3 +1,4 @@
+
 import { 
   Home, 
   Users, 
@@ -18,7 +19,14 @@ import {
   ReceiptText,
   FileText,
   CalendarClock,
-  Download
+  Download,
+  LayoutDashboard,
+  User,
+  Receipt,
+  Store,
+  UserCog,
+  FileSpreadsheet,
+  Shield
 } from 'lucide-react';
 
 // Dashboard
