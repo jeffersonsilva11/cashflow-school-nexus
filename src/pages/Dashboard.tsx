@@ -1,98 +1,136 @@
 
 import React from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  CreditCard, 
-  Users, 
-  School, 
-  DollarSign
-} from 'lucide-react';
-import { StatCard } from '@/components/dashboard/StatCard';
-import { SchoolsTable } from '@/components/dashboard/SchoolsTable';
-import { TransactionsTable } from '@/components/dashboard/TransactionsTable';
-import { TransactionTrendChart } from '@/components/dashboard/TransactionTrendChart';
-import { TransactionTypePieChart } from '@/components/dashboard/TransactionTypePieChart';
-import { 
-  dashboardStats, 
-  transactionTrend, 
-  schools, 
-  recentTransactions 
-} from '@/services/mockData';
-import { formatCurrency } from '@/lib/format';
-
-// Transaction type pie chart data
-const transactionTypeData = [
-  { name: 'Compras', value: dashboardStats.transactionByType.purchase },
-  { name: 'Recargas', value: dashboardStats.transactionByType.reload },
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StatCard from "@/components/dashboard/StatCard";
+import TransactionTrendChart from "@/components/dashboard/TransactionTrendChart";
+import TransactionTypePieChart from "@/components/dashboard/TransactionTypePieChart";
+import TransactionsTable from "@/components/dashboard/TransactionsTable";
+import SchoolsTable from "@/components/dashboard/SchoolsTable";
+import TransactionsLogWidget from "@/components/financial/TransactionsLogWidget"; 
+import { useAuth } from "@/contexts/AuthContext";
+import { CreditCard, Users, School, DollarSign } from "lucide-react";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  
   return (
     <div className="animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do sistema cashless para escolas.</p>
-      </div>
-      
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Escolas Ativas" 
-          value={dashboardStats.activeSchools}
-          icon={<School size={24} />}
-          changeValue={dashboardStats.growthRate.schools}
-          changeLabel="desde o mês passado"
-        />
-        <StatCard 
-          title="Alunos Cadastrados" 
-          value={dashboardStats.totalStudents}
-          icon={<Users size={24} />}
-          changeValue={8.3}
-          changeLabel="desde o mês passado"
-        />
-        <StatCard 
-          title="Transações Hoje" 
-          value={dashboardStats.dailyTransactions}
-          icon={<CreditCard size={24} />}
-          changeValue={dashboardStats.growthRate.transactions}
-          changeLabel="desde ontem"
-        />
-        <StatCard 
-          title="Volume Mensal" 
-          value={formatCurrency(dashboardStats.monthlyVolume)}
-          icon={<DollarSign size={24} />}
-          changeValue={dashboardStats.growthRate.volume}
-          changeLabel="desde o mês passado"
-        />
-      </div>
-      
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 mt-6">
-        {/* Transaction Trend Chart */}
-        <div className="lg:col-span-2">
-          <TransactionTrendChart data={transactionTrend} />
-        </div>
-        
-        {/* Transaction Type Distribution */}
+      <div className="flex flex-col gap-y-2 md:flex-row md:justify-between md:items-center mb-6">
         <div>
-          <TransactionTypePieChart data={transactionTypeData} />
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Bem-vindo, {user?.name}! Aqui está um resumo do seu sistema.
+          </p>
         </div>
       </div>
       
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mt-6">
-        {/* Top Schools Table */}
-        <SchoolsTable 
-          schools={schools}
-          title="Escolas Mais Ativas"
-          description="Ranking das escolas com maior volume de transações"
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard 
+          title="Transações Hoje"
+          value="246" 
+          trend="+12.5%" 
+          description="Comparado a ontem" 
+          icon={<CreditCard className="h-4 w-4" />}
         />
         
-        {/* Recent Transactions Table */}
-        <TransactionsTable 
-          transactions={recentTransactions}
-          title="Transações Recentes"
-          description="Últimas transações realizadas no sistema"
+        <StatCard 
+          title="Usuários Ativos"
+          value="2,345" 
+          trend="+3.1%" 
+          description="Novos usuários esta semana" 
+          icon={<Users className="h-4 w-4" />}
         />
+        
+        <StatCard 
+          title="Escolas"
+          value="42" 
+          trend="0%" 
+          description="Mesma quantidade da semana anterior" 
+          icon={<School className="h-4 w-4" />}
+        />
+        
+        <StatCard 
+          title="Volume Financeiro"
+          value="R$ 195.240,00" 
+          trend="+24.5%" 
+          description="Comparado ao mês passado" 
+          icon={<DollarSign className="h-4 w-4" />}
+        />
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
+        <Card className="col-span-7 md:col-span-5">
+          <CardHeader>
+            <CardTitle className="text-lg">Tendência de Transações</CardTitle>
+            <CardDescription>
+              Volume de transações nos últimos 30 dias
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <TransactionTrendChart />
+          </CardContent>
+        </Card>
+        
+        <div className="md:col-span-2 space-y-4">
+          <TransactionsLogWidget />
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">        
+        <Card className="col-span-7 md:col-span-4 lg:col-span-4">
+          <Tabs defaultValue="recent">
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Transações</CardTitle>
+                <TabsList>
+                  <TabsTrigger value="recent">Recentes</TabsTrigger>
+                  <TabsTrigger value="pending">Pendentes</TabsTrigger>
+                </TabsList>
+              </div>
+              <CardDescription>
+                Listagem das últimas transações do sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TabsContent value="recent" className="pt-4">
+                <TransactionsTable />
+              </TabsContent>
+              <TabsContent value="pending" className="pt-4">
+                <TransactionsTable type="pending" />
+              </TabsContent>
+            </CardContent>
+          </Tabs>
+        </Card>
+        
+        <div className="col-span-7 md:col-span-3 lg:col-span-3 grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tipos de Transação</CardTitle>
+              <CardDescription>
+                Distribuição por tipo de transação
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionTypePieChart />
+            </CardContent>
+          </Card>
+          
+          {user?.role === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Escolas Ativas</CardTitle>
+                <CardDescription>
+                  Escolas com maior volume de transações
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SchoolsTable />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
-};
+}
