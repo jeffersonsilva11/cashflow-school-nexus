@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Vendor {
   id: string;
@@ -246,7 +247,7 @@ export const fetchVendorTransfers = async (vendorId: string, limit = 10) => {
 };
 
 // Function to create or update commission tiers
-export const updateCommissionTier = async (tier: Partial<CommissionTier>) => {
+export const updateCommissionTier = async (tier: Partial<CommissionTier> & { vendor_id: string }) => {
   try {
     const { data, error } = await supabase
       .from('vendor_commission_tiers')
@@ -267,7 +268,7 @@ export const updateCommissionTier = async (tier: Partial<CommissionTier>) => {
 };
 
 // Function to create or update vendor product
-export const updateVendorProduct = async (product: Partial<VendorProduct>) => {
+export const updateVendorProduct = async (product: Partial<VendorProduct> & { vendor_id: string; name: string; price: number }) => {
   try {
     const { data, error } = await supabase
       .from('vendor_products')
@@ -309,7 +310,7 @@ export const createVendorTransfer = async (transfer: Omit<VendorTransfer, 'id' |
 };
 
 // Function to update vendor financials
-export const updateVendorFinancials = async (financials: Partial<VendorFinancials>) => {
+export const updateVendorFinancials = async (financials: Partial<VendorFinancials> & { vendor_id: string }) => {
   try {
     const { data, error } = await supabase
       .from('vendors_financials')
