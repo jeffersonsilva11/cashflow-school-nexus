@@ -19,27 +19,31 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     );
   }
 
+  // If no user is logged in, redirect to login
   if (!user) {
+    console.log('[ProtectedRoute] No user logged in, redirecting to login');
     return <Navigate to="/login" />;
   }
 
   // Always allow admin users to access any route
   if (user.role === 'admin') {
-    console.log('Admin user detected - granting access to all routes');
+    console.log(`[ProtectedRoute] Admin user ${user.name} (${user.email}) detected - granting access to all routes`);
     return <>{children}</>;
   }
 
   // If no specific roles are required, allow access
   if (allowedRoles.length === 0) {
+    console.log('[ProtectedRoute] No specific roles required, allowing access');
     return <>{children}</>;
   }
 
   // For non-admin users, check if they have the required role
   if (!allowedRoles.includes(user.role)) {
-    console.log(`Access denied: User has role ${user.role}, but needs one of: ${allowedRoles.join(', ')}`);
+    console.log(`[ProtectedRoute] Access denied: User ${user.name} (${user.email}) has role ${user.role}, but needs one of: ${allowedRoles.join(', ')}`);
     return <Navigate to="/access-denied" />;
   }
 
+  console.log(`[ProtectedRoute] Access granted: User ${user.name} (${user.email}) has required role ${user.role}`);
   return <>{children}</>;
 };
 

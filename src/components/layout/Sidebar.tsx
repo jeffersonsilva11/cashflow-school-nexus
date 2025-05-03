@@ -30,26 +30,36 @@ type SidebarProps = {
 const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   const { user, logout } = useAuth();
 
-  // Função para verificar se o usuário tem permissão para ver um item do menu
+  // Function to check if user has permission to see a menu item
   const hasPermission = (requiredPermissions: string[]) => {
-    if (!user || !user.role) return false;
+    // If no user or no role, deny access
+    if (!user || !user.role) {
+      console.log('[Sidebar] No user or role defined, denying access');
+      return false;
+    }
     
     // Admin always has access to everything
-    if (user.role === 'admin') return true;
+    if (user.role === 'admin') {
+      console.log(`[Sidebar] User ${user.name} has admin role, granting access to all items`);
+      return true;
+    }
     
     // For non-admins, check specific permissions
-    return requiredPermissions.includes(user.role);
+    const hasAccess = requiredPermissions.includes(user.role);
+    console.log(`[Sidebar] User ${user.name} with role ${user.role} access to ${requiredPermissions.join(', ')}: ${hasAccess}`);
+    return hasAccess;
   };
 
-  // Log para debug
-  if (user) {
-    console.log(`[Sidebar] User: ${user.name}, role: ${user.role}, checking menu permissions`);
-  }
+  // Debug logging for menu filtering
+  console.log(`[Sidebar] User: ${user?.name || 'Unknown'}, role: ${user?.role || 'None'}, checking menu permissions`);
+  console.log('[Sidebar] Admin check:', user?.role === 'admin' ? 'Is admin' : 'Not admin');
 
-  // Filtra os itens de navegação com base nas permissões do usuário
+  // Filter navigation items based on user permissions
   const filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
   const filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
   const filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+
+  console.log(`[Sidebar] Filtered items counts: Main: ${filteredMainNavItems.length}, Financial: ${filteredFinancialNavItems.length}, Reports/Admin: ${filteredReportsAndAdminItems.length}`);
 
   return (
     <div 
