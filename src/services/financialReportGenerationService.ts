@@ -114,7 +114,10 @@ export async function generateRevenueByPlanReport(): Promise<RevenueByPlanItemDa
       
       if (schoolsError) throw schoolsError;
       
-      const schoolIds = schoolsWithPlan ? schoolsWithPlan.map(school => school.id) : [];
+      // Use type assertion to avoid deep instantiation
+      const schoolIds = schoolsWithPlan 
+        ? (schoolsWithPlan as Array<{id: string}>).map(school => school.id) 
+        : [];
       
       if (schoolIds.length === 0) {
         revenueByPlanData.push({ plan: plan.name, revenue: 0, percentage: 0 });

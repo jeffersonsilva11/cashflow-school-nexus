@@ -1,23 +1,26 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Schools from './pages/Schools';
 import NewSchool from './pages/NewSchool';
-import SchoolDetails from './pages/SchoolDetails';
-import SchoolsMap from './pages/SchoolsMap';
+import SchoolDetails from '@/pages/SchoolDetails';
+import SchoolsMap from '@/pages/SchoolsMap';
 import SchoolInvites from './pages/schools/SchoolInvites';
-import StudentsImport from './pages/StudentsImport';
-import Tablets from './pages/Tablets';
-import NewTablet from './pages/NewTablet';
-import TabletDetails from './pages/TabletDetails';
-import DeviceAlerts from './pages/DeviceAlerts';
-import Payments from './pages/Payments';
-import Canteen from './pages/Canteen';
-import FinancialReports from './pages/FinancialReports';
+import StudentsImport from '@/pages/school/StudentsImport';
+import Tablets from '@/pages/Tablets';
+import NewTablet from '@/pages/NewTablet';
+import TabletDetails from '@/pages/TabletDetails';
+import DeviceAlerts from '@/pages/DeviceAlerts';
+import Payments from '@/pages/Payments';
+import Canteen from '@/pages/Canteen';
+import FinancialReports from '@/pages/reports/FinancialReports';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import Devices from './pages/Devices';
+import DeviceDetails from './pages/DeviceDetails';
 
 function App() {
   return (
@@ -39,6 +42,10 @@ function App() {
           <Route path="/schools/students-import" element={<ProtectedRoute><StudentsImport /></ProtectedRoute>} />
           <Route path="/schools/:schoolId" element={<ProtectedRoute><SchoolDetails /></ProtectedRoute>} />
 
+          {/* Devices Routes */}
+          <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
+          <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetails /></ProtectedRoute>} />
+          
           {/* Tablets Routes */}
           <Route path="/tablets" element={<ProtectedRoute><Tablets /></ProtectedRoute>} />
           <Route path="/tablets/new" element={<ProtectedRoute><NewTablet /></ProtectedRoute>} />

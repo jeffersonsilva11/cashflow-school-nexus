@@ -1,9 +1,8 @@
 
 import * as React from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
+import { addDays, format } from "date-fns";
 import { DateRange } from "react-day-picker";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,10 +12,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function DateRangePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
+export function DateRangePicker({
+  className,
+}: React.HTMLAttributes<HTMLDivElement>) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
-    to: new Date(),
+    to: addDays(new Date(), 30),
   });
 
   return (
@@ -42,7 +43,7 @@ export function DateRangePicker({ className }: React.HTMLAttributes<HTMLDivEleme
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>Selecione o período</span>
+              <span>Selecione um período</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -54,7 +55,6 @@ export function DateRangePicker({ className }: React.HTMLAttributes<HTMLDivEleme
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
-            className={cn("p-3 pointer-events-auto")}
           />
         </PopoverContent>
       </Popover>
