@@ -75,15 +75,15 @@ export async function fetchAuditLogs(
 
     // Process data to make sure user is correctly formatted
     const processedData = data?.map(log => {
-      // If user has error property, set user to null
-      if (log.user && (log.user as any).error) {
+      // Check if user property has error or is undefined
+      if (!log.user || (log.user && typeof log.user === 'object' && 'error' in log.user)) {
         return {
           ...log,
           user: null
-        };
+        } as AuditLog;
       }
-      return log;
-    }) as unknown as AuditLog[];
+      return log as AuditLog;
+    });
 
     return {
       data: processedData || [],
@@ -148,13 +148,18 @@ export async function fetchAuditLogDetails(logId: string) {
       throw error;
     }
 
-    // Handle case where user might have error
-    const processedData = data ? {
-      ...data,
-      user: (data.user && (data.user as any).error) ? null : data.user
-    } : null;
+    // Process to check for error in user object
+    if (!data) return null;
+    
+    // Check if user property has error
+    if (!data.user || (data.user && typeof data.user === 'object' && 'error' in data.user)) {
+      return {
+        ...data,
+        user: null
+      } as AuditLog;
+    }
 
-    return processedData as AuditLog | null;
+    return data as AuditLog;
   } catch (error) {
     console.error(`Erro em fetchAuditLogDetails para ${logId}:`, error);
     return null;

@@ -5,7 +5,11 @@ import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
-export default function AppLayout() {
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   
@@ -30,7 +34,7 @@ export default function AppLayout() {
         <Header pathname={location.pathname} />
         
         <main className="p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
