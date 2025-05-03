@@ -5,12 +5,14 @@ import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './contexts/AuthContext';
-import { ProtectedRoute } from './contexts/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Schools from './pages/Schools';
+import SchoolsMap from './pages/schools/SchoolsMap';
+import SchoolInvites from './pages/schools/SchoolInvites';
 import NewSchool from './pages/NewSchool';
 import Students from './pages/Students';
 import StudentDetails from './pages/StudentDetails';
@@ -50,6 +52,8 @@ import Settings from './pages/Settings';
 import ThirdPartyDashboard from './pages/ThirdPartyDashboard';
 import FinancialReports from './pages/reports/FinancialReports';
 import DeviceUsageReport from './pages/reports/DeviceUsageReport';
+import StudentsReport from './pages/reports/StudentsReport';
+import AnalyticsReport from './pages/reports/AnalyticsReport';
 import AccessDenied from './pages/AccessDenied';
 import NotFound from './pages/NotFound';
 import SecurityCompliance from "./pages/SecurityCompliance";
@@ -95,6 +99,8 @@ function App() {
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/schools" element={<Schools />} />
+              <Route path="/schools/map" element={<SchoolsMap />} />
+              <Route path="/schools/invites" element={<SchoolInvites />} />
               <Route path="/new-school" element={<NewSchool />} />
               
               <Route path="/students" element={<Students />} />
@@ -145,6 +151,8 @@ function App() {
               
               <Route path="/reports/financial" element={<FinancialReports />} />
               <Route path="/reports/device-usage" element={<DeviceUsageReport />} />
+              <Route path="/reports/students" element={<StudentsReport />} />
+              <Route path="/analytics" element={<AnalyticsReport />} />
               
               {/* Nova rota para Segurança e Compliance */}
               <Route path="/security-compliance" element={<SecurityCompliance />} />
