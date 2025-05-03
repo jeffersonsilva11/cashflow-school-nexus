@@ -1,7 +1,7 @@
-
 // Tipos para pagamentos
-export type PaymentMethod = 'credit_card' | 'bank_slip' | 'pix';
+export type PaymentMethod = 'credit_card' | 'bank_slip' | 'pix' | 'student_card' | 'student_wristband';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'canceled';
+export type VendorType = 'own' | 'third_party';
 
 export interface PaymentInfo {
   id: string;
@@ -18,6 +18,11 @@ export interface PaymentInfo {
   parentName?: string;
   schoolId?: string;
   schoolName?: string;
+  vendorId?: string;
+  vendorName?: string;
+  vendorType?: VendorType;
+  terminalId?: string;
+  deviceId?: string; // ID da pulseira/cartão do estudante
   metadata?: Record<string, any>;
 }
 
@@ -32,6 +37,11 @@ export interface CreatePaymentData {
   parentName?: string;
   schoolId?: string;
   schoolName?: string;
+  vendorId?: string;
+  vendorName?: string;
+  vendorType?: VendorType;
+  terminalId?: string;
+  deviceId?: string;
   metadata?: Record<string, any>;
 }
 
@@ -200,13 +210,79 @@ class PaymentService {
     return payment || null;
   }
 
-  // Lista pagamentos com filtragem simples
+  // Processa um pagamento de cantina via dispositivo estudantil
+  async processCanteenPayment(data: {
+    studentId: string;
+    studentName: string;
+    deviceId: string;
+    amount: number;
+    vendorId: string;
+    vendorName: string;
+    vendorType: VendorType;
+    terminalId: string;
+    schoolId: string;
+    schoolName: string;
+  }): Promise<PaymentInfo> {
+    // Simula uma chamada de API
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const id = `CNT${Math.floor(10000 + Math.random() * 90000)}`;
+    
+    // Aqui teríamos integração com gateway de pagamento da Stone
+    // para registrar a transação no sistema deles
+    
+    const payment: PaymentInfo = {
+      id,
+      amount: data.amount,
+      description: `Compra na cantina ${data.vendorName}`,
+      status: 'paid',
+      method: 'student_wristband',
+      createdAt: new Date().toISOString(),
+      paidAt: new Date().toISOString(),
+      studentId: data.studentId,
+      studentName: data.studentName,
+      schoolId: data.schoolId,
+      schoolName: data.schoolName,
+      vendorId: data.vendorId,
+      vendorName: data.vendorName,
+      vendorType: data.vendorType,
+      terminalId: data.terminalId,
+      deviceId: data.deviceId,
+      metadata: {
+        transactionType: 'canteen_purchase',
+        terminalProvider: 'Stone',
+      },
+    };
+    
+    this.payments.push(payment);
+    return payment;
+  }
+
+  // Método para obter pagamentos de cantina por vendedor
+  async getPaymentsByVendor(vendorId: string): Promise<PaymentInfo[]> {
+    // Simula uma chamada de API
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    return this.payments.filter(p => p.vendorId === vendorId);
+  }
+
+  // Método para obter pagamentos feitos por um dispositivo específico
+  async getPaymentsByDevice(deviceId: string): Promise<PaymentInfo[]> {
+    // Simula uma chamada de API
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    return this.payments.filter(p => p.deviceId === deviceId);
+  }
+
+  // Lista pagamentos com filtragem por tipo de vendedor
   async listPayments(filters?: {
     status?: PaymentStatus;
     method?: PaymentMethod;
     studentId?: string;
     parentId?: string;
     schoolId?: string;
+    vendorId?: string;
+    vendorType?: VendorType;
   }): Promise<PaymentInfo[]> {
     // Simula uma chamada de API
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -219,6 +295,8 @@ class PaymentService {
       if (filters.studentId && payment.studentId !== filters.studentId) return false;
       if (filters.parentId && payment.parentId !== filters.parentId) return false;
       if (filters.schoolId && payment.schoolId !== filters.schoolId) return false;
+      if (filters.vendorId && payment.vendorId !== filters.vendorId) return false;
+      if (filters.vendorType && payment.vendorType !== filters.vendorType) return false;
       return true;
     });
   }
@@ -232,6 +310,10 @@ class PaymentService {
         return ['boleto'];
       case 'pix':
         return ['pix'];
+      case 'student_card':
+        return ['card'];
+      case 'student_wristband':
+        return ['student_wristband'];
       default:
         return ['card'];
     }
@@ -313,6 +395,50 @@ class PaymentService {
         paidAt: '2025-04-28T11:47:20Z',
         schoolId: 'SCH003',
         schoolName: 'Colégio São Pedro'
+      },
+      {
+        id: 'CNT10001',
+        amount: 1250,
+        description: 'Compra na cantina Delícias da Ana',
+        status: 'paid',
+        method: 'student_wristband',
+        createdAt: '2025-05-02T12:15:00Z',
+        paidAt: '2025-05-02T12:15:05Z',
+        studentId: 'STD001',
+        studentName: 'Lucas Silva',
+        schoolId: 'SCH001',
+        schoolName: 'Colégio São Paulo',
+        vendorId: 'VND001',
+        vendorName: 'Delícias da Ana',
+        vendorType: 'third_party',
+        terminalId: 'TERM001',
+        deviceId: 'DEV0023',
+        metadata: {
+          transactionType: 'canteen_purchase',
+          terminalProvider: 'Stone',
+        }
+      },
+      {
+        id: 'CNT10002',
+        amount: 950,
+        description: 'Compra na cantina Escolar',
+        status: 'paid',
+        method: 'student_wristband',
+        createdAt: '2025-05-02T10:30:00Z',
+        paidAt: '2025-05-02T10:30:03Z',
+        studentId: 'STD002',
+        studentName: 'Maria Oliveira',
+        schoolId: 'SCH002',
+        schoolName: 'Escola Maria Eduarda',
+        vendorId: 'SCH002',
+        vendorName: 'Cantina Escolar',
+        vendorType: 'own',
+        terminalId: 'TERM005',
+        deviceId: 'DEV0045',
+        metadata: {
+          transactionType: 'canteen_purchase',
+          items: ['Suco natural', 'Sanduíche']
+        }
       }
     ];
     

@@ -33,6 +33,7 @@ import { formatCurrency } from '@/lib/format';
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [selectedVendorType, setSelectedVendorType] = useState('all');
 
   // Generate more transactions for display purposes
   const expandedTransactions = [
@@ -41,14 +42,30 @@ export default function Transactions() {
     ...recentTransactions.map(t => ({...t, id: `T${parseInt(t.id.substring(1)) + 200}`})),
   ];
   
-  const filteredTransactions = expandedTransactions.filter(transaction => {
+  // Adicionar informações de terceirização a algumas transações para exemplo
+  const transactionsWithVendorInfo = expandedTransactions.map((t, index) => {
+    // Alterna entre própria e terceirizada
+    const isThirdParty = index % 4 === 0 || index % 5 === 0;
+    return {
+      ...t,
+      vendorType: isThirdParty ? 'third_party' : 'own',
+      vendorName: isThirdParty 
+        ? ['Cantina do João', 'Lanchonete Maria', 'Delícias Gourmet'][index % 3] 
+        : 'Cantina Escolar',
+    };
+  });
+  
+  const filteredTransactions = transactionsWithVendorInfo.filter(transaction => {
     const matchesSearch = transaction.student.toLowerCase().includes(searchTerm.toLowerCase()) || 
                       transaction.school.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
+                      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (transaction.vendorName && transaction.vendorName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = selectedType === 'all' || transaction.type === selectedType;
     
-    return matchesSearch && matchesType;
+    const matchesVendorType = selectedVendorType === 'all' || transaction.vendorType === selectedVendorType;
+    
+    return matchesSearch && matchesType && matchesVendorType;
   });
   
   const getTypeBadge = (type: string) => {
@@ -59,6 +76,17 @@ export default function Transactions() {
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Recarga</Badge>;
       default:
         return <Badge>{type}</Badge>;
+    }
+  };
+
+  const getVendorBadge = (vendorType: string) => {
+    switch (vendorType) {
+      case 'third_party':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">Terceirizado</Badge>;
+      case 'own':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">Próprio</Badge>;
+      default:
+        return null;
     }
   };
   
@@ -124,7 +152,7 @@ export default function Transactions() {
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Select
               value={selectedType}
               onValueChange={setSelectedType}
@@ -136,6 +164,20 @@ export default function Transactions() {
                 <SelectItem value="all">Todos os tipos</SelectItem>
                 <SelectItem value="purchase">Compra</SelectItem>
                 <SelectItem value="reload">Recarga</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={selectedVendorType}
+              onValueChange={setSelectedVendorType}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Tipo de Cantina" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as cantinas</SelectItem>
+                <SelectItem value="own">Cantinas próprias</SelectItem>
+                <SelectItem value="third_party">Cantinas terceirizadas</SelectItem>
               </SelectContent>
             </Select>
             
@@ -153,6 +195,7 @@ export default function Transactions() {
                 <TableHead>Data/Hora</TableHead>
                 <TableHead>Aluno</TableHead>
                 <TableHead>Escola</TableHead>
+                <TableHead>Estabelecimento</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
@@ -165,6 +208,12 @@ export default function Transactions() {
                   <TableCell className="text-sm">{formatDate(transaction.date)}</TableCell>
                   <TableCell className="font-medium">{transaction.student}</TableCell>
                   <TableCell>{transaction.school}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {transaction.vendorName}
+                      {getVendorBadge(transaction.vendorType)}
+                    </div>
+                  </TableCell>
                   <TableCell>{getTypeBadge(transaction.type)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
                   <TableCell>
@@ -185,6 +234,11 @@ export default function Transactions() {
                             Estornar
                           </DropdownMenuItem>
                         )}
+                        {transaction.vendorType === 'third_party' && (
+                          <DropdownMenuItem>
+                            Detalhes do estabelecimento
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -202,7 +256,7 @@ export default function Transactions() {
         
         <div className="p-4 border-t flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Mostrando {filteredTransactions.length} de {expandedTransactions.length} transações
+            Mostrando {filteredTransactions.length} de {transactionsWithVendorInfo.length} transações
           </div>
           
           <div className="flex gap-2">
