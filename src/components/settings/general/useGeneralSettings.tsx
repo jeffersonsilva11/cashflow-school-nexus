@@ -36,7 +36,18 @@ export const useGeneralSettings = () => {
           updated_at: new Date().toISOString() // Add this field to default
         };
       }
-      return data;
+      
+      // Ensure date_format is one of the allowed values
+      const validDateFormats = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
+      const validatedData = {
+        ...data,
+        date_format: validDateFormats.includes(data.date_format) ? 
+          data.date_format : 'DD/MM/YYYY',
+        time_format: ['12h', '24h'].includes(data.time_format) ?
+          data.time_format : '24h'
+      };
+      
+      return validatedData;
     },
   });
   

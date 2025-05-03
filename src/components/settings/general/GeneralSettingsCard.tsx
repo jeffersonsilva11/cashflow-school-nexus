@@ -6,6 +6,7 @@ import { PencilLine, Settings, Clock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { GeneralSettingsForm } from './GeneralSettingsForm';
 import { useGeneralSettings } from './useGeneralSettings';
+import type { GeneralConfig } from './GeneralSettingsForm';
 
 const GeneralSettingsCard = () => {
   const {
@@ -21,10 +22,51 @@ const GeneralSettingsCard = () => {
   // Handler for logo upload that updates the form
   const handleLogoUploadWrapper = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const logoUrl = await handleLogoUpload(e);
-    if (logoUrl) {
+    if (logoUrl && generalConfig) {
       const updatedConfig = { ...generalConfig, logo_url: logoUrl };
-      saveConfig(updatedConfig);
+      saveConfig(updatedConfig as GeneralConfig);
     }
+  };
+
+  // Prepare form values ensuring they match the expected types
+  const prepareFormValues = (): GeneralConfig => {
+    if (!generalConfig) {
+      return {
+        company_name: '',
+        logo_url: '',
+        timezone: 'America/Sao_Paulo',
+        date_format: 'DD/MM/YYYY',
+        time_format: '24h',
+        default_currency: 'BRL',
+        support_email: '',
+        support_phone: '',
+        terms_url: '',
+        privacy_url: ''
+      };
+    }
+    
+    // Ensure date_format is one of the allowed values
+    const dateFormat = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'].includes(generalConfig.date_format)
+      ? generalConfig.date_format as 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
+      : 'DD/MM/YYYY';
+      
+    // Ensure time_format is one of the allowed values
+    const timeFormat = ['12h', '24h'].includes(generalConfig.time_format)
+      ? generalConfig.time_format as '12h' | '24h'
+      : '24h';
+    
+    return {
+      company_name: generalConfig.company_name || '',
+      logo_url: generalConfig.logo_url || '',
+      timezone: generalConfig.timezone || 'America/Sao_Paulo',
+      date_format: dateFormat,
+      time_format: timeFormat,
+      default_currency: generalConfig.default_currency || 'BRL',
+      support_email: generalConfig.support_email || '',
+      support_phone: generalConfig.support_phone || '',
+      terms_url: generalConfig.terms_url || '',
+      privacy_url: generalConfig.privacy_url || ''
+    };
   };
   
   return (
@@ -58,7 +100,7 @@ const GeneralSettingsCard = () => {
             <div>Carregando configurações...</div>
           ) : generalConfig ? (
             <GeneralSettingsForm 
-              defaultValues={generalConfig} 
+              defaultValues={prepareFormValues()}
               isEditing={isEditing}
               onSubmit={saveConfig}
               onCancel={cancelEditing}
