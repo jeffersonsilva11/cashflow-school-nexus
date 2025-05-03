@@ -71,8 +71,9 @@ export const createBackup = async (options: BackupOptions): Promise<{ success: b
     const backupData: Record<string, any[]> = {};
     
     for (const table of tablesToBackup) {
+      // Use type assertion to allow dynamic table names
       const { data, error } = await supabase
-        .from(table)
+        .from(table as any)
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -110,7 +111,7 @@ export const createBackup = async (options: BackupOptions): Promise<{ success: b
         file_size: new Blob([finalBackupData]).size,
         encrypted: isEncrypted,
         tables_included: tablesToBackup
-      })
+      } as any)
       .select()
       .single();
     

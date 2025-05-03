@@ -238,6 +238,39 @@ export type Database = {
           },
         ]
       }
+      device_statuses: {
+        Row: {
+          battery_level: number | null
+          device_id: string
+          id: string
+          last_seen_at: string
+          location: Json | null
+          signal_strength: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          battery_level?: number | null
+          device_id: string
+          id?: string
+          last_seen_at?: string
+          location?: Json | null
+          signal_strength?: number | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          battery_level?: number | null
+          device_id?: string
+          id?: string
+          last_seen_at?: string
+          location?: Json | null
+          signal_strength?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           assigned_at: string | null

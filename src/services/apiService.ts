@@ -58,6 +58,10 @@ export const generateApiKey = async (name: string, scope: string[]): Promise<Api
     const hashedKey = await hashString(key);
     const keyPrefix = key.substring(0, 8);
     
+    // Set expiration to one year from now
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    
     // Store the key in the database (only the hash)
     const { data, error } = await supabase
       .from('api_keys')
@@ -67,7 +71,7 @@ export const generateApiKey = async (name: string, scope: string[]): Promise<Api
         key_hash: hashedKey,
         scope,
         status: 'active',
-        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year expiry
+        expires_at: oneYearFromNow.toISOString() // Convert Date to ISO string
       })
       .select('id, name, key_prefix, created_at, expires_at, scope, status')
       .single();
@@ -105,7 +109,7 @@ export const listApiKeys = async (): Promise<ApiResponse<ApiKey[]>> => {
     
     return {
       success: true,
-      data: data as any as ApiKey[],
+      data: data as unknown as ApiKey[],
       timestamp: new Date().toISOString()
     };
   } catch (error) {
