@@ -5,10 +5,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
-// Define os tipos de usuário do sistema
+// Define the types of user roles in the system
 export type UserRole = 'admin' | 'school_admin' | 'parent' | 'staff';
 
-// Interface para o objeto de usuário
+// Interface for the user object
 export interface User {
   id: string;
   name: string;
@@ -18,7 +18,7 @@ export interface User {
   avatar?: string;
 }
 
-// Interface para o contexto de autenticação
+// Interface for the authentication context
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -28,10 +28,10 @@ interface AuthContextType {
   hasPermission: (requiredRoles: UserRole[]) => boolean;
 }
 
-// Cria o contexto de autenticação
+// Create the authentication context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Provedor do contexto de autenticação
+// Authentication context provider
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -39,12 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Função para transformar o usuário do Supabase no formato necessário para a aplicação
+  // Function to transform the Supabase user into the format needed for the application
   const formatUserData = async (supaUser: SupabaseUser | null): Promise<User | null> => {
     if (!supaUser) return null;
 
     try {
-      // Obter dados do perfil do usuário da tabela de perfis
+      // Get user profile data from the profiles table
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -52,19 +52,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) throw profileError;
+      
+      // Parse role to ensure it's a valid UserRole type
+      let userRole: UserRole = 'parent'; // Default role
+      
+      if (profileData?.role === 'admin' || 
+          profileData?.role === 'school_admin' || 
+          profileData?.role === 'parent' || 
+          profileData?.role === 'staff') {
+        userRole = profileData.role as UserRole;
+      }
 
       return {
         id: supaUser.id,
         name: profileData?.name || supaUser.email?.split('@')[0] || 'Usuário',
         email: supaUser.email || '',
-        role: profileData?.role || 'parent',
+        role: userRole,
         schoolId: profileData?.school_id,
         avatar: profileData?.avatar_url
       };
     } catch (error) {
-      console.error('Erro ao obter perfil do usuário:', error);
+      console.error('Error getting user profile:', error);
       
-      // Retorna um usuário básico mesmo sem perfil
+      // Return a basic user even without a profile
       return {
         id: supaUser.id,
         name: supaUser.email?.split('@')[0] || 'Usuário',
@@ -75,14 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Verificar se o usuário já está autenticado ao carregar
+  // Check if the user is already authenticated when loading
   useEffect(() => {
-    // Primeiro, configurar o listener para mudanças de estado de autenticação
+    // First, set up a listener for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         
-        // Não faz chamadas ao Supabase diretamente no callback para evitar deadlocks
+        // Don't make direct Supabase calls in the callback to avoid deadlocks
         setTimeout(async () => {
           if (session?.user) {
             const formattedUser = await formatUserData(session.user);
@@ -95,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Em seguida, verificar a sessão atual
+    // Then check the current session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       
@@ -111,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Função de login
+  // Login function
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -141,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Função de logout
+  // Logout function
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -162,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Verifica se o usuário tem permissão baseado em seu papel
+  // Check if the user has permission based on their role
   const hasPermission = (requiredRoles: UserRole[]): boolean => {
     if (!user) return false;
     return requiredRoles.includes(user.role);
@@ -180,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Hook para usar o contexto de autenticação
+// Hook to use the authentication context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

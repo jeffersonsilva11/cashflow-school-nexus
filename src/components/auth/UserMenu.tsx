@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, User, Settings, School, Shield, UserRound } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
@@ -20,7 +21,7 @@ export default function UserMenu() {
   
   if (!user) return null;
   
-  // Função para obter as iniciais do nome do usuário
+  // Function to get user initials from name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -30,6 +31,7 @@ export default function UserMenu() {
       .substring(0, 2);
   };
   
+  // Function to get user role display text
   const getRole = (role: string) => {
     switch(role) {
       case 'admin': return 'Administrador';
@@ -40,6 +42,7 @@ export default function UserMenu() {
     }
   };
   
+  // Function to get role icon based on user role
   const getRoleIcon = (role: string) => {
     switch(role) {
       case 'admin': return <Shield className="h-4 w-4 mr-2 text-primary" />;
@@ -47,6 +50,17 @@ export default function UserMenu() {
       case 'parent': return <UserRound className="h-4 w-4 mr-2 text-blue-500" />;
       case 'staff': return <User className="h-4 w-4 mr-2 text-orange-500" />;
       default: return <User className="h-4 w-4 mr-2" />;
+    }
+  };
+  
+  // Function to get badge variant based on user role
+  const getRoleBadgeVariant = (role: string) => {
+    switch(role) {
+      case 'admin': return 'default';
+      case 'school_admin': return 'success';
+      case 'parent': return 'info';
+      case 'staff': return 'warning';
+      default: return 'secondary';
     }
   };
   
@@ -69,9 +83,11 @@ export default function UserMenu() {
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
-            <div className="flex items-center mt-2 p-1 rounded-full bg-muted/50 w-fit">
-              {getRoleIcon(user.role)}
-              <span className="text-xs font-medium">{getRole(user.role)}</span>
+            <div className="mt-2">
+              <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center w-fit gap-1 text-xs">
+                {getRoleIcon(user.role)}
+                {getRole(user.role)}
+              </Badge>
             </div>
           </div>
         </DropdownMenuLabel>

@@ -1,17 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Info } from 'lucide-react';
 
 export default function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const { login, loading, isAuthenticated } = useAuth();
   
@@ -120,9 +118,25 @@ export default function Login() {
                 </Button>
               </div>
               
-              <div className="text-xs text-center text-muted-foreground mt-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-blue-500 mt-0.5" />
+                  <div className="text-xs text-left text-blue-700">
+                    <p className="font-medium">Para criar um usuário superadmin:</p>
+                    <ol className="list-decimal list-inside mt-1 ml-1 space-y-1">
+                      <li>Acesse o painel do Supabase</li>
+                      <li>Vá em Authentication &gt; Users</li>
+                      <li>Clique em "Add User"</li>
+                      <li>Crie com o email: admin@cashflow.com</li>
+                      <li>Use a senha: admin123</li>
+                      <li>Em "User Metadata", adicione: <code className="bg-blue-100 px-1">{`{"role":"admin","name":"Admin"}`}</code></li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-center text-muted-foreground">
                 <p>Use as credenciais fornecidas pelo administrador do sistema.</p>
-                <p className="mt-2">Para testes, use: <strong>admin@cashflow.com</strong> e senha: <strong>admin123</strong></p>
               </div>
             </CardContent>
           </form>
