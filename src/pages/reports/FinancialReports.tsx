@@ -48,15 +48,16 @@ import {
 import { 
   FinancialTrendChart 
 } from '@/components/financial/FinancialTrendChart';
-import { 
-  schoolFinancials, 
-  financialReports, 
-  subscriptions 
-} from '@/services/financialMockData';
 import { formatCurrency } from '@/lib/format';
 import { SchoolUsageReport } from '@/components/reports/SchoolUsageReport';
 import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
 import { ConsumptionAnalysisReport } from '@/components/reports/ConsumptionAnalysisReport';
+import { 
+  useFinancialOverview,
+  useRevenueByPlan,
+  useMonthlyTrend 
+} from '@/services/financialReportService';
+import { useSchoolsFinancial } from '@/services/schoolFinancialService';
 
 export default function FinancialReports() {
   const { toast } = useToast();
@@ -65,8 +66,14 @@ export default function FinancialReports() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   
+  // Fetch real data from services
+  const { data: financialOverview, isLoading: overviewLoading } = useFinancialOverview();
+  const { data: revenueByPlan, isLoading: revenueLoading } = useRevenueByPlan();
+  const { data: monthlyTrend, isLoading: trendLoading } = useMonthlyTrend();
+  const { data: schools = [], isLoading: schoolsLoading } = useSchoolsFinancial();
+  
   // Filtrar escolas pela busca
-  const filteredSchools = schoolFinancials.filter(school => 
+  const filteredSchools = schools.filter(school => 
     school.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -93,6 +100,31 @@ export default function FinancialReports() {
     // Simular download após um pequeno delay
     setTimeout(() => setIsExportDialogOpen(false), 1500);
   };
+
+  // Loading state
+  const isLoading = overviewLoading || revenueLoading || trendLoading || schoolsLoading;
+  
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Relatórios Financeiros</h1>
+            <p className="text-muted-foreground">
+              Visualização detalhada dos dados financeiros e métricas do sistema
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p className="text-lg text-muted-foreground">Carregando dados financeiros...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -162,11 +194,11 @@ export default function FinancialReports() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(financialReports.overview.totalRevenueMonth)}
+                  {formatCurrency(financialOverview?.totalRevenueMonth || 0)}
                 </div>
                 <div className="flex items-center text-xs text-green-600 mt-1">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  <span>{financialReports.overview.growthRate}% em relação ao período anterior</span>
+                  <span>{financialOverview?.growthRate || 0}% em relação ao período anterior</span>
                 </div>
               </CardContent>
             </Card>
@@ -179,11 +211,13 @@ export default function FinancialReports() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {subscriptions.filter(s => s.status === 'active').length}
+                  {financialOverview?.totalActiveSubscriptions || 0}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {subscriptions.filter(s => s.status === 'past_due').length} em atraso
-                </div>
+                {financialOverview?.totalPendingPayments ? (
+                  <div className="text-xs text-amber-600 mt-1">
+                    {formatCurrency(financialOverview.totalPendingPayments)} em pagamentos pendentes
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
             
@@ -195,7 +229,7 @@ export default function FinancialReports() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(financialReports.overview.averageRevenuePerSchool)}
+                  {formatCurrency(financialOverview?.averageRevenuePerSchool || 0)}
                 </div>
                 <div className="flex items-center text-xs text-green-600 mt-1">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -229,7 +263,7 @@ export default function FinancialReports() {
                 <CardDescription>Evolução da receita no período</CardDescription>
               </CardHeader>
               <CardContent>
-                <FinancialTrendChart data={financialReports.monthlyTrend} />
+                <FinancialTrendChart data={monthlyTrend || []} />
               </CardContent>
             </Card>
             
@@ -239,9 +273,9 @@ export default function FinancialReports() {
                 <CardDescription>Receita por tipo de plano</CardDescription>
               </CardHeader>
               <CardContent>
-                <RevenueByPlanChart data={financialReports.revenueByPlan} />
+                <RevenueByPlanChart data={revenueByPlan || []} />
                 <div className="mt-4 space-y-3">
-                  {financialReports.revenueByPlan.map((item) => (
+                  {revenueByPlan && revenueByPlan.map((item) => (
                     <div key={item.plan} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <span className="font-medium">{item.plan}</span>

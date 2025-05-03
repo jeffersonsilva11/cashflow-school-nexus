@@ -29,6 +29,73 @@ export type TransactionTypeData = {
   value: number;
 }[];
 
+// Helper function to calculate growth rate
+async function calculateGrowthRate(table: string, currentPeriodStart: Date, previousPeriodStart: Date) {
+  try {
+    // Get current period count
+    const { count: currentCount, error: currentError } = await supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', currentPeriodStart.toISOString());
+    
+    if (currentError) throw currentError;
+    
+    // Get previous period count
+    const { count: previousCount, error: previousError } = await supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', previousPeriodStart.toISOString())
+      .lt('created_at', currentPeriodStart.toISOString());
+    
+    if (previousError) throw previousError;
+    
+    // Calculate growth rate
+    if (previousCount && previousCount > 0) {
+      return ((currentCount - previousCount) / previousCount) * 100;
+    }
+    
+    return 0; // No previous data to compare
+  } catch (error) {
+    console.error(`Error calculating growth rate for ${table}:`, error);
+    return 0;
+  }
+}
+
+// Calculate volume growth rate
+async function calculateVolumeGrowthRate(currentPeriodStart: Date, previousPeriodStart: Date) {
+  try {
+    // Get current period volume
+    const { data: currentData, error: currentError } = await supabase
+      .from('transactions')
+      .select('amount')
+      .gte('transaction_date', currentPeriodStart.toISOString());
+    
+    if (currentError) throw currentError;
+    
+    // Get previous period volume
+    const { data: previousData, error: previousError } = await supabase
+      .from('transactions')
+      .select('amount')
+      .gte('transaction_date', previousPeriodStart.toISOString())
+      .lt('transaction_date', currentPeriodStart.toISOString());
+    
+    if (previousError) throw previousError;
+    
+    const currentVolume = currentData?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
+    const previousVolume = previousData?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
+    
+    // Calculate growth rate
+    if (previousVolume > 0) {
+      return ((currentVolume - previousVolume) / previousVolume) * 100;
+    }
+    
+    return 0; // No previous data to compare
+  } catch (error) {
+    console.error("Error calculating volume growth rate:", error);
+    return 0;
+  }
+}
+
 // Fetch the main dashboard statistics
 export async function fetchDashboardStatistics(): Promise<DashboardStatistics> {
   try {
@@ -70,13 +137,11 @@ export async function fetchDashboardStatistics(): Promise<DashboardStatistics> {
     
     const monthlyVolume = monthTransactions?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
     
-    // For now, hardcode growth rates as we don't have enough historical data yet
-    // In a real app, we'd compare with previous periods to calculate these
-    const growthRate = {
-      schools: 12.5,
-      transactions: 18.2,
-      volume: 15.4,
-    };
+    // Calculate growth rates by comparing current month with previous month
+    const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const schoolsGrowthRate = await calculateGrowthRate('schools', firstDayOfMonth, previousMonth);
+    const transactionsGrowthRate = await calculateGrowthRate('transactions', firstDayOfMonth, previousMonth);
+    const volumeGrowthRate = await calculateVolumeGrowthRate(firstDayOfMonth, previousMonth);
     
     // Get transaction distribution by type
     const { data: transTypes, error: typesError } = await supabase
@@ -100,12 +165,31 @@ export async function fetchDashboardStatistics(): Promise<DashboardStatistics> {
       totalStudents: totalStudents || 0,
       dailyTransactions: dailyTransactions || 0,
       monthlyVolume,
-      growthRate,
+      growthRate: {
+        schools: parseFloat(schoolsGrowthRate.toFixed(1)),
+        transactions: parseFloat(transactionsGrowthRate.toFixed(1)),
+        volume: parseFloat(volumeGrowthRate.toFixed(1)),
+      },
       transactionByType,
     };
   } catch (error) {
     console.error("Error fetching dashboard statistics:", error);
-    throw error;
+    // Provide fallback data in case of error
+    return {
+      activeSchools: 0,
+      totalStudents: 0,
+      dailyTransactions: 0,
+      monthlyVolume: 0,
+      growthRate: {
+        schools: 0,
+        transactions: 0,
+        volume: 0,
+      },
+      transactionByType: {
+        purchase: 50,
+        reload: 50,
+      },
+    };
   }
 }
 
@@ -144,7 +228,7 @@ export async function fetchTransactionTrend(): Promise<TransactionTrend> {
     }));
   } catch (error) {
     console.error("Error fetching transaction trend:", error);
-    throw error;
+    return [];
   }
 }
 
@@ -175,7 +259,10 @@ export async function fetchTransactionTypeDistribution(): Promise<TransactionTyp
     ];
   } catch (error) {
     console.error("Error fetching transaction type distribution:", error);
-    throw error;
+    return [
+      { name: 'Compras', value: 50 },
+      { name: 'Recargas', value: 50 }
+    ];
   }
 }
 

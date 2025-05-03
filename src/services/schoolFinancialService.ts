@@ -56,7 +56,7 @@ export async function fetchSchoolsFinancial() {
           .eq('school_id', school.id)
           .order('issued_date', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
         
         // Calcular receita total
         const { data: invoices } = await supabase
@@ -75,7 +75,7 @@ export async function fetchSchoolsFinancial() {
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
         
         // Mapear os dados para o formato esperado
         return {
