@@ -37,7 +37,7 @@ export interface PaymentTerminal {
   vendor_id: string;
   school_id: string;
   status: 'active' | 'inactive' | 'maintenance';
-  last_sync?: Date;
+  last_sync?: Date | string;
   firmware_version?: string;
   battery_level?: number;
   connection_status?: 'online' | 'offline';
@@ -282,10 +282,10 @@ export class PaymentGatewayService {
       
       // Update related systems (student balance, vendor financials)
       if (data && transaction.status === 'completed') {
-        await this.updateRelatedSystems(data as PaymentGatewayTransaction);
+        await this.updateRelatedSystems(data);
       }
       
-      return data as PaymentGatewayTransaction;
+      return data as unknown as PaymentGatewayTransaction;
     } catch (error) {
       console.error('Error in saveTransaction:', error);
       return null;
@@ -305,7 +305,7 @@ export class PaymentGatewayService {
           vendor_id: terminal.vendor_id,
           school_id: terminal.school_id,
           status: terminal.status,
-          last_sync: terminal.last_sync,
+          last_sync_at: terminal.last_sync instanceof Date ? terminal.last_sync.toISOString() : terminal.last_sync,
           firmware_version: terminal.firmware_version
         })
         .select()
@@ -316,7 +316,7 @@ export class PaymentGatewayService {
         return null;
       }
       
-      return data as PaymentTerminal;
+      return data as unknown as PaymentTerminal;
     } catch (error) {
       console.error('Error in registerTerminal:', error);
       return null;
@@ -330,7 +330,7 @@ export class PaymentGatewayService {
         .from('payment_terminals')
         .update({
           status: status,
-          last_sync: new Date(),
+          last_sync_at: new Date().toISOString(),
           ...metadata
         })
         .eq('terminal_id', terminalId);
@@ -362,7 +362,7 @@ export class PaymentGatewayService {
         return null;
       }
       
-      const transaction = originalTransaction as PaymentGatewayTransaction;
+      const transaction = originalTransaction as unknown as PaymentGatewayTransaction;
       
       // Create the gateway based on the original transaction
       const gateway = PaymentGatewayFactory.createGateway(transaction.payment_gateway);
@@ -442,7 +442,7 @@ export class PaymentGatewayService {
               reason: 'Incomplete transaction data'
             });
           }
-        } else if (existingTransaction.status !== transaction.status) {
+        } else if (existingTransaction.status !== transaction.status && transaction.status) {
           // Status mismatch, update our record
           const { error: updateError } = await supabase
             .from('payment_gateway_transactions')
@@ -557,7 +557,7 @@ export class PaymentGatewayService {
         return [];
       }
       
-      return data as PaymentGatewayTransaction[];
+      return data as unknown as PaymentGatewayTransaction[];
     } catch (error) {
       console.error('Error in getVendorTransactions:', error);
       return [];
@@ -586,7 +586,10 @@ export class PaymentGatewayService {
         return [];
       }
       
-      return data as PaymentTerminal[];
+      return data.map(terminal => ({
+        ...terminal,
+        last_sync: terminal.last_sync_at
+      })) as unknown as PaymentTerminal[];
     } catch (error) {
       console.error('Error in getTerminals:', error);
       return [];
@@ -620,7 +623,7 @@ export const simulateTerminalPayment = async (
     }
     
     // Create gateway instance
-    const gateway = PaymentGatewayFactory.createGateway(terminal.gateway);
+    const gateway = PaymentGatewayFactory.createGateway(terminal.gateway as any);
     
     // Process payment with payment gateway
     const paymentResult = await gateway.processPayment({
@@ -638,7 +641,7 @@ export const simulateTerminalPayment = async (
     // Save transaction to our system
     return await paymentGatewayService.saveTransaction({
       transaction_id: paymentResult.transaction_id,
-      payment_gateway: terminal.gateway,
+      payment_gateway: terminal.gateway as any,
       terminal_id: terminalId,
       amount,
       status: 'completed',

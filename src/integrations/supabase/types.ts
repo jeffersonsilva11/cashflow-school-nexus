@@ -130,16 +130,113 @@ export type Database = {
           },
         ]
       }
+      payment_gateway_transactions: {
+        Row: {
+          amount: number
+          authorization_code: string | null
+          card_brand: string | null
+          created_at: string | null
+          device_id: string | null
+          id: string
+          installments: number | null
+          metadata: Json | null
+          nsu: string | null
+          payment_gateway: string
+          payment_method: string
+          school_id: string | null
+          status: string
+          student_id: string | null
+          terminal_id: string
+          transaction_date: string
+          transaction_id: string
+          type: string
+          updated_at: string | null
+          vendor_id: string | null
+        }
+        Insert: {
+          amount: number
+          authorization_code?: string | null
+          card_brand?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          installments?: number | null
+          metadata?: Json | null
+          nsu?: string | null
+          payment_gateway: string
+          payment_method: string
+          school_id?: string | null
+          status: string
+          student_id?: string | null
+          terminal_id: string
+          transaction_date?: string
+          transaction_id: string
+          type: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Update: {
+          amount?: number
+          authorization_code?: string | null
+          card_brand?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          installments?: number | null
+          metadata?: Json | null
+          nsu?: string | null
+          payment_gateway?: string
+          payment_method?: string
+          school_id?: string | null
+          status?: string
+          student_id?: string | null
+          terminal_id?: string
+          transaction_date?: string
+          transaction_id?: string
+          type?: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_gateway_transactions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_gateway_transactions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_gateway_transactions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_terminals: {
         Row: {
           app_version: string | null
+          battery_level: number | null
+          connection_status: string | null
           created_at: string | null
           device_id: string | null
           firmware_version: string | null
+          gateway: string
           id: string
           ip_address: string | null
           last_sync_at: string | null
           mac_address: string | null
+          model: string
+          school_id: string | null
+          serial_number: string
           status: string
           stone_terminal_id: string | null
           terminal_id: string
@@ -148,13 +245,19 @@ export type Database = {
         }
         Insert: {
           app_version?: string | null
+          battery_level?: number | null
+          connection_status?: string | null
           created_at?: string | null
           device_id?: string | null
           firmware_version?: string | null
+          gateway?: string
           id?: string
           ip_address?: string | null
           last_sync_at?: string | null
           mac_address?: string | null
+          model?: string
+          school_id?: string | null
+          serial_number?: string
           status: string
           stone_terminal_id?: string | null
           terminal_id: string
@@ -163,13 +266,19 @@ export type Database = {
         }
         Update: {
           app_version?: string | null
+          battery_level?: number | null
+          connection_status?: string | null
           created_at?: string | null
           device_id?: string | null
           firmware_version?: string | null
+          gateway?: string
           id?: string
           ip_address?: string | null
           last_sync_at?: string | null
           mac_address?: string | null
+          model?: string
+          school_id?: string | null
+          serial_number?: string
           status?: string
           stone_terminal_id?: string | null
           terminal_id?: string
@@ -182,6 +291,13 @@ export type Database = {
             columns: ["device_id"]
             isOneToOne: false
             referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_terminals_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
           {

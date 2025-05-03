@@ -1,420 +1,470 @@
 
-// Terminal API Edge Function to handle requests from Android POS terminals
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.0';
-import { corsHeaders } from '../_shared/cors.ts';
+// CORS headers for cross-origin requests
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+};
 
-// Create a Supabase client with the Auth context of the function
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    })
+  }
+
+  // Create a Supabase client
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
+  // Get the request path and extract the endpoint
+  const url = new URL(req.url)
+  const path = url.pathname.split('/').pop()
+  const authHeader = req.headers.get('Authorization')
+
+  // Simple authentication check
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ error: 'Missing or invalid authorization token' }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+
+  // Extract the API key
+  const apiKey = authHeader.replace('Bearer ', '')
+
+  // In a real implementation, we would validate the API key against authorized terminals
+  // For this demo, we'll just check if the key format is correct
+  if (apiKey !== 'sk_test_sample_key') {
+    console.log('Invalid API key provided:', apiKey)
+    return new Response(
+      JSON.stringify({ error: 'Invalid API key' }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 
   try {
-    // Parse request
-    const { path, method } = new URL(req.url);
-    const body = await req.json();
-    const authHeader = req.headers.get('Authorization');
-    
-    // Validate API key for terminal auth
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Invalid API key' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    const apiKey = authHeader.split(' ')[1];
-    
-    // In a real implementation, validate API key against terminal credentials in database
-    // For now, simple validation for demo purposes
-    const { data: terminal, error: terminalError } = await supabase
-      .from('payment_terminals')
-      .select('*')
-      .eq('terminal_id', body.terminal_id)
-      .single();
-      
-    if (terminalError || !terminal) {
-      return new Response(
-        JSON.stringify({ error: 'Terminal not found or unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Handle different endpoints
-    const pathSegments = path.split('/').filter(Boolean);
-    const endpoint = pathSegments[pathSegments.length - 1];
-    
-    switch (endpoint) {
-      // Handle transaction processing
+    // Process endpoint requests
+    switch (path) {
       case 'process':
-        return await handleProcessTransaction(body, terminal);
-        
-      // Handle transaction sync
+        if (req.method !== 'POST') {
+          return methodNotAllowed()
+        }
+        return await processTransaction(req, supabase)
+
       case 'sync':
-        return await handleSyncTransactions(body, terminal);
-        
-      // Handle terminal status update
+        if (req.method !== 'POST') {
+          return methodNotAllowed()
+        }
+        return await syncTransactions(req, supabase)
+
       case 'status':
-        return await handleStatusUpdate(body, terminal);
-        
-      // Handle terminal configuration request
+        if (req.method !== 'POST') {
+          return methodNotAllowed()
+        }
+        return await updateStatus(req, supabase)
+
       case 'config':
-        return await handleConfigRequest(body, terminal);
-        
+        if (req.method !== 'GET') {
+          return methodNotAllowed()
+        }
+        return await getConfig(req, supabase)
+
       default:
         return new Response(
           JSON.stringify({ error: 'Endpoint not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+          {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
     }
   } catch (error) {
-    console.error('Terminal API error:', error);
+    console.error('Error processing request:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
-});
+})
 
-// Handle new transaction from terminal
-async function handleProcessTransaction(data, terminal) {
+// Process a new transaction from a terminal
+async function processTransaction(req: Request, supabase: any) {
+  const data = await req.json()
+  
+  console.log('Processing transaction:', data)
+  
+  // Validate required fields
+  if (!data.terminal_id || !data.transaction_id || !data.amount || 
+      !data.payment_method || !data.vendor_id || !data.school_id) {
+    return new Response(
+      JSON.stringify({ error: 'Missing required fields' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+  
   try {
-    const {
-      transaction_id,
-      amount,
-      payment_method,
-      card_brand,
-      installments,
-      authorization_code,
-      nsu,
-      student_id,
-      vendor_id,
-      school_id,
-    } = data;
-    
-    // Validate required fields
-    if (!transaction_id || !amount || !payment_method || !vendor_id || !school_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Insert transaction into database
-    const { data: transactionData, error: transactionError } = await supabase
+    // Save the transaction to the database
+    const { data: transaction, error } = await supabase
       .from('payment_gateway_transactions')
       .insert({
-        transaction_id,
-        payment_gateway: terminal.gateway,
-        terminal_id: terminal.terminal_id,
-        amount,
-        status: 'completed',
-        type: 'purchase',
-        payment_method,
-        card_brand,
-        installments,
-        authorization_code,
-        nsu,
-        transaction_date: new Date(),
-        vendor_id,
-        student_id,
-        school_id,
-        metadata: {
-          processed_by: 'terminal',
-          device_timestamp: data.timestamp
-        }
+        transaction_id: data.transaction_id,
+        payment_gateway: data.payment_gateway || 'stone',
+        terminal_id: data.terminal_id,
+        device_id: data.device_id,
+        amount: data.amount,
+        status: data.status || 'completed',
+        type: data.type || 'purchase',
+        payment_method: data.payment_method,
+        card_brand: data.card_brand,
+        installments: data.installments,
+        authorization_code: data.authorization_code,
+        nsu: data.nsu,
+        transaction_date: data.timestamp || new Date().toISOString(),
+        vendor_id: data.vendor_id,
+        student_id: data.student_id,
+        school_id: data.school_id,
+        metadata: data.metadata
       })
       .select()
-      .single();
+      .single()
     
-    if (transactionError) {
-      console.error('Error saving transaction:', transactionError);
+    if (error) {
+      console.error('Error saving transaction:', error)
       return new Response(
-        JSON.stringify({ error: 'Error saving transaction', details: transactionError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'Failed to save transaction', details: error }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
-    
-    // Update related systems (student balance, vendor financials)
-    await updateRelatedSystems(transactionData);
     
     // Update terminal last sync time
     await supabase
       .from('payment_terminals')
-      .update({
-        last_sync: new Date(),
-        status: 'active'
-      })
-      .eq('terminal_id', terminal.terminal_id);
+      .update({ last_sync_at: new Date().toISOString() })
+      .eq('terminal_id', data.terminal_id)
+    
+    // Here we would also update vendor financials and student balance if needed
     
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        transaction: transactionData,
-        message: 'Transaction processed successfully'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ success: true, data: transaction }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   } catch (error) {
-    console.error('Process transaction error:', error);
+    console.error('Error in processTransaction:', error)
     return new Response(
-      JSON.stringify({ error: 'Transaction processing failed', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 }
 
-// Handle transaction sync from terminal
-async function handleSyncTransactions(data, terminal) {
+// Sync transactions from a terminal
+async function syncTransactions(req: Request, supabase: any) {
+  const data = await req.json()
+  
+  console.log('Syncing transactions:', data)
+  
+  // Validate required fields
+  if (!data.terminal_id || !data.transactions || !Array.isArray(data.transactions)) {
+    return new Response(
+      JSON.stringify({ error: 'Missing required fields' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+  
   try {
-    const { transactions, terminal_id } = data;
+    const processed = []
+    const mismatched = []
     
-    if (!transactions || !Array.isArray(transactions)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid transactions data' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    const processed = [];
-    const failed = [];
-    
-    // Process each transaction
-    for (const transaction of transactions) {
+    // Process each transaction and check if it already exists in our system
+    for (const transaction of data.transactions) {
+      if (!transaction.transaction_id) continue
+      
       // Check if transaction already exists
       const { data: existingTransaction } = await supabase
         .from('payment_gateway_transactions')
         .select('*')
         .eq('transaction_id', transaction.transaction_id)
-        .single();
+        .single()
       
       if (!existingTransaction) {
-        // Add required fields
-        transaction.payment_gateway = terminal.gateway;
-        transaction.terminal_id = terminal_id;
-        transaction.transaction_date = new Date(transaction.timestamp || Date.now());
-        
-        // Insert new transaction
-        const { data: newTransaction, error } = await supabase
-          .from('payment_gateway_transactions')
-          .insert(transaction)
-          .select()
-          .single();
-        
-        if (error) {
-          failed.push({ 
-            transaction_id: transaction.transaction_id, 
-            error: error.message 
-          });
-        } else {
-          processed.push(newTransaction);
-          
-          // Update related systems if status is completed
-          if (transaction.status === 'completed') {
-            await updateRelatedSystems(newTransaction);
-          }
-        }
-      } else {
-        // Transaction already exists, check if status needs updating
-        if (existingTransaction.status !== transaction.status) {
-          const { error } = await supabase
+        // New transaction, save it
+        if (transaction.amount && transaction.payment_method && 
+            transaction.vendor_id && transaction.school_id) {
+          const { data: saved, error } = await supabase
             .from('payment_gateway_transactions')
-            .update({ status: transaction.status })
-            .eq('transaction_id', transaction.transaction_id);
+            .insert({
+              transaction_id: transaction.transaction_id,
+              payment_gateway: transaction.payment_gateway || 'stone',
+              terminal_id: data.terminal_id,
+              amount: transaction.amount,
+              status: transaction.status || 'completed',
+              type: transaction.type || 'purchase',
+              payment_method: transaction.payment_method,
+              card_brand: transaction.card_brand,
+              installments: transaction.installments,
+              authorization_code: transaction.authorization_code,
+              nsu: transaction.nsu,
+              transaction_date: transaction.timestamp || new Date().toISOString(),
+              vendor_id: transaction.vendor_id,
+              student_id: transaction.student_id,
+              school_id: transaction.school_id,
+              metadata: transaction.metadata
+            })
+            .select()
+            .single()
           
-          if (error) {
-            failed.push({ 
-              transaction_id: transaction.transaction_id, 
-              error: error.message 
-            });
+          if (!error) {
+            processed.push(saved)
           } else {
-            processed.push(existingTransaction);
+            mismatched.push({
+              transaction_id: transaction.transaction_id,
+              reason: 'Failed to save',
+              error: error.message
+            })
           }
         } else {
-          // Already exists with same status
-          processed.push(existingTransaction);
+          mismatched.push({
+            transaction_id: transaction.transaction_id,
+            reason: 'Incomplete transaction data'
+          })
+        }
+      } else if (existingTransaction.status !== transaction.status && transaction.status) {
+        // Status mismatch, update our record
+        const { error: updateError } = await supabase
+          .from('payment_gateway_transactions')
+          .update({ status: transaction.status })
+          .eq('transaction_id', transaction.transaction_id)
+        
+        if (updateError) {
+          mismatched.push({
+            transaction_id: transaction.transaction_id,
+            reason: 'Failed to update status',
+            error: updateError.message
+          })
+        } else {
+          processed.push(existingTransaction)
         }
       }
     }
     
-    // Update terminal sync time
+    // Update terminal last sync time
     await supabase
       .from('payment_terminals')
-      .update({
-        last_sync: new Date(),
+      .update({ 
+        last_sync_at: new Date().toISOString(),
         status: 'active'
       })
-      .eq('terminal_id', terminal.terminal_id);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        processed: processed.length,
-        failed: failed.length,
-        message: `Synced ${processed.length} transactions, ${failed.length} failed`
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Sync transactions error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Transaction sync failed', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-}
-
-// Handle terminal status update
-async function handleStatusUpdate(data, terminal) {
-  try {
-    const { status, battery_level, firmware_version, connection_status } = data;
-    
-    // Update terminal status
-    const { error } = await supabase
-      .from('payment_terminals')
-      .update({
-        status: status || terminal.status,
-        last_sync: new Date(),
-        battery_level: battery_level !== undefined ? battery_level : terminal.battery_level,
-        firmware_version: firmware_version || terminal.firmware_version,
-        connection_status: connection_status || terminal.connection_status
-      })
-      .eq('terminal_id', terminal.terminal_id);
-    
-    if (error) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to update terminal status', details: error.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      .eq('terminal_id', data.terminal_id)
     
     return new Response(
       JSON.stringify({ 
-        success: true,
-        message: 'Terminal status updated successfully'
+        success: true, 
+        processed: processed.length,
+        mismatched
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   } catch (error) {
-    console.error('Terminal status update error:', error);
+    console.error('Error in syncTransactions:', error)
     return new Response(
-      JSON.stringify({ error: 'Status update failed', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 }
 
-// Handle terminal configuration request
-async function handleConfigRequest(data, terminal) {
+// Update terminal status
+async function updateStatus(req: Request, supabase: any) {
+  const data = await req.json()
+  
+  console.log('Updating terminal status:', data)
+  
+  // Validate required fields
+  if (!data.terminal_id || !data.status) {
+    return new Response(
+      JSON.stringify({ error: 'Missing required fields' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+  
   try {
-    // Get terminal configuration options
-    // In a real system, this would pull from a configuration database
+    // Check if terminal exists
+    const { data: terminal, error: findError } = await supabase
+      .from('payment_terminals')
+      .select('*')
+      .eq('terminal_id', data.terminal_id)
+      .single()
+    
+    if (findError || !terminal) {
+      return new Response(
+        JSON.stringify({ error: 'Terminal not found' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // Update terminal status and other fields
+    const updateData = {
+      status: data.status,
+      last_sync_at: new Date().toISOString(),
+    }
+    
+    // Add optional fields if provided
+    if (data.firmware_version) updateData.firmware_version = data.firmware_version
+    if (data.battery_level !== undefined) updateData.battery_level = data.battery_level
+    if (data.connection_status) updateData.connection_status = data.connection_status
+    
+    const { error } = await supabase
+      .from('payment_terminals')
+      .update(updateData)
+      .eq('terminal_id', data.terminal_id)
+    
+    if (error) {
+      console.error('Error updating terminal status:', error)
+      return new Response(
+        JSON.stringify({ error: 'Failed to update terminal status', details: error }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    return new Response(
+      JSON.stringify({ success: true }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  } catch (error) {
+    console.error('Error in updateStatus:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+}
+
+// Get terminal configuration
+async function getConfig(req: Request, supabase: any) {
+  const url = new URL(req.url)
+  const terminalId = url.searchParams.get('terminal_id')
+  
+  if (!terminalId) {
+    return new Response(
+      JSON.stringify({ error: 'Missing terminal_id parameter' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+  
+  console.log('Getting configuration for terminal:', terminalId)
+  
+  try {
+    // Check if terminal exists
+    const { data: terminal, error: findError } = await supabase
+      .from('payment_terminals')
+      .select('*')
+      .eq('terminal_id', terminalId)
+      .single()
+    
+    if (findError || !terminal) {
+      return new Response(
+        JSON.stringify({ error: 'Terminal not found' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // In a real implementation, this would be fetched from a configuration table
+    // For now, we return a hardcoded configuration
     const config = {
-      terminal_id: terminal.terminal_id,
+      terminal_id: terminalId,
       server_endpoint: `${supabaseUrl}/functions/v1/terminal-api`,
+      api_key: 'sk_test_sample_key', // In production, this would be a secure, per-terminal key
       auto_sync_interval_minutes: 15,
       print_receipt: true,
       allowed_payment_methods: ['credit', 'debit', 'pix'],
       timeout_seconds: 30,
-      debug_mode: process.env.NODE_ENV !== 'production',
-      // Gateway-specific settings
-      gateway_settings: {
-        stone: {
-          merchant_key: 'MERCHANT_KEY_PLACEHOLDER',
-          stone_code: 'STONE_CODE_PLACEHOLDER',
-          environment: 'production'
-        },
-        mercadopago: {
-          public_key: 'PUBLIC_KEY_PLACEHOLDER',
-          access_token: 'ACCESS_TOKEN_PLACEHOLDER',
-        },
-        pagseguro: {
-          app_id: 'APP_ID_PLACEHOLDER',
-          app_key: 'APP_KEY_PLACEHOLDER',
-        }
-      }[terminal.gateway] || {}
-    };
+      debug_mode: false
+    }
     
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        config
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ success: true, config }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   } catch (error) {
-    console.error('Terminal configuration error:', error);
+    console.error('Error in getConfig:', error)
     return new Response(
-      JSON.stringify({ error: 'Configuration request failed', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 }
 
-// Helper function to update related systems
-async function updateRelatedSystems(transaction) {
-  try {
-    // If this is a student purchase, update the student's balance
-    if (transaction.student_id && transaction.type === 'purchase') {
-      // This would update the student's balance in a real system
-      console.log(`Updating student ${transaction.student_id} balance after purchase of ${transaction.amount}`);
+// Helper function for method not allowed responses
+function methodNotAllowed() {
+  return new Response(
+    JSON.stringify({ error: 'Method not allowed' }),
+    {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
-    
-    // Update vendor financial records
-    if (transaction.vendor_id) {
-      // If purchase, add to vendor balance
-      if (transaction.type === 'purchase') {
-        // Get vendor financials
-        const { data: financials } = await supabase
-          .from('vendors_financials')
-          .select('*')
-          .eq('vendor_id', transaction.vendor_id)
-          .single();
-        
-        if (financials) {
-          // Get vendor type to determine commission
-          const { data: vendor } = await supabase
-            .from('vendors')
-            .select('type, commission_rate')
-            .eq('id', transaction.vendor_id)
-            .single();
-          
-          if (vendor && vendor.type === 'third_party') {
-            const commissionRate = vendor.commission_rate || 0.1; // Default 10% if not specified
-            const commission = transaction.amount * commissionRate;
-            const netAmount = transaction.amount - commission;
-            
-            // Update vendor financials
-            await supabase
-              .from('vendors_financials')
-              .update({
-                balance: (financials.balance || 0) + netAmount,
-                pending_transfer: (financials.pending_transfer || 0) + netAmount
-              })
-              .eq('vendor_id', transaction.vendor_id);
-          } else {
-            // Own vendor, no commission
-            await supabase
-              .from('vendors_financials')
-              .update({
-                balance: (financials.balance || 0) + transaction.amount
-              })
-              .eq('vendor_id', transaction.vendor_id);
-          }
-        }
-      }
-      // If refund, subtract from vendor balance
-      else if (transaction.type === 'refund') {
-        // Similar logic for refunds
-        console.log(`Updating vendor ${transaction.vendor_id} balance after refund of ${Math.abs(transaction.amount)}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error updating related systems:', error);
-  }
+  )
 }
