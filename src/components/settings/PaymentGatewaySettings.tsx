@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { CreditCard, Key, PencilLine, Save, TestTube } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 // Define schemas for payment gateway configuration
 const stoneConfigSchema = z.object({
@@ -37,6 +37,7 @@ type PagseguroConfig = z.infer<typeof pagseguroConfigSchema>;
 const PaymentGatewaySettings = () => {
   const [activeTab, setActiveTab] = useState<string>("stone");
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const navigate = useNavigate();
   
   // Fetch existing configurations
   const { data: stoneConfig, isLoading: loadingStone, refetch: refetchStone } = useQuery({

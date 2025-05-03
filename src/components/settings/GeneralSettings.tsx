@@ -59,7 +59,8 @@ const GeneralSettings = () => {
           support_phone: '',
           terms_url: '',
           privacy_url: '',
-          config: {}
+          config: {},
+          updated_at: new Date().toISOString() // Add this field to default
         };
       }
       return data;
