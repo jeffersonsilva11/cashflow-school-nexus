@@ -112,6 +112,9 @@ export interface ConsumptionAnalysis {
   average_per_student: number;
   created_at?: string;
   updated_at?: string;
+  school?: {
+    name: string;
+  };
 }
 
 // Monthly Trends Types

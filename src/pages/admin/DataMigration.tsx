@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DataMigrationTool } from '@/components/admin/DataMigrationTool';
+import DataMigrationTool from '@/components/admin/DataMigrationTool';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 
