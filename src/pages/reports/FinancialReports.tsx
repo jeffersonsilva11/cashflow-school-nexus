@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   FileBarChart, 
@@ -40,23 +41,30 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { 
   RevenueByPlanChart 
 } from '@/components/financial/RevenueByPlanChart';
 import { 
   FinancialTrendChart 
 } from '@/components/financial/FinancialTrendChart';
-import { formatCurrency } from '@/lib/format';
-import { SchoolUsageReport } from '@/components/reports/SchoolUsageReport';
-import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
-import { ConsumptionAnalysisReport } from '@/components/reports/ConsumptionAnalysisReport';
 import { 
   useFinancialOverview,
   useRevenueByPlan,
   useMonthlyTrend 
 } from '@/services/financialReportHooks';
 import { useSchoolsFinancial } from '@/services/schoolFinancialService';
+import { ConsumptionAnalysisReport } from '@/components/reports/ConsumptionAnalysisReport';
+import { ExportDataDialog } from '@/components/reports/ExportDataDialog';
+import { SchoolUsageReport } from '@/components/reports/SchoolUsageReport';
+
+// Custom formatter for currency
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value);
+};
 
 export default function FinancialReports() {
   const { toast } = useToast();

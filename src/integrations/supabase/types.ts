@@ -114,6 +114,53 @@ export type Database = {
         }
         Relationships: []
       }
+      consumption_analysis: {
+        Row: {
+          amount: number
+          average_per_student: number
+          created_at: string
+          id: string
+          product_type: string
+          quantity: number
+          report_date: string
+          school_id: string | null
+          student_count: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          average_per_student?: number
+          created_at?: string
+          id?: string
+          product_type: string
+          quantity?: number
+          report_date?: string
+          school_id?: string | null
+          student_count?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          average_per_student?: number
+          created_at?: string
+          id?: string
+          product_type?: string
+          quantity?: number
+          report_date?: string
+          school_id?: string | null
+          student_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_analysis_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_alerts: {
         Row: {
           alert_type: string
@@ -349,33 +396,54 @@ export type Database = {
       }
       financial_reports: {
         Row: {
+          active_schools: number | null
+          active_subscriptions: number | null
+          average_revenue: number | null
           created_at: string
           data: Json
           end_date: string
+          growth_rate: number | null
           id: string
+          pending_payments: number | null
           period: string
+          period_name: string | null
           report_type: string
           start_date: string
+          total_revenue: number | null
           updated_at: string
         }
         Insert: {
+          active_schools?: number | null
+          active_subscriptions?: number | null
+          average_revenue?: number | null
           created_at?: string
           data: Json
           end_date: string
+          growth_rate?: number | null
           id?: string
+          pending_payments?: number | null
           period: string
+          period_name?: string | null
           report_type: string
           start_date: string
+          total_revenue?: number | null
           updated_at?: string
         }
         Update: {
+          active_schools?: number | null
+          active_subscriptions?: number | null
+          average_revenue?: number | null
           created_at?: string
           data?: Json
           end_date?: string
+          growth_rate?: number | null
           id?: string
+          pending_payments?: number | null
           period?: string
+          period_name?: string | null
           report_type?: string
           start_date?: string
+          total_revenue?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -439,6 +507,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      monthly_trends: {
+        Row: {
+          commission: number
+          created_at: string
+          id: string
+          month: string
+          revenue: number
+          transaction_count: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          commission?: number
+          created_at?: string
+          id?: string
+          month: string
+          revenue?: number
+          transaction_count?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          commission?: number
+          created_at?: string
+          id?: string
+          month?: string
+          revenue?: number
+          transaction_count?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
       }
       parent_student: {
         Row: {
@@ -855,6 +956,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      revenue_by_plan: {
+        Row: {
+          created_at: string
+          id: string
+          percentage: number
+          plan_id: string | null
+          plan_name: string
+          report_date: string
+          revenue: number
+          school_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          percentage?: number
+          plan_id?: string | null
+          plan_name: string
+          report_date?: string
+          revenue?: number
+          school_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          percentage?: number
+          plan_id?: string | null
+          plan_name?: string
+          report_date?: string
+          revenue?: number
+          school_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_by_plan_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -1564,6 +1709,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_consumption_analysis_report: {
+        Args: { report_date: string }
+        Returns: undefined
+      }
+      generate_financial_overview_report: {
+        Args: { start_date: string; end_date: string; report_period: string }
+        Returns: string
+      }
+      generate_monthly_trend_report: {
+        Args: { months_back: number }
+        Returns: string
+      }
+      generate_revenue_by_plan_report: {
+        Args: { start_date: string; end_date: string }
+        Returns: string
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
