@@ -169,15 +169,19 @@ export const generateFinancialOverviewReport = async (): Promise<FinancialReport
       revenue: Math.random() * 50000 + 30000 // Dado mockado para exemplo
     }));
     
+    // Extração segura do valor sum da resposta
+    const pendingAmount = pendingInvoices?.sum ? 
+      (typeof pendingInvoices.sum === 'number' ? pendingInvoices.sum : 0) : 0;
+    
     // Retornar relatório gerado
     return {
       totalRevenueMonth: totalRevenue,
       totalActiveSchools: activeSchools?.count || 0,
       totalActiveSubscriptions: activeSubscriptions?.count || 0,
-      totalPendingPayments: pendingInvoices?.sum || 0,
+      totalPendingPayments: pendingAmount,
       averageRevenuePerSchool: avgRevenue,
       growthRate: 8.5, // Exemplo fixo
-      monthlyData: monthlyData // Corrigido: adicionando o campo obrigatório monthlyData
+      monthlyData: monthlyData // Campo obrigatório adicionado
     };
   } catch (error) {
     console.error("Error in generateFinancialOverviewReport:", error);
@@ -207,7 +211,7 @@ export const generateRevenueByPlanReport = async (): Promise<RevenueByPlanItemDa
       return financialReports.revenueByPlan;
     }
     
-    // Converter para o formato necessário
+    // Converter para o formato necessário, adicionando os campos name e value que estavam faltando
     return revByPlan.map(item => ({
       name: item.plan_name,
       plan: item.plan_name,

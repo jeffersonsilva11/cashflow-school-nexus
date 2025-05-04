@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { schoolFinancials, subscriptions, invoices, financialReports, plans } from "@/services/financialMockData";
 import { schools, students, users } from "@/services/mockData";
@@ -99,7 +98,10 @@ export async function clearDatabaseData(): Promise<{ success: boolean; message: 
     // Limpar cada tabela
     for (const table of tablesToClear) {
       try {
-        const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        // Utilizando a tabela como um valor literal, não como uma string dinâmica
+        const { error } = await supabase.from(table as any)
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000');
         
         if (error) {
           console.error(`Erro ao limpar tabela ${table}:`, error);
