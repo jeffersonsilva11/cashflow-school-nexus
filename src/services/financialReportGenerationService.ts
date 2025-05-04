@@ -181,7 +181,7 @@ export const generateFinancialOverviewReport = async (): Promise<FinancialReport
       totalPendingPayments: pendingAmount,
       averageRevenuePerSchool: avgRevenue,
       growthRate: 8.5, // Exemplo fixo
-      monthlyData: monthlyData // Campo obrigatório adicionado
+      monthlyData: monthlyData // Adding the required monthlyData property
     };
   } catch (error) {
     console.error("Error in generateFinancialOverviewReport:", error);
