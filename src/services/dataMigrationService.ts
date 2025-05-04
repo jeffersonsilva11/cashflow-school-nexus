@@ -56,6 +56,81 @@ const checkExistingData = async (): Promise<{
   }
 };
 
+// Nova função para limpar o banco de dados
+export async function clearDatabaseData(): Promise<{ success: boolean; message: string }> {
+  try {
+    console.log("Iniciando limpeza do banco de dados...");
+
+    // Lista de tabelas para limpar (ordem é importante devido a dependências)
+    const tablesToClear = [
+      'transactions',
+      'devices',
+      'device_logs',
+      'device_alerts',
+      'device_batches',
+      'device_statuses',
+      'student_balances',
+      'parent_student',
+      'students',
+      'parents',
+      'monthly_trends',
+      'revenue_by_plan',
+      'consumption_analysis',
+      'invoices',
+      'subscriptions',
+      'financial_reports',
+      'plans',
+      'schools',
+      'tablets',
+      'payment_terminals',
+      'payment_gateway_transactions',
+      'vendor_products',
+      'vendor_commission_tiers',
+      'vendor_sales_reports',
+      'vendor_transfers',
+      'vendors_financials',
+      'vendors'
+      // Nota: não limpamos tabelas relacionadas a usuários como 'profiles'
+    ];
+    
+    let successCount = 0;
+    let errorMessages = [];
+
+    // Limpar cada tabela
+    for (const table of tablesToClear) {
+      try {
+        const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        
+        if (error) {
+          console.error(`Erro ao limpar tabela ${table}:`, error);
+          errorMessages.push(`${table}: ${error.message}`);
+        } else {
+          successCount++;
+          console.log(`Tabela ${table} limpa com sucesso`);
+        }
+      } catch (err) {
+        console.error(`Erro ao limpar tabela ${table}:`, err);
+        errorMessages.push(`${table}: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      }
+    }
+
+    const message = successCount === tablesToClear.length
+      ? `Todas as ${successCount} tabelas foram limpas com sucesso`
+      : `${successCount} de ${tablesToClear.length} tabelas foram limpas. ${errorMessages.length} erros encontrados.`;
+
+    return {
+      success: successCount > 0,
+      message
+    };
+  } catch (error) {
+    console.error("Erro ao limpar banco de dados:", error);
+    return {
+      success: false,
+      message: `Falha na limpeza do banco: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+    };
+  }
+}
+
 // Step 1: Migrate schools data
 export async function migrateSchools() {
   try {
@@ -637,6 +712,31 @@ export function useMigrateData() {
         toast({
           title: "Erro na migração",
           description: error instanceof Error ? error.message : "Ocorreu um erro durante a migração dos dados",
+          variant: "destructive"
+        });
+        throw error;
+      }
+    },
+    clearDatabaseData: async () => {
+      try {
+        const result = await clearDatabaseData();
+        if (result.success) {
+          toast({
+            title: "Limpeza concluída",
+            description: result.message
+          });
+        } else {
+          toast({
+            title: "Limpeza não concluída",
+            description: result.message,
+            variant: "destructive"
+          });
+        }
+        return result;
+      } catch (error) {
+        toast({
+          title: "Erro na limpeza",
+          description: error instanceof Error ? error.message : "Ocorreu um erro durante a limpeza dos dados",
           variant: "destructive"
         });
         throw error;

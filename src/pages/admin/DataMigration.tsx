@@ -22,6 +22,7 @@ export default function DataMigration() {
           A migração incluirá escolas, planos, assinaturas, faturas e relatórios financeiros.
           <br /><br />
           <strong>Nota:</strong> A ferramenta verificará se já existem dados no banco para evitar duplicações.
+          Agora você também pode limpar todos os dados antes de fazer uma nova migração.
         </AlertDescription>
       </Alert>
       

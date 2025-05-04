@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { Upload, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, Check, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { useMigrateData, MigrationResult } from "@/services/dataMigrationService";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -64,13 +64,14 @@ export default function DataMigrationTool() {
   ]);
   
   const [migrating, setMigrating] = useState<boolean>(false);
+  const [clearing, setClearing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [results, setResults] = useState<{success: string[], error: string[]}>({ success: [], error: [] });
   const [showResults, setShowResults] = useState<boolean>(false);
   const [hasExistingData, setHasExistingData] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(true);
   
-  const { migrateAllData } = useMigrateData();
+  const { migrateAllData, clearDatabaseData } = useMigrateData();
   
   // Verificar se já existem dados no banco
   useEffect(() => {
@@ -153,6 +154,50 @@ export default function DataMigrationTool() {
     }
   };
   
+  const clearData = async () => {
+    // Confirmação do usuário
+    if (!window.confirm("ATENÇÃO: Esta ação irá remover TODOS os dados do banco. Esta operação não pode ser desfeita. Deseja continuar?")) {
+      return;
+    }
+    
+    setClearing(true);
+    setProgress(0);
+    setResults({ success: [], error: [] });
+    setShowResults(false);
+    
+    try {
+      // Executar a limpeza de dados
+      setProgress(30);
+      const result = await clearDatabaseData();
+      setProgress(100);
+      
+      if (result.success) {
+        setResults({ 
+          success: [result.message],
+          error: []
+        });
+        
+        // Atualizar o estado para indicar que não temos mais dados no banco
+        setHasExistingData(false);
+      } else {
+        setResults({
+          success: [],
+          error: [result.message]
+        });
+      }
+    } catch (error) {
+      console.error("Error during database clearing:", error);
+      
+      setResults({
+        success: [],
+        error: [error instanceof Error ? error.message : "Ocorreu um erro desconhecido durante a limpeza do banco."]
+      });
+    } finally {
+      setShowResults(true);
+      setClearing(false);
+    }
+  };
+  
   if (isChecking) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -201,7 +246,7 @@ export default function DataMigrationTool() {
                   id={option.id} 
                   checked={option.selected} 
                   onCheckedChange={() => toggleOption(option.id)}
-                  disabled={migrating}
+                  disabled={migrating || clearing}
                 />
                 <div className="grid gap-1.5">
                   <Label htmlFor={option.id} className="font-medium">{option.name}</Label>
@@ -211,10 +256,10 @@ export default function DataMigrationTool() {
             ))}
           </div>
           
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Button 
               onClick={migrateData} 
-              disabled={migrating || options.filter(opt => opt.selected).length === 0}
+              disabled={migrating || clearing || options.filter(opt => opt.selected).length === 0}
               className="w-full sm:w-auto"
               variant={hasExistingData ? "destructive" : "default"}
             >
@@ -231,8 +276,27 @@ export default function DataMigrationTool() {
               )}
             </Button>
             
-            {migrating && (
-              <div className="mt-4">
+            <Button 
+              onClick={clearData} 
+              disabled={migrating || clearing || !hasExistingData}
+              variant="outline"
+              className="w-full sm:w-auto border-red-300 text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              {clearing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Limpando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2" size={16} />
+                  Limpar Banco de Dados
+                </>
+              )}
+            </Button>
+            
+            {(migrating || clearing) && (
+              <div className="mt-4 w-full">
                 <Progress value={progress} className="h-2" />
                 <p className="text-sm text-center mt-1 text-muted-foreground">
                   {progress}% concluído
@@ -246,9 +310,9 @@ export default function DataMigrationTool() {
       {showResults && (
         <Card>
           <CardHeader>
-            <CardTitle>Resultados da Migração</CardTitle>
+            <CardTitle>Resultados da Operação</CardTitle>
             <CardDescription>
-              Detalhes sobre o processo de migração
+              Detalhes sobre o processo de {clearing ? "limpeza" : "migração"}
             </CardDescription>
           </CardHeader>
           <CardContent>
