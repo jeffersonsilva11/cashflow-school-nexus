@@ -7,7 +7,11 @@ import { Transaction } from '@/services/transactionService';
 import { format } from 'date-fns';
 import { ArrowDownCircle, ArrowUpCircle, RefreshCcw } from 'lucide-react';
 
-export default function TransactionsLogWidget() {
+interface TransactionsLogWidgetProps {
+  limit?: number;
+}
+
+export default function TransactionsLogWidget({ limit = 5 }: TransactionsLogWidgetProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -15,7 +19,7 @@ export default function TransactionsLogWidget() {
     const loadTransactions = async () => {
       setLoading(true);
       try {
-        const data = await fetchRecentTransactions(5);
+        const data = await fetchRecentTransactions(limit);
         setTransactions(data);
       } catch (error) {
         console.error("Erro ao carregar transações recentes:", error);
@@ -25,7 +29,7 @@ export default function TransactionsLogWidget() {
     };
     
     loadTransactions();
-  }, []);
+  }, [limit]);
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -86,54 +90,46 @@ export default function TransactionsLogWidget() {
   };
   
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Transações Recentes</CardTitle>
-        <CardDescription>
-          Últimas movimentações no sistema
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : transactions.length > 0 ? (
-          <div className="space-y-4">
-            {transactions.map(transaction => (
-              <div key={transaction.id} className="flex items-start justify-between pb-4 border-b last:border-0 last:pb-0">
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    {getTypeIcon(transaction.type)}
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {getTypeLabel(transaction.type)} - {transaction.student?.name || 'Aluno não identificado'}
-                    </div>
-                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-2 gap-y-1 mt-1">
-                      <span>{formatDate(transaction.transaction_date)}</span>
-                      <span>•</span>
-                      {transaction.vendor && (
-                        <span>Vendedor: {transaction.vendor.name}</span>
-                      )}
-                    </div>
-                    <div className="mt-1">
-                      {getStatusBadge(transaction.status)}
-                    </div>
-                  </div>
+    <div>
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : transactions.length > 0 ? (
+        <div className="space-y-4">
+          {transactions.map(transaction => (
+            <div key={transaction.id} className="flex items-start justify-between pb-4 border-b last:border-0 last:pb-0">
+              <div className="flex gap-3">
+                <div className="mt-1">
+                  {getTypeIcon(transaction.type)}
                 </div>
-                <div className={`font-medium ${transaction.type === 'purchase' ? 'text-red-600' : 'text-green-600'}`}>
-                  {formatAmount(transaction.amount, transaction.type)}
+                <div>
+                  <div className="font-medium">
+                    {getTypeLabel(transaction.type)} - {transaction.student?.name || 'Aluno não identificado'}
+                  </div>
+                  <div className="text-sm text-muted-foreground flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                    <span>{formatDate(transaction.transaction_date)}</span>
+                    <span>•</span>
+                    {transaction.vendor && (
+                      <span>Vendedor: {transaction.vendor.name}</span>
+                    )}
+                  </div>
+                  <div className="mt-1">
+                    {getStatusBadge(transaction.status)}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            Nenhuma transação recente encontrada.
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className={`font-medium ${transaction.type === 'purchase' ? 'text-red-600' : 'text-green-600'}`}>
+                {formatAmount(transaction.amount, transaction.type)}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 text-muted-foreground">
+          Nenhuma transação recente encontrada.
+        </div>
+      )}
+    </div>
   );
 }

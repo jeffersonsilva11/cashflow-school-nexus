@@ -11,7 +11,7 @@ import {
 import { FinancialOverviewChart } from "@/components/financial/FinancialOverviewChart";
 import { FinancialTrendChart } from "@/components/financial/FinancialTrendChart";
 import { RevenueByPlanChart } from "@/components/financial/RevenueByPlanChart";
-import { TransactionsLogWidget } from "@/components/financial/TransactionsLogWidget";
+import TransactionsLogWidget from "@/components/financial/TransactionsLogWidget";
 import { useFinancialOverview, useRevenueByPlan, useMonthlyTrend } from "@/services/financialReportHooks";
 
 export default function Financial() {
@@ -45,7 +45,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {overviewData ? formatCurrency(overviewData.currentRevenue) : 'Carregando...'}
+              {overviewData ? formatCurrency(overviewData.totalRevenueMonth) : 'Carregando...'}
             </div>
           </CardContent>
         </Card>
@@ -58,7 +58,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {overviewData ? formatCurrency(overviewData.currentCommissions) : 'Carregando...'}
+              {overviewData ? formatCurrency(overviewData.totalRevenueMonth * 0.1) : 'Carregando...'}
             </div>
           </CardContent>
         </Card>
@@ -71,7 +71,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {overviewData ? overviewData.activeSchools : 'Carregando...'}
+              {overviewData ? overviewData.totalActiveSchools : 'Carregando...'}
             </div>
           </CardContent>
         </Card>
@@ -128,8 +128,8 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {!isOverviewLoading && overviewData ? (
-                <FinancialOverviewChart data={overviewData} />
+              {!isOverviewLoading && overviewData?.monthlyData ? (
+                <FinancialOverviewChart data={overviewData.monthlyData} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>

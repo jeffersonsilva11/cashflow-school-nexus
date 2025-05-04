@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileBarChart, BarChart3, UsersIcon, DeviceTabletIcon } from 'lucide-react';
+import { FileBarChart, BarChart3, UsersIcon, Tablet } from 'lucide-react';
 
 export default function Reports() {
   const reportTypes = [
@@ -28,7 +28,7 @@ export default function Reports() {
     {
       title: 'Relatórios de Dispositivos',
       description: 'Status e uso dos dispositivos no sistema',
-      icon: DeviceTabletIcon,
+      icon: Tablet,
       href: '/reports/devices',
     },
     {

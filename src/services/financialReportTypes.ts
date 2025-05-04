@@ -9,9 +9,15 @@ export interface FinancialReportOverviewData {
   totalPendingPayments: number;
   averageRevenuePerSchool: number;
   growthRate: number;
+  monthlyData: {
+    month: string;
+    revenue: number;
+  }[];
 }
 
 export interface RevenueByPlanItemData {
+  name: string;
+  value: number;
   plan: string;
   revenue: number;
   percentage: number;
