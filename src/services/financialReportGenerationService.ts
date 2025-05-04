@@ -214,8 +214,8 @@ export const generateRevenueByPlanReport = async (): Promise<RevenueByPlanItemDa
     // Converter para o formato necessário, adicionando os campos name e value que estavam faltando
     return revByPlan.map(item => ({
       name: item.plan_name,
-      plan: item.plan_name,
       value: item.revenue,
+      plan: item.plan_name,
       revenue: item.revenue,
       percentage: item.percentage
     }));
