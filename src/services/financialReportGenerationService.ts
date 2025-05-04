@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   FinancialReportOverviewData,
@@ -180,7 +181,7 @@ export const generateFinancialOverviewReport = async (): Promise<FinancialReport
       totalPendingPayments: pendingAmount,
       averageRevenuePerSchool: avgRevenue,
       growthRate: 8.5, // Exemplo fixo
-      monthlyData // Adding the required monthlyData property
+      monthlyData
     };
   } catch (error) {
     console.error("Error in generateFinancialOverviewReport:", error);
