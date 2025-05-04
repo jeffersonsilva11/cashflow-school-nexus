@@ -28,6 +28,15 @@ import { GlobalComponents } from './components/layout/GlobalComponents';
 import Index from './pages/Index';
 import MainLayout from './components/layout/MainLayout';
 import ThirdPartyDashboard from './pages/ThirdPartyDashboard';
+import Students from './pages/Students';
+import Vendors from './pages/Vendors';
+import Financial from './pages/financial/Financial';
+import Billing from './pages/financial/Billing';
+import Invoices from './pages/financial/Invoices';
+import Transactions from './pages/Transactions';
+import Reports from './pages/reports/Reports';
+import DataMigration from './pages/admin/DataMigration';
+import AccessDenied from './pages/AccessDenied';
 
 function App() {
   return (
@@ -39,6 +48,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Index />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
 
             {/* Protected Routes with MainLayout */}
             <Route element={<MainLayout />}>
@@ -53,6 +63,12 @@ function App() {
               <Route path="/schools/students-import" element={<ProtectedRoute><StudentsImport /></ProtectedRoute>} />
               <Route path="/schools/:schoolId" element={<ProtectedRoute><SchoolDetails /></ProtectedRoute>} />
 
+              {/* Students Routes */}
+              <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+
+              {/* Vendors Routes */}
+              <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
+
               {/* Devices Routes */}
               <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetails /></ProtectedRoute>} />
@@ -65,14 +81,24 @@ function App() {
               {/* Device Alerts Route */}
               <Route path="/device-alerts" element={<ProtectedRoute><DeviceAlerts /></ProtectedRoute>} />
 
+              {/* Financial Routes */}
+              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+              <Route path="/financial/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+              <Route path="/financial/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+              <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+
               {/* Payments Route */}
               <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
 
               {/* Canteen Route */}
               <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
 
-              {/* Financial Reports Route */}
-              <Route path="/financial-reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
+              {/* Reports Routes */}
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/reports/financial" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/data-migration" element={<ProtectedRoute><DataMigration /></ProtectedRoute>} />
 
               {/* Settings Routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
