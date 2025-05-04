@@ -1,12 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { Upload, Check, AlertCircle } from "lucide-react";
+import { Upload, Check, AlertCircle, Loader2 } from "lucide-react";
+import { useMigrateData, MigrationResult } from "@/services/dataMigrationService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MigrationOption {
   id: string;
@@ -18,34 +20,46 @@ interface MigrationOption {
 export default function DataMigrationTool() {
   const [options, setOptions] = useState<MigrationOption[]>([
     { 
+      id: 'schools-plans', 
+      name: 'Escolas e Planos', 
+      description: 'Migrar dados de escolas e planos para o banco de dados', 
+      selected: true 
+    },
+    { 
+      id: 'subscriptions', 
+      name: 'Assinaturas', 
+      description: 'Migrar assinaturas mockadas para o banco de dados', 
+      selected: true 
+    },
+    { 
+      id: 'invoices', 
+      name: 'Faturas', 
+      description: 'Migrar faturas mockadas para o banco de dados', 
+      selected: true 
+    },
+    { 
       id: 'financial-reports', 
       name: 'Relatórios Financeiros', 
-      description: 'Migrar dados de relatórios financeiros mockados para o banco de dados', 
+      description: 'Migrar dados de relatórios financeiros para o banco de dados', 
       selected: true 
     },
     { 
-      id: 'consumption-analysis', 
-      name: 'Análise de Consumo', 
-      description: 'Migrar dados de análise de consumo para o banco de dados', 
-      selected: true 
-    },
-    { 
-      id: 'monthly-trends', 
-      name: 'Tendências Mensais', 
-      description: 'Migrar dados de tendências mensais para o banco de dados', 
-      selected: true 
-    },
-    { 
-      id: 'revenue-by-plan', 
-      name: 'Receita por Plano', 
-      description: 'Migrar dados de receita por plano para o banco de dados', 
+      id: 'students-devices', 
+      name: 'Alunos e Dispositivos', 
+      description: 'Migrar dados de alunos e dispositivos para o banco de dados', 
       selected: true 
     },
     { 
       id: 'transactions', 
       name: 'Transações', 
       description: 'Migrar transações mockadas para o banco de dados', 
-      selected: false 
+      selected: true 
+    },
+    { 
+      id: 'users-profiles', 
+      name: 'Usuários e Perfis', 
+      description: 'Migrar dados de usuários e perfis para o banco de dados', 
+      selected: true 
     }
   ]);
   
@@ -53,6 +67,35 @@ export default function DataMigrationTool() {
   const [progress, setProgress] = useState<number>(0);
   const [results, setResults] = useState<{success: string[], error: string[]}>({ success: [], error: [] });
   const [showResults, setShowResults] = useState<boolean>(false);
+  const [hasExistingData, setHasExistingData] = useState<boolean>(false);
+  const [isChecking, setIsChecking] = useState<boolean>(true);
+  
+  const { migrateAllData } = useMigrateData();
+  
+  // Verificar se já existem dados no banco
+  useEffect(() => {
+    const checkExistingData = async () => {
+      try {
+        // Verificar tabela de escolas
+        const { count: schoolCount, error: schoolError } = await supabase
+          .from('schools')
+          .select('*', { count: 'exact', head: true });
+        
+        // Verificar tabela de planos
+        const { count: planCount, error: planError } = await supabase
+          .from('plans')
+          .select('*', { count: 'exact', head: true });
+          
+        setHasExistingData((schoolCount || 0) > 0 || (planCount || 0) > 0);
+        setIsChecking(false);
+      } catch (error) {
+        console.error("Erro ao verificar dados existentes:", error);
+        setIsChecking(false);
+      }
+    };
+    
+    checkExistingData();
+  }, []);
   
   const toggleOption = (id: string) => {
     setOptions(options.map(option => 
@@ -77,54 +120,56 @@ export default function DataMigrationTool() {
       setMigrating(false);
       return;
     }
-    
-    let currentProgress = 0;
-    const successResults: string[] = [];
-    const errorResults: string[] = [];
-    
-    // Simular a migração de dados
-    for (const option of selectedOptions) {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+
+    try {
+      // Iniciar a migração real usando o serviço
+      const result: MigrationResult = await migrateAllData();
+      
+      if (result.success) {
+        setResults({ 
+          success: [`Migração concluída com sucesso! ${result.schoolsCount || 0} escolas e ${result.plansCount || 0} planos foram migrados.`],
+          error: []
+        });
         
-        // Em um ambiente real, aqui executaríamos a migração real dos dados
-        // por exemplo, fazendo chamadas ao Supabase para inserir dados
-        
-        currentProgress += (100 / selectedOptions.length);
-        setProgress(Math.min(Math.round(currentProgress), 100));
-        
-        successResults.push(`Migração de ${option.name} concluída com sucesso.`);
-      } catch (error) {
-        console.error(`Error migrating ${option.name}:`, error);
-        errorResults.push(`Erro ao migrar ${option.name}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        // Atualizar o estado para indicar que agora temos dados no banco
+        setHasExistingData(true);
+      } else {
+        setResults({
+          success: [],
+          error: [result.message || "Ocorreu um erro durante a migração."]
+        });
       }
-    }
-    
-    setResults({ success: successResults, error: errorResults });
-    setShowResults(true);
-    setMigrating(false);
-    setProgress(100);
-    
-    if (errorResults.length === 0) {
-      toast({
-        title: "Migração concluída",
-        description: `${successResults.length} tipos de dados foram migrados com sucesso.`,
+    } catch (error) {
+      console.error("Error during migration:", error);
+      
+      setResults({
+        success: [],
+        error: [error instanceof Error ? error.message : "Ocorreu um erro desconhecido durante a migração."]
       });
-    } else {
-      toast({
-        title: "Migração concluída com erros",
-        description: `${successResults.length} tipos de dados foram migrados com sucesso. ${errorResults.length} erros foram encontrados.`,
-        variant: "destructive"
-      });
+    } finally {
+      setProgress(100);
+      setShowResults(true);
+      setMigrating(false);
     }
   };
+  
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>Verificando dados existentes...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col gap-2 mb-6">
         <h1 className="text-3xl font-bold">Ferramenta de Migração de Dados</h1>
         <p className="text-muted-foreground">
-          Migre dados mockados para o banco de dados
+          Migre dados mockados para o banco de dados Supabase
         </p>
       </div>
       
@@ -132,10 +177,23 @@ export default function DataMigrationTool() {
         <CardHeader>
           <CardTitle>Selecione os tipos de dados para migrar</CardTitle>
           <CardDescription>
-            Escolha quais tipos de dados você deseja migrar para o banco de dados
+            {hasExistingData 
+              ? "ATENÇÃO: Já existem dados no banco. A migração pode causar duplicações ou conflitos."
+              : "Escolha quais tipos de dados você deseja migrar para o banco de dados"}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {hasExistingData && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-800">
+              <AlertCircle className="h-4 w-4 inline-block mr-2" />
+              <span className="font-medium">Dados existentes detectados!</span>
+              <p className="mt-1 text-sm">
+                O banco de dados já contém informações. Executar a migração novamente pode causar 
+                duplicações. Recomenda-se limpar os dados existentes antes de continuar.
+              </p>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {options.map((option) => (
               <div key={option.id} className="flex items-center space-x-2">
@@ -158,18 +216,17 @@ export default function DataMigrationTool() {
               onClick={migrateData} 
               disabled={migrating || options.filter(opt => opt.selected).length === 0}
               className="w-full sm:w-auto"
+              variant={hasExistingData ? "destructive" : "default"}
             >
               {migrating ? (
                 <>
-                  <span className="animate-spin mr-2">
-                    <Upload size={16} />
-                  </span>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Migrando...
                 </>
               ) : (
                 <>
                   <Upload className="mr-2" size={16} />
-                  Iniciar Migração
+                  {hasExistingData ? 'Forçar Migração' : 'Iniciar Migração'}
                 </>
               )}
             </Button>

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { schoolFinancials, subscriptions, invoices, financialReports, plans } from "@/services/financialMockData";
 import { schools, students, users } from "@/services/mockData";
@@ -9,6 +10,8 @@ export type MigrationResult = {
   message: string;
   schoolsCount?: number;
   plansCount?: number;
+  studentsCount?: number;
+  devicesCount?: number;
   error?: any;
 };
 
@@ -24,16 +27,24 @@ const checkExistingData = async (): Promise<{
   planCount: number;
 }> => {
   try {
-    const { data: existingSchools } = await supabase.from('schools').select('count').single();
-    const { data: existingPlans } = await supabase.from('plans').select('count').single();
+    // Buscar contagem de escolas
+    const { count: schoolCount, error: schoolError } = await supabase
+      .from('schools')
+      .select('*', { count: 'exact', head: true });
     
-    const schoolCount = existingSchools?.count || 0;
-    const planCount = existingPlans?.count || 0;
+    if (schoolError) throw schoolError;
+    
+    // Buscar contagem de planos
+    const { count: planCount, error: planError } = await supabase
+      .from('plans')
+      .select('*', { count: 'exact', head: true });
+    
+    if (planError) throw planError;
     
     return {
-      hasData: schoolCount > 0 || planCount > 0,
-      schoolCount,
-      planCount
+      hasData: (schoolCount || 0) > 0 || (planCount || 0) > 0,
+      schoolCount: schoolCount || 0,
+      planCount: planCount || 0
     };
   } catch (error) {
     console.error("Error checking existing data:", error);
@@ -127,10 +138,10 @@ export async function migrateSubscriptions() {
     if (plansError) throw plansError;
     
     // Create maps for easier lookups
-    const schoolsDbMap = {};
+    const schoolsDbMap: Record<string, string> = {};
     dbSchools.forEach(school => { schoolsDbMap[school.name] = school.id; });
     
-    const plansDbMap = {};
+    const plansDbMap: Record<string, string> = {};
     dbPlans.forEach(plan => { plansDbMap[plan.name] = plan.id; });
     
     // Format subscriptions
@@ -155,7 +166,6 @@ export async function migrateSubscriptions() {
         start_date: sub.startDate,
         current_period_start: sub.currentPeriodStart,
         current_period_end: sub.currentPeriodEnd,
-        // Use monthlyFee instead of amount
         monthly_fee: sub.monthlyFee,
         status: sub.status,
         payment_method: sub.paymentMethod,
@@ -197,10 +207,10 @@ export async function migrateInvoices() {
     if (subsError) throw subsError;
     
     // Create maps for lookups
-    const schoolsDbMap = {};
+    const schoolsDbMap: Record<string, string> = {};
     dbSchools.forEach(school => { schoolsDbMap[school.name] = school.id; });
     
-    const subscriptionsDbMap = {};
+    const subscriptionsDbMap: Record<string, string> = {};
     dbSubscriptions.forEach(sub => { subscriptionsDbMap[sub.school_id] = sub.id; });
     
     // Format invoices
@@ -273,6 +283,12 @@ export async function migrateFinancialReports() {
       period: 'monthly',
       start_date: '2025-05-01',
       end_date: '2025-05-31',
+      total_revenue: financialReports.overview.totalRevenueMonth,
+      active_schools: financialReports.overview.totalActiveSchools,
+      active_subscriptions: financialReports.overview.totalActiveSubscriptions,
+      pending_payments: financialReports.overview.totalPendingPayments,
+      average_revenue: financialReports.overview.averageRevenuePerSchool,
+      growth_rate: financialReports.overview.growthRate,
       data: financialReports.overview
     };
     
@@ -319,9 +335,11 @@ export async function migrateStudents() {
       
       if (!schoolId) {
         console.warn(`No matching school found for student ${student.name} (school ID: ${student.school_id})`);
+        return null;
       }
       
       return {
+        id: generateId(),
         name: student.name,
         grade: student.grade,
         school_id: schoolId,
@@ -329,7 +347,7 @@ export async function migrateStudents() {
         document_id: student.document_id,
         active: student.active
       };
-    }).filter(student => student.school_id); // Only keep students with valid school IDs
+    }).filter(student => student !== null); // Only keep students with valid school IDs
     
     const { data, error } = await supabase
       .from('students')
@@ -436,7 +454,6 @@ export async function migrateTransactions() {
     // Create sample transactions
     const transactions = [];
     const transactionTypes = ['purchase', 'topup'];
-    const transactionStatuses = ['completed', 'pending', 'failed'];
     
     // Create transactions spanning the last 30 days
     const now = new Date();
@@ -583,13 +600,15 @@ export async function migrateAllData(): Promise<MigrationResult> {
       success: true,
       message: "Todos os dados foram migrados com sucesso!",
       schoolsCount: migratedSchools.length,
-      plansCount: migratedPlans.length
+      plansCount: migratedPlans.length,
+      studentsCount: migratedStudents?.length || 0,
+      devicesCount: migratedDevices?.length || 0
     };
   } catch (error) {
     console.error("Error in full migration:", error);
     return {
       success: false,
-      message: `Erro na migração: ${error.message || "Ocorreu um erro desconhecido"}`,
+      message: `Erro na migração: ${error instanceof Error ? error.message : "Ocorreu um erro desconhecido"}`,
       error
     };
   }
@@ -617,7 +636,7 @@ export function useMigrateData() {
       } catch (error) {
         toast({
           title: "Erro na migração",
-          description: error.message || "Ocorreu um erro durante a migração dos dados",
+          description: error instanceof Error ? error.message : "Ocorreu um erro durante a migração dos dados",
           variant: "destructive"
         });
         throw error;
