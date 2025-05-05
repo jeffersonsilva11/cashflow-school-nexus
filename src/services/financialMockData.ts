@@ -297,7 +297,13 @@ export const financialReports = {
     totalActiveSubscriptions: 5,
     totalPendingPayments: 3000.00,
     averageRevenuePerSchool: 28514.10,
-    growthRate: 12.5
+    growthRate: 12.5,
+    monthlyData: [
+      { month: "Jan", revenue: 108500.20 },
+      { month: "Feb", revenue: 115750.40 },
+      { month: "Mar", revenue: 128350.80 },
+      { month: "Apr", revenue: 142570.50 }
+    ]
   },
   revenueByPlan: [
     { plan: "Basic", revenue: 24000.00, percentage: 16.8 },

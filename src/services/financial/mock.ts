@@ -7,7 +7,14 @@ export const getMockOverviewData = () => {
 };
 
 export const getMockRevenueByPlanData = () => {
-  return financialReports.revenueByPlan;
+  // Garantir que os dados mockados incluam name e value
+  return financialReports.revenueByPlan.map(item => ({
+    name: item.plan,
+    value: item.revenue,
+    plan: item.plan,
+    revenue: item.revenue,
+    percentage: item.percentage
+  }));
 };
 
 export const getMockMonthlyTrendData = () => {

@@ -79,3 +79,4 @@ export const generateFinancialOverviewReport = async (): Promise<FinancialReport
     return getMockOverviewData();
   }
 };
+
