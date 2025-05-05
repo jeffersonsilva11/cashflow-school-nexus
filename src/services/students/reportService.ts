@@ -7,6 +7,11 @@ export type StudentActivityData = {
   period: string;
   count: number;
   activity_type?: string;
+  // Campos adicionais para compatibilidade com os dados mockados
+  month?: string;
+  active?: number;
+  inactive?: number;
+  total?: number;
 };
 
 export type StudentDemographicsData = {
@@ -20,6 +25,11 @@ export type StudentRetentionData = {
   retention_rate: number;
   enrolled: number;
   left: number;
+  // Campos adicionais para compatibilidade com os dados mockados
+  newStudents?: number;
+  transfers?: number;
+  graduation?: number;
+  retention?: number;
 };
 
 // Função para gerar relatório de atividade dos estudantes
@@ -30,17 +40,38 @@ export const generateStudentActivityReport = async (): Promise<StudentActivityDa
     if (reportData && Array.isArray(reportData)) {
       // Garantir que os dados correspondam ao tipo StudentActivityData
       return reportData.map((item: any) => ({
-        period: item.period || '',
-        count: item.count || 0,
-        activity_type: item.activity_type || undefined
+        period: item.period || item.month || '',
+        count: item.count || item.active || 0,
+        activity_type: item.activity_type || undefined,
+        // Preservar campos originais dos dados mockados
+        month: item.month,
+        active: item.active,
+        inactive: item.inactive,
+        total: item.total
       })) as StudentActivityData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
-    return getMockStudentActivityData();
+    const mockData = getMockStudentActivityData();
+    return mockData.map(item => ({
+      period: item.month,
+      count: item.active,
+      month: item.month,
+      active: item.active,
+      inactive: item.inactive,
+      total: item.total
+    }));
   } catch (error) {
     console.error("Error generating student activity report:", error);
-    return getMockStudentActivityData();
+    const mockData = getMockStudentActivityData();
+    return mockData.map(item => ({
+      period: item.month,
+      count: item.active,
+      month: item.month,
+      active: item.active,
+      inactive: item.inactive,
+      total: item.total
+    }));
   }
 };
 
@@ -78,16 +109,41 @@ export const generateStudentRetentionReport = async (): Promise<StudentRetention
       // Garantir que os dados correspondam ao tipo StudentRetentionData
       return reportData.map((item: any) => ({
         period: item.period || '',
-        retention_rate: item.retention_rate || 0,
-        enrolled: item.enrolled || 0,
-        left: item.left || 0
+        retention_rate: item.retention_rate || item.retention || 0,
+        enrolled: item.enrolled || item.newStudents || 0,
+        left: item.left || item.transfers || 0,
+        // Preservar campos originais dos dados mockados
+        newStudents: item.newStudents,
+        transfers: item.transfers,
+        graduation: item.graduation,
+        retention: item.retention
       })) as StudentRetentionData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
-    return getMockStudentRetentionData();
+    const mockData = getMockStudentRetentionData();
+    return mockData.map(item => ({
+      period: item.period,
+      retention_rate: item.retention,
+      enrolled: item.newStudents,
+      left: item.transfers,
+      newStudents: item.newStudents,
+      transfers: item.transfers,
+      graduation: item.graduation,
+      retention: item.retention
+    }));
   } catch (error) {
     console.error("Error generating student retention report:", error);
-    return getMockStudentRetentionData();
+    const mockData = getMockStudentRetentionData();
+    return mockData.map(item => ({
+      period: item.period,
+      retention_rate: item.retention,
+      enrolled: item.newStudents,
+      left: item.transfers,
+      newStudents: item.newStudents,
+      transfers: item.transfers,
+      graduation: item.graduation,
+      retention: item.retention
+    }));
   }
 };

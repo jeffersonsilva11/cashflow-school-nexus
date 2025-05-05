@@ -4,23 +4,45 @@ import { supabase } from "@/integrations/supabase/client";
 // Função para buscar relatórios de status dos dispositivos
 export const fetchDeviceStatusReport = async () => {
   try {
-    // Modificando para buscar da tabela de dispositivos e agrupar os dados
+    // Modificando para buscar da tabela financial_reports com o tipo específico
     const { data, error } = await supabase
-      .from('devices')
-      .select('status, count(*)')
-      .group('status');
+      .from('financial_reports')
+      .select('*')
+      .eq('report_type', 'device_status')
+      .order('created_at', { ascending: false })
+      .limit(1);
     
     if (error) throw error;
     
-    // Transforme os resultados para o formato esperado
-    if (data) {
-      // Calculando o total para obter a porcentagem
-      const total = data.reduce((sum, item) => sum + item.count, 0);
+    if (data && data.length > 0 && data[0].data) {
+      return data[0].data;
+    }
+    
+    // Se não encontrar dados na tabela financial_reports, tenta buscar da tabela devices
+    // e processar manualmente
+    const { data: devicesData, error: devicesError } = await supabase
+      .from('devices')
+      .select('status');
+    
+    if (devicesError) throw devicesError;
+    
+    // Se encontrou dados de dispositivos, processa para o formato esperado
+    if (devicesData && devicesData.length > 0) {
+      // Agrupando manualmente pelo status
+      const statusCount: Record<string, number> = {};
+      devicesData.forEach(device => {
+        const status = device.status || 'Unknown';
+        statusCount[status] = (statusCount[status] || 0) + 1;
+      });
       
-      return data.map(item => ({
-        status: item.status,
-        count: item.count,
-        percentage: total > 0 ? Math.round((item.count / total) * 100) : 0
+      // Calculando total e porcentagens
+      const total = Object.values(statusCount).reduce((sum, count) => sum + count, 0);
+      
+      // Formatando para o formato esperado
+      return Object.entries(statusCount).map(([status, count]) => ({
+        status,
+        count,
+        percentage: Math.round((count / total) * 100)
       }));
     }
     
@@ -34,49 +56,61 @@ export const fetchDeviceStatusReport = async () => {
 // Função para buscar relatórios de bateria dos dispositivos
 export const fetchDeviceBatteryReport = async () => {
   try {
-    // Note: Como não temos dados de bateria detalhados, iremos buscar da tabela
-    // device_statuses que tem battery_level 
+    // Buscar da tabela financial_reports
     const { data, error } = await supabase
-      .from('device_statuses')
-      .select('battery_level, count(*)')
-      .not('battery_level', 'is', null)
-      .group('battery_level');
+      .from('financial_reports')
+      .select('*')
+      .eq('report_type', 'device_battery')
+      .order('created_at', { ascending: false })
+      .limit(1);
     
     if (error) throw error;
     
-    // Transforme os resultados para o formato esperado
-    if (data) {
-      // Agrupando em faixas
-      const batteryRanges = {
-        '90-100%': { count: 0, percentage: 0 },
-        '70-90%': { count: 0, percentage: 0 },
-        '50-70%': { count: 0, percentage: 0 },
-        '30-50%': { count: 0, percentage: 0 },
-        '0-30%': { count: 0, percentage: 0 }
+    if (data && data.length > 0 && data[0].data) {
+      return data[0].data;
+    }
+    
+    // Se não encontrar na tabela financial_reports, buscar da device_statuses e processar
+    const { data: deviceStatus, error: deviceStatusError } = await supabase
+      .from('device_statuses')
+      .select('battery_level')
+      .not('battery_level', 'is', null);
+    
+    if (deviceStatusError) throw deviceStatusError;
+    
+    if (deviceStatus && deviceStatus.length > 0) {
+      // Agrupar em categorias de bateria
+      const batteryLevels: Record<string, number> = {
+        '90-100%': 0,
+        '70-90%': 0,
+        '50-70%': 0,
+        '30-50%': 0,
+        '0-30%': 0
       };
       
-      data.forEach(item => {
-        const level = item.battery_level;
+      deviceStatus.forEach(item => {
+        const level = item.battery_level || 0;
         if (level >= 90) {
-          batteryRanges['90-100%'].count += item.count;
+          batteryLevels['90-100%']++;
         } else if (level >= 70) {
-          batteryRanges['70-90%'].count += item.count;
+          batteryLevels['70-90%']++;
         } else if (level >= 50) {
-          batteryRanges['50-70%'].count += item.count;
+          batteryLevels['50-70%']++;
         } else if (level >= 30) {
-          batteryRanges['30-50%'].count += item.count;
+          batteryLevels['30-50%']++;
         } else {
-          batteryRanges['0-30%'].count += item.count;
+          batteryLevels['0-30%']++;
         }
       });
       
-      // Calculando o total e as porcentagens
-      const total = Object.values(batteryRanges).reduce((sum, item) => sum + item.count, 0);
+      // Calcular total e percentuais
+      const total = Object.values(batteryLevels).reduce((sum, count) => sum + count, 0);
       
-      return Object.entries(batteryRanges).map(([level, data]) => ({
+      // Formatar para o formato esperado
+      return Object.entries(batteryLevels).map(([level, count]) => ({
         level,
-        count: data.count,
-        percentage: total > 0 ? Math.round((data.count / total) * 100) : 0
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0
       }));
     }
     

@@ -30,16 +30,29 @@ export const fetchStudentActivityReport = async () => {
 export const fetchStudentDemographicsReport = async () => {
   try {
     // Podemos obter dados demográficos diretamente da tabela de estudantes
+    // Como não podemos usar .group('grade') diretamente, faremos uma busca simples
+    // e processaremos os dados manualmente
     const { data: students, error: studentsError } = await supabase
       .from('students')
-      .select('grade, count(*)')
-      .group('grade')
-      .order('grade');
+      .select('grade');
     
     if (studentsError) throw studentsError;
     
     if (students && students.length > 0) {
-      return students;
+      // Agrupando manualmente
+      const gradeCount: Record<string, number> = {};
+      students.forEach(student => {
+        const grade = student.grade || 'Não especificado';
+        gradeCount[grade] = (gradeCount[grade] || 0) + 1;
+      });
+      
+      // Convertendo para o formato esperado
+      const result = Object.entries(gradeCount).map(([grade, count]) => ({
+        grade,
+        count
+      }));
+      
+      return result;
     }
     
     return null;

@@ -67,7 +67,7 @@ const StudentReports = () => {
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
+                    <XAxis dataKey={activityData && activityData[0]?.month ? "month" : "period"} />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -160,7 +160,9 @@ const StudentReports = () => {
                     <CardContent className="pt-6">
                       <div className="text-center">
                         <h4 className="font-medium">{period.period}</h4>
-                        <p className="text-2xl font-bold text-green-600 mt-2">{period.retention}%</p>
+                        <p className="text-2xl font-bold text-green-600 mt-2">
+                          {period.retention_rate || period.retention || 0}%
+                        </p>
                         <p className="text-sm text-muted-foreground">Taxa de Retenção</p>
                       </div>
                     </CardContent>
