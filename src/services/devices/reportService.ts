@@ -27,13 +27,16 @@ export const generateDeviceStatusReport = async (): Promise<DeviceStatusData[]> 
   try {
     const reportData = await fetchDeviceStatusReport();
     
-    if (reportData && reportData.length > 0) {
-      // Garantir que os dados correspondam ao tipo DeviceStatusData
-      return reportData.map((item: any) => ({
-        status: item.status || '',
-        count: item.count || 0,
-        percentage: item.percentage || 0
-      })) as DeviceStatusData[];
+    if (reportData) {
+      // Verificar se reportData é um array antes de acessar a propriedade length
+      if (Array.isArray(reportData) && reportData.length > 0) {
+        // Garantir que os dados correspondam ao tipo DeviceStatusData
+        return reportData.map((item: any) => ({
+          status: item.status || '',
+          count: item.count || 0,
+          percentage: item.percentage || 0
+        })) as DeviceStatusData[];
+      }
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -49,13 +52,16 @@ export const generateDeviceBatteryReport = async (): Promise<DeviceBatteryData[]
   try {
     const reportData = await fetchDeviceBatteryReport();
     
-    if (reportData && reportData.length > 0) {
-      // Garantir que os dados correspondam ao tipo DeviceBatteryData
-      return reportData.map((item: any) => ({
-        level: item.level || '',
-        count: item.count || 0,
-        percentage: item.percentage || 0
-      })) as DeviceBatteryData[];
+    if (reportData) {
+      // Verificar se reportData é um array antes de acessar a propriedade length
+      if (Array.isArray(reportData) && reportData.length > 0) {
+        // Garantir que os dados correspondam ao tipo DeviceBatteryData
+        return reportData.map((item: any) => ({
+          level: item.level || '',
+          count: item.count || 0,
+          percentage: item.percentage || 0
+        })) as DeviceBatteryData[];
+      }
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -71,14 +77,17 @@ export const generateDeviceUsageReport = async (): Promise<DeviceUsageData[]> =>
   try {
     const reportData = await fetchDeviceUsageReport();
     
-    if (reportData && Array.isArray(reportData)) {
-      // Garantir que os dados correspondam ao tipo DeviceUsageData
-      return reportData.map((item: any) => ({
-        month: item.month || '',
-        daily_active: item.daily_active || 0,
-        monthly_active: item.monthly_active || 0,
-        total: item.total || 0
-      })) as DeviceUsageData[];
+    if (reportData) {
+      // Verificar se reportData é um array antes de usar métodos de array
+      if (Array.isArray(reportData)) {
+        // Garantir que os dados correspondam ao tipo DeviceUsageData
+        return reportData.map((item: any) => ({
+          month: item.month || '',
+          daily_active: item.daily_active || 0,
+          monthly_active: item.monthly_active || 0,
+          total: item.total || 0
+        })) as DeviceUsageData[];
+      }
     }
     
     // Se não houver relatório no banco, usar dados mockados
