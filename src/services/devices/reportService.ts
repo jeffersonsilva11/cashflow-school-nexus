@@ -25,10 +25,15 @@ export type DeviceUsageData = {
 // Função para gerar relatório de status dos dispositivos
 export const generateDeviceStatusReport = async (): Promise<DeviceStatusData[]> => {
   try {
-    const report = await fetchDeviceStatusReport();
+    const reportData = await fetchDeviceStatusReport();
     
-    if (report && report.length > 0) {
-      return report as DeviceStatusData[];
+    if (reportData && reportData.length > 0) {
+      // Garantir que os dados correspondam ao tipo DeviceStatusData
+      return reportData.map((item: any) => ({
+        status: item.status || '',
+        count: item.count || 0,
+        percentage: item.percentage || 0
+      })) as DeviceStatusData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -42,10 +47,15 @@ export const generateDeviceStatusReport = async (): Promise<DeviceStatusData[]> 
 // Função para gerar relatório de bateria dos dispositivos
 export const generateDeviceBatteryReport = async (): Promise<DeviceBatteryData[]> => {
   try {
-    const report = await fetchDeviceBatteryReport();
+    const reportData = await fetchDeviceBatteryReport();
     
-    if (report && report.length > 0) {
-      return report as DeviceBatteryData[];
+    if (reportData && reportData.length > 0) {
+      // Garantir que os dados correspondam ao tipo DeviceBatteryData
+      return reportData.map((item: any) => ({
+        level: item.level || '',
+        count: item.count || 0,
+        percentage: item.percentage || 0
+      })) as DeviceBatteryData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -59,10 +69,16 @@ export const generateDeviceBatteryReport = async (): Promise<DeviceBatteryData[]
 // Função para gerar relatório de uso dos dispositivos
 export const generateDeviceUsageReport = async (): Promise<DeviceUsageData[]> => {
   try {
-    const report = await fetchDeviceUsageReport();
+    const reportData = await fetchDeviceUsageReport();
     
-    if (report && report.length > 0) {
-      return report as DeviceUsageData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo DeviceUsageData
+      return reportData.map((item: any) => ({
+        month: item.month || '',
+        daily_active: item.daily_active || 0,
+        monthly_active: item.monthly_active || 0,
+        total: item.total || 0
+      })) as DeviceUsageData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados

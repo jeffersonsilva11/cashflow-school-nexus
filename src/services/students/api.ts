@@ -4,13 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 // Função para buscar relatórios de atividade dos estudantes
 export const fetchStudentActivityReport = async () => {
   try {
+    // Modificando para buscar da tabela financial_reports com o tipo específico
     const { data, error } = await supabase
-      .from('student_activity_reports')
+      .from('financial_reports')
       .select('*')
-      .order('period', { ascending: true });
+      .eq('report_type', 'student_activity')
+      .order('created_at', { ascending: false })
+      .limit(1);
     
     if (error) throw error;
-    return data;
+    
+    // Se encontrar um relatório, retorne os dados específicos dele
+    if (data && data.length > 0 && data[0].data) {
+      return data[0].data;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error fetching student activity report:", error);
     return null;
@@ -20,13 +29,20 @@ export const fetchStudentActivityReport = async () => {
 // Função para buscar relatórios demográficos dos estudantes
 export const fetchStudentDemographicsReport = async () => {
   try {
-    const { data, error } = await supabase
-      .from('student_demographics')
-      .select('*')
-      .order('grade', { ascending: true });
+    // Podemos obter dados demográficos diretamente da tabela de estudantes
+    const { data: students, error: studentsError } = await supabase
+      .from('students')
+      .select('grade, count(*)')
+      .group('grade')
+      .order('grade');
     
-    if (error) throw error;
-    return data;
+    if (studentsError) throw studentsError;
+    
+    if (students && students.length > 0) {
+      return students;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error fetching student demographics report:", error);
     return null;
@@ -36,13 +52,22 @@ export const fetchStudentDemographicsReport = async () => {
 // Função para buscar relatórios de retenção de estudantes
 export const fetchStudentRetentionReport = async () => {
   try {
+    // Modificando para buscar da tabela financial_reports com o tipo específico
     const { data, error } = await supabase
-      .from('student_retention')
+      .from('financial_reports')
       .select('*')
-      .order('period', { ascending: true });
+      .eq('report_type', 'student_retention')
+      .order('created_at', { ascending: false })
+      .limit(1);
     
     if (error) throw error;
-    return data;
+    
+    // Se encontrar um relatório, retorne os dados específicos dele
+    if (data && data.length > 0 && data[0].data) {
+      return data[0].data;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error fetching student retention report:", error);
     return null;

@@ -4,33 +4,36 @@ import { getMockStudentActivityData, getMockStudentDemographicsData, getMockStud
 
 // Tipos de dados para os relatórios de estudantes
 export type StudentActivityData = {
-  month: string;
-  active: number;
-  inactive: number;
-  total: number;
+  period: string;
+  count: number;
+  activity_type?: string;
 };
 
 export type StudentDemographicsData = {
   grade: string;
   count: number;
-  percentage: number;
+  percentage?: number;
 };
 
 export type StudentRetentionData = {
   period: string;
-  newStudents: number;
-  transfers: number;
-  graduation: number;
-  retention: number;
+  retention_rate: number;
+  enrolled: number;
+  left: number;
 };
 
 // Função para gerar relatório de atividade dos estudantes
 export const generateStudentActivityReport = async (): Promise<StudentActivityData[]> => {
   try {
-    const report = await fetchStudentActivityReport();
+    const reportData = await fetchStudentActivityReport();
     
-    if (report && report.length > 0) {
-      return report as StudentActivityData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo StudentActivityData
+      return reportData.map((item: any) => ({
+        period: item.period || '',
+        count: item.count || 0,
+        activity_type: item.activity_type || undefined
+      })) as StudentActivityData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -44,10 +47,18 @@ export const generateStudentActivityReport = async (): Promise<StudentActivityDa
 // Função para gerar relatório demográfico dos estudantes
 export const generateStudentDemographicsReport = async (): Promise<StudentDemographicsData[]> => {
   try {
-    const report = await fetchStudentDemographicsReport();
+    const reportData = await fetchStudentDemographicsReport();
     
-    if (report && report.length > 0) {
-      return report as StudentDemographicsData[];
+    if (reportData && reportData.length > 0) {
+      // Calcular o total de estudantes para as porcentagens
+      const total = reportData.reduce((sum, item) => sum + item.count, 0);
+      
+      // Garantir que os dados correspondam ao tipo StudentDemographicsData
+      return reportData.map((item: any) => ({
+        grade: item.grade || 'Não especificado',
+        count: item.count || 0,
+        percentage: total > 0 ? Math.round((item.count / total) * 100) : 0
+      })) as StudentDemographicsData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -61,10 +72,16 @@ export const generateStudentDemographicsReport = async (): Promise<StudentDemogr
 // Função para gerar relatório de retenção dos estudantes
 export const generateStudentRetentionReport = async (): Promise<StudentRetentionData[]> => {
   try {
-    const report = await fetchStudentRetentionReport();
+    const reportData = await fetchStudentRetentionReport();
     
-    if (report && report.length > 0) {
-      return report as StudentRetentionData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo StudentRetentionData
+      return reportData.map((item: any) => ({
+        period: item.period || '',
+        retention_rate: item.retention_rate || 0,
+        enrolled: item.enrolled || 0,
+        left: item.left || 0
+      })) as StudentRetentionData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados

@@ -23,10 +23,15 @@ export type ProductCategoryData = {
 // Função para gerar relatório de tendências de transação
 export const generateTransactionTrendsReport = async (): Promise<TransactionTrendData[]> => {
   try {
-    const report = await fetchTransactionTrendsReport();
+    const reportData = await fetchTransactionTrendsReport();
     
-    if (report && report.length > 0) {
-      return report as TransactionTrendData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo TransactionTrendData
+      return reportData.map((item: any) => ({
+        date: item.date || '',
+        count: item.count || 0,
+        amount: item.amount || 0
+      })) as TransactionTrendData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -40,10 +45,14 @@ export const generateTransactionTrendsReport = async (): Promise<TransactionTren
 // Função para gerar relatório de comportamento do usuário
 export const generateUserBehaviorReport = async (): Promise<UserBehaviorData[]> => {
   try {
-    const report = await fetchUserBehaviorReport();
+    const reportData = await fetchUserBehaviorReport();
     
-    if (report && report.length > 0) {
-      return report as UserBehaviorData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo UserBehaviorData
+      return reportData.map((item: any) => ({
+        hour: item.hour || '',
+        transactions: item.transactions || 0
+      })) as UserBehaviorData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
@@ -57,10 +66,15 @@ export const generateUserBehaviorReport = async (): Promise<UserBehaviorData[]> 
 // Função para gerar relatório de categoria de produto
 export const generateProductCategoryReport = async (): Promise<ProductCategoryData[]> => {
   try {
-    const report = await fetchProductCategoryReport();
+    const reportData = await fetchProductCategoryReport();
     
-    if (report && report.length > 0) {
-      return report as ProductCategoryData[];
+    if (reportData && Array.isArray(reportData)) {
+      // Garantir que os dados correspondam ao tipo ProductCategoryData
+      return reportData.map((item: any) => ({
+        category: item.category || '',
+        value: item.value || 0,
+        count: item.count || 0
+      })) as ProductCategoryData[];
     }
     
     // Se não houver relatório no banco, usar dados mockados
