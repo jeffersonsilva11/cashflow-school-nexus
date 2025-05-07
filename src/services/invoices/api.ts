@@ -10,7 +10,7 @@ export interface Invoice {
   issued_date: string;
   due_date: string;
   paid_date?: string | null;
-  items?: any[] | null;
+  items?: any | null; // Changed from any[] to any to accommodate Json type from Supabase
   subscription_id?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -94,7 +94,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'created_at' |
       throw error;
     }
     
-    return data;
+    return data as Invoice;
   } catch (error) {
     console.error("Error in createInvoice:", error);
     throw error;
@@ -116,7 +116,7 @@ export const updateInvoice = async (id: string, updates: Partial<Invoice>): Prom
       throw error;
     }
     
-    return data;
+    return data as Invoice;
   } catch (error) {
     console.error(`Error in updateInvoice for ${id}:`, error);
     throw error;
