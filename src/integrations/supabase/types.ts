@@ -318,6 +318,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_usage_reports: {
+        Row: {
+          created_at: string
+          daily_active: number
+          id: string
+          month: string
+          monthly_active: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_active?: number
+          id?: string
+          month: string
+          monthly_active?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_active?: number
+          id?: string
+          month?: string
+          monthly_active?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           assigned_at: string | null
@@ -1052,6 +1082,39 @@ export type Database = {
         }
         Relationships: []
       }
+      student_activity_reports: {
+        Row: {
+          active: number
+          created_at: string
+          id: string
+          inactive: number
+          month: string
+          period: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          active?: number
+          created_at?: string
+          id?: string
+          inactive?: number
+          month: string
+          period: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: number
+          created_at?: string
+          id?: string
+          inactive?: number
+          month?: string
+          period?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_balances: {
         Row: {
           balance: number | null
@@ -1086,6 +1149,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_demographics_reports: {
+        Row: {
+          count: number
+          created_at: string
+          grade: string
+          id: string
+          percentage: number
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          grade: string
+          id?: string
+          percentage?: number
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          grade?: string
+          id?: string
+          percentage?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_retention_reports: {
+        Row: {
+          created_at: string
+          enrolled: number
+          graduation: number
+          id: string
+          new_students: number
+          period: string
+          retention_rate: number
+          students_left: number
+          transfers: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enrolled?: number
+          graduation?: number
+          id?: string
+          new_students?: number
+          period: string
+          retention_rate?: number
+          students_left?: number
+          transfers?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enrolled?: number
+          graduation?: number
+          id?: string
+          new_students?: number
+          period?: string
+          retention_rate?: number
+          students_left?: number
+          transfers?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       students: {
         Row: {

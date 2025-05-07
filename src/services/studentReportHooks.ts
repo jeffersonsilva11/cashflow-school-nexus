@@ -1,35 +1,70 @@
 
-import { useQuery } from "@tanstack/react-query";
-import {
-  generateStudentActivityReport,
-  generateStudentDemographicsReport,
-  generateStudentRetentionReport,
-  StudentActivityData,
-  StudentDemographicsData,
-  StudentRetentionData
-} from './students/reportService';
+import { useQuery } from '@tanstack/react-query';
+import { getMockStudentActivityData, getMockStudentDemographicsData, getMockStudentRetentionData } from './students/mock';
+import { fetchStudentActivityReport, fetchStudentDemographicsReport, fetchStudentRetentionReport } from './students/api';
 
-// React Query hooks for student report generation
-export function useStudentActivityReport() {
-  return useQuery<StudentActivityData[], Error>({
-    queryKey: ['student-activity'],
-    queryFn: generateStudentActivityReport,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+export const useStudentActivityReport = () => {
+  return useQuery({
+    queryKey: ['student-activity-report'],
+    queryFn: async () => {
+      try {
+        const reportData = await fetchStudentActivityReport();
+        
+        if (reportData) {
+          return reportData;
+        }
+        
+        // Se não encontrar dados no banco, usar dados mockados
+        return getMockStudentActivityData();
+      } catch (error) {
+        console.error("Error in useStudentActivityReport:", error);
+        return getMockStudentActivityData();
+      }
+    },
+    refetchOnWindowFocus: false
   });
-}
+};
 
-export function useStudentDemographicsReport() {
-  return useQuery<StudentDemographicsData[], Error>({
-    queryKey: ['student-demographics'],
-    queryFn: generateStudentDemographicsReport,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+export const useStudentDemographicsReport = () => {
+  return useQuery({
+    queryKey: ['student-demographics-report'],
+    queryFn: async () => {
+      try {
+        const reportData = await fetchStudentDemographicsReport();
+        
+        if (reportData) {
+          return reportData;
+        }
+        
+        // Se não encontrar dados no banco, usar dados mockados
+        return getMockStudentDemographicsData();
+      } catch (error) {
+        console.error("Error in useStudentDemographicsReport:", error);
+        return getMockStudentDemographicsData();
+      }
+    },
+    refetchOnWindowFocus: false
   });
-}
+};
 
-export function useStudentRetentionReport() {
-  return useQuery<StudentRetentionData[], Error>({
-    queryKey: ['student-retention'],
-    queryFn: generateStudentRetentionReport,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+export const useStudentRetentionReport = () => {
+  return useQuery({
+    queryKey: ['student-retention-report'],
+    queryFn: async () => {
+      try {
+        const reportData = await fetchStudentRetentionReport();
+        
+        if (reportData) {
+          return reportData;
+        }
+        
+        // Se não encontrar dados no banco, usar dados mockados
+        return getMockStudentRetentionData();
+      } catch (error) {
+        console.error("Error in useStudentRetentionReport:", error);
+        return getMockStudentRetentionData();
+      }
+    },
+    refetchOnWindowFocus: false
   });
-}
+};

@@ -1,36 +1,68 @@
 
-// Mock data for student reports when database is empty
+// Mock data for student reports
 
 export const getMockStudentActivityData = () => {
   return [
-    { month: "Jan", active: 450, inactive: 50, total: 500 },
-    { month: "Feb", active: 470, inactive: 40, total: 510 },
-    { month: "Mar", active: 490, inactive: 30, total: 520 },
-    { month: "Apr", active: 510, inactive: 20, total: 530 },
-    { month: "May", active: 530, inactive: 10, total: 540 },
+    { month: 'Jan', active: 950, inactive: 50, total: 1000 },
+    { month: 'Feb', active: 980, inactive: 45, total: 1025 },
+    { month: 'Mar', active: 1020, inactive: 40, total: 1060 },
+    { month: 'Abr', active: 1050, inactive: 35, total: 1085 },
+    { month: 'Mai', active: 1080, inactive: 30, total: 1110 },
+    { month: 'Jun', active: 1100, inactive: 25, total: 1125 }
   ];
 };
 
 export const getMockStudentDemographicsData = () => {
   return [
-    { grade: "1º Ano", count: 45, percentage: 8.3 },
-    { grade: "2º Ano", count: 52, percentage: 9.6 },
-    { grade: "3º Ano", count: 48, percentage: 8.9 },
-    { grade: "4º Ano", count: 50, percentage: 9.3 },
-    { grade: "5º Ano", count: 55, percentage: 10.2 },
-    { grade: "6º Ano", count: 58, percentage: 10.7 },
-    { grade: "7º Ano", count: 60, percentage: 11.1 },
-    { grade: "8º Ano", count: 57, percentage: 10.6 },
-    { grade: "9º Ano", count: 56, percentage: 10.4 },
-    { grade: "Ensino Médio", count: 59, percentage: 10.9 },
+    { grade: '1º ano', count: 120, percentage: 10 },
+    { grade: '2º ano', count: 135, percentage: 11 },
+    { grade: '3º ano', count: 115, percentage: 10 },
+    { grade: '4º ano', count: 125, percentage: 10 },
+    { grade: '5º ano', count: 145, percentage: 12 },
+    { grade: '6º ano', count: 155, percentage: 13 },
+    { grade: '7º ano', count: 140, percentage: 12 },
+    { grade: '8º ano', count: 130, percentage: 11 },
+    { grade: '9º ano', count: 135, percentage: 11 }
   ];
 };
 
 export const getMockStudentRetentionData = () => {
   return [
-    { period: "Jan - Mar", newStudents: 45, transfers: 5, graduation: 0, retention: 98 },
-    { period: "Abr - Jun", newStudents: 30, transfers: 8, graduation: 0, retention: 96 },
-    { period: "Jul - Set", newStudents: 52, transfers: 12, graduation: 0, retention: 95 },
-    { period: "Out - Dez", newStudents: 15, transfers: 4, graduation: 40, retention: 92 },
+    {
+      period: '2025-Q1',
+      new_students: 85,
+      transfers: 15,
+      graduation: 0,
+      enrolled: 1020,
+      left: 15,
+      retention_rate: 98
+    },
+    {
+      period: '2025-Q2',
+      new_students: 75,
+      transfers: 10,
+      graduation: 0,
+      enrolled: 1085,
+      left: 10,
+      retention_rate: 99
+    },
+    {
+      period: '2025-Q3',
+      new_students: 95,
+      transfers: 12,
+      graduation: 0,
+      enrolled: 1168,
+      left: 12,
+      retention_rate: 99
+    },
+    {
+      period: '2025-Q4',
+      new_students: 40,
+      transfers: 25,
+      graduation: 150,
+      enrolled: 1033,
+      left: 175,
+      retention_rate: 85
+    }
   ];
 };
