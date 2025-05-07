@@ -13,7 +13,8 @@ import {
   BarChart3,
   FileBarChart,
   Database,
-  DollarSign
+  DollarSign,
+  RefreshCw
 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
 
@@ -107,6 +108,12 @@ export const reportsAndAdminItems: NavItemType[] = [
     title: 'Migração de Dados',
     href: '/admin/data-migration',
     icon: Database,
+    permission: ['admin']
+  },
+  {
+    title: 'Status da Migração',
+    href: '/admin/migration-status',
+    icon: RefreshCw,
     permission: ['admin']
   }
 ];

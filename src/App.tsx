@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -37,6 +36,7 @@ import Transactions from './pages/Transactions';
 import Reports from './pages/reports/Reports';
 import DataMigration from './pages/admin/DataMigration';
 import AccessDenied from './pages/AccessDenied';
+import MigrationStatus from '@/pages/admin/MigrationStatus';
 
 function App() {
   return (
@@ -99,6 +99,7 @@ function App() {
               
               {/* Admin Routes */}
               <Route path="/admin/data-migration" element={<ProtectedRoute><DataMigration /></ProtectedRoute>} />
+              <Route path="/admin/migration-status" element={<MigrationStatus />} />
 
               {/* Settings Routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
