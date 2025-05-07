@@ -1,6 +1,6 @@
 
-import { fetchStudentActivityReport, fetchStudentDemographicsReport, fetchStudentRetentionReport } from './api';
 import { getMockStudentActivityData, getMockStudentDemographicsData, getMockStudentRetentionData } from './mock';
+import { fetchStudentActivityReport, fetchStudentDemographicsReport, fetchStudentRetentionReport } from './api';
 
 // Tipos de dados para os relatórios de estudantes
 export type StudentActivityData = {
@@ -124,7 +124,7 @@ export const generateStudentRetentionReport = async (): Promise<StudentRetention
       period: item.period,
       retention_rate: item.retention_rate,
       enrolled: item.enrolled,
-      students_left: item.left, // Mapping "left" from mock to "students_left"
+      students_left: item.students_left, // Updated from item.left to item.students_left
       new_students: item.new_students,
       transfers: item.transfers,
       graduation: item.graduation
@@ -136,7 +136,7 @@ export const generateStudentRetentionReport = async (): Promise<StudentRetention
       period: item.period,
       retention_rate: item.retention_rate,
       enrolled: item.enrolled,
-      students_left: item.left, // Mapping "left" from mock to "students_left"
+      students_left: item.students_left, // Updated from item.left to item.students_left
       new_students: item.new_students,
       transfers: item.transfers,
       graduation: item.graduation

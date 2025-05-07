@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Student {
@@ -121,5 +120,63 @@ export const deleteStudent = async (id: string): Promise<void> => {
   } catch (error) {
     console.error(`Error in deleteStudent for ${id}:`, error);
     throw error;
+  }
+};
+
+// Report-related API functions
+export const fetchStudentActivityReport = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('student_activity_reports')
+      .select('*')
+      .order('month');
+    
+    if (error) {
+      console.error("Error fetching student activity report:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error in fetchStudentActivityReport:", error);
+    return null;
+  }
+};
+
+export const fetchStudentDemographicsReport = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('student_demographics_reports')
+      .select('*')
+      .order('grade');
+    
+    if (error) {
+      console.error("Error fetching student demographics report:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error in fetchStudentDemographicsReport:", error);
+    return null;
+  }
+};
+
+export const fetchStudentRetentionReport = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('student_retention_reports')
+      .select('*')
+      .order('period');
+    
+    if (error) {
+      console.error("Error fetching student retention report:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error in fetchStudentRetentionReport:", error);
+    return null;
   }
 };
