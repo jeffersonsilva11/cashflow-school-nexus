@@ -24,12 +24,11 @@ export type StudentRetentionData = {
   period: string;
   retention_rate: number;
   enrolled: number;
-  left: number;
+  students_left: number;  // Changed from "left" to match our DB column
   // Campos adicionais para compatibilidade com os dados mockados
-  newStudents?: number;
+  new_students?: number;
   transfers?: number;
   graduation?: number;
-  retention?: number;
 };
 
 // Função para gerar relatório de atividade dos estudantes
@@ -80,7 +79,7 @@ export const generateStudentDemographicsReport = async (): Promise<StudentDemogr
   try {
     const reportData = await fetchStudentDemographicsReport();
     
-    if (reportData && reportData.length > 0) {
+    if (reportData && Array.isArray(reportData)) {
       // Calcular o total de estudantes para as porcentagens
       const total = reportData.reduce((sum, item) => sum + item.count, 0);
       
@@ -109,14 +108,13 @@ export const generateStudentRetentionReport = async (): Promise<StudentRetention
       // Garantir que os dados correspondam ao tipo StudentRetentionData
       return reportData.map((item: any) => ({
         period: item.period || '',
-        retention_rate: item.retention_rate || item.retention || 0,
-        enrolled: item.enrolled || item.newStudents || 0,
-        left: item.left || item.transfers || 0,
-        // Preservar campos originais dos dados mockados
-        newStudents: item.newStudents,
+        retention_rate: item.retention_rate || 0,
+        enrolled: item.enrolled || 0,
+        students_left: item.students_left || 0,
+        // Campos adicionais para compatibilidade
+        new_students: item.new_students,
         transfers: item.transfers,
-        graduation: item.graduation,
-        retention: item.retention
+        graduation: item.graduation
       })) as StudentRetentionData[];
     }
     
@@ -124,26 +122,24 @@ export const generateStudentRetentionReport = async (): Promise<StudentRetention
     const mockData = getMockStudentRetentionData();
     return mockData.map(item => ({
       period: item.period,
-      retention_rate: item.retention,
-      enrolled: item.newStudents,
-      left: item.transfers,
-      newStudents: item.newStudents,
+      retention_rate: item.retention_rate,
+      enrolled: item.enrolled,
+      students_left: item.left, // Mapping "left" from mock to "students_left"
+      new_students: item.new_students,
       transfers: item.transfers,
-      graduation: item.graduation,
-      retention: item.retention
+      graduation: item.graduation
     }));
   } catch (error) {
     console.error("Error generating student retention report:", error);
     const mockData = getMockStudentRetentionData();
     return mockData.map(item => ({
       period: item.period,
-      retention_rate: item.retention,
-      enrolled: item.newStudents,
-      left: item.transfers,
-      newStudents: item.newStudents,
+      retention_rate: item.retention_rate,
+      enrolled: item.enrolled,
+      students_left: item.left, // Mapping "left" from mock to "students_left"
+      new_students: item.new_students,
       transfers: item.transfers,
-      graduation: item.graduation,
-      retention: item.retention
+      graduation: item.graduation
     }));
   }
 };

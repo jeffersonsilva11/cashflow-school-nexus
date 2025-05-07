@@ -13,6 +13,11 @@ const StudentReports = () => {
   const isLoading = activityLoading || demographicsLoading || retentionLoading;
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
 
+  // Make sure the data is an array before using it
+  const safeActivityData = Array.isArray(activityData) ? activityData : [];
+  const safeDemographicsData = Array.isArray(demographicsData) ? demographicsData : [];
+  const safeRetentionData = Array.isArray(retentionData) ? retentionData : [];
+
   if (isLoading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -63,11 +68,11 @@ const StudentReports = () => {
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={activityData}
+                    data={safeActivityData}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={activityData && activityData[0]?.month ? "month" : "period"} />
+                    <XAxis dataKey={safeActivityData[0]?.month ? "month" : "period"} />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -91,7 +96,7 @@ const StudentReports = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={demographicsData}
+                      data={safeDemographicsData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -101,7 +106,7 @@ const StudentReports = () => {
                       nameKey="grade"
                       label={({ grade, percentage }) => `${grade}: ${percentage}%`}
                     >
-                      {demographicsData?.map((entry, index) => (
+                      {safeDemographicsData?.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -112,7 +117,7 @@ const StudentReports = () => {
               <div className="flex flex-col justify-center">
                 <h3 className="text-lg font-medium mb-4">Distribuição por Série</h3>
                 <div className="space-y-2">
-                  {demographicsData?.map((item, index) => (
+                  {safeDemographicsData?.map((item, index) => (
                     <div key={index} className="flex justify-between items-center">
                       <div className="flex items-center">
                         <div 
@@ -140,7 +145,7 @@ const StudentReports = () => {
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={retentionData}
+                    data={safeRetentionData}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -148,20 +153,20 @@ const StudentReports = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="newStudents" name="Novos Alunos" fill="#82ca9d" />
+                    <Bar dataKey="new_students" name="Novos Alunos" fill="#82ca9d" />
                     <Bar dataKey="transfers" name="Transferências" fill="#8884d8" />
                     <Bar dataKey="graduation" name="Formados" fill="#ffc658" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                {retentionData?.map((period, index) => (
+                {safeRetentionData?.map((period, index) => (
                   <Card key={index} className="bg-muted/20">
                     <CardContent className="pt-6">
                       <div className="text-center">
                         <h4 className="font-medium">{period.period}</h4>
                         <p className="text-2xl font-bold text-green-600 mt-2">
-                          {period.retention_rate || period.retention || 0}%
+                          {period.retention_rate || 0}%
                         </p>
                         <p className="text-sm text-muted-foreground">Taxa de Retenção</p>
                       </div>

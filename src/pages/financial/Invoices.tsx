@@ -77,7 +77,9 @@ export default function Invoices() {
     }
   };
 
-  const getPaymentMethodLabel = (method: string) => {
+  const getPaymentMethodLabel = (method: string | null | undefined) => {
+    if (!method) return '-';
+    
     switch (method) {
       case 'PIX':
       case 'pix':
@@ -173,7 +175,7 @@ export default function Invoices() {
                 {invoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">{invoice.invoice_id}</TableCell>
-                    <TableCell>{(invoice.schools as any)?.name || 'Escola não especificada'}</TableCell>
+                    <TableCell>{invoice.schools?.name || 'Escola não especificada'}</TableCell>
                     <TableCell>
                       {invoice.issued_date ? format(new Date(invoice.issued_date), 'P', {locale: ptBR}) : ''}
                     </TableCell>

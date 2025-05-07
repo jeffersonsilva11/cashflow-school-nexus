@@ -10,10 +10,12 @@ export interface Invoice {
   issued_date: string;
   due_date: string;
   paid_date?: string | null;
-  items?: any[];
+  items?: any[] | null;
   subscription_id?: string | null;
   created_at?: string;
   updated_at?: string;
+  payment_method?: string | null;
+  schools?: { name: string } | null;
 }
 
 // Fetch all invoices
@@ -21,7 +23,7 @@ export const fetchInvoices = async (): Promise<Invoice[]> => {
   try {
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, schools(name)')
+      .select('*, schools:school_id (name)')
       .order('issued_date', { ascending: false });
     
     if (error) {
@@ -29,7 +31,7 @@ export const fetchInvoices = async (): Promise<Invoice[]> => {
       throw error;
     }
     
-    return data || [];
+    return data as Invoice[];
   } catch (error) {
     console.error("Error in fetchInvoices:", error);
     throw error;
@@ -50,7 +52,7 @@ export const fetchInvoicesBySchool = async (schoolId: string): Promise<Invoice[]
       throw error;
     }
     
-    return data || [];
+    return data as Invoice[];
   } catch (error) {
     console.error(`Error in fetchInvoicesBySchool for ${schoolId}:`, error);
     throw error;
@@ -62,7 +64,7 @@ export const fetchInvoiceById = async (id: string): Promise<Invoice | null> => {
   try {
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, schools(name)')
+      .select('*, schools:school_id (name)')
       .eq('id', id)
       .single();
     
@@ -71,7 +73,7 @@ export const fetchInvoiceById = async (id: string): Promise<Invoice | null> => {
       throw error;
     }
     
-    return data;
+    return data as Invoice;
   } catch (error) {
     console.error(`Error in fetchInvoiceById for ${id}:`, error);
     throw error;

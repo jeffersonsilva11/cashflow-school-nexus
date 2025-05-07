@@ -10,7 +10,7 @@ export const useStudentActivityReport = () => {
       try {
         const reportData = await fetchStudentActivityReport();
         
-        if (reportData) {
+        if (reportData && Array.isArray(reportData)) {
           return reportData;
         }
         
@@ -32,7 +32,7 @@ export const useStudentDemographicsReport = () => {
       try {
         const reportData = await fetchStudentDemographicsReport();
         
-        if (reportData) {
+        if (reportData && Array.isArray(reportData)) {
           return reportData;
         }
         
@@ -54,7 +54,7 @@ export const useStudentRetentionReport = () => {
       try {
         const reportData = await fetchStudentRetentionReport();
         
-        if (reportData) {
+        if (reportData && Array.isArray(reportData)) {
           return reportData;
         }
         
