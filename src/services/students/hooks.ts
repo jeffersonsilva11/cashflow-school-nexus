@@ -1,30 +1,19 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  fetchStudents, 
-  fetchStudentById, 
-  createStudent, 
-  updateStudent, 
+  fetchStudentById,
+  fetchStudents,
+  createStudent,
+  updateStudent,
   deleteStudent,
-  fetchStudentsBySchool,
-  fetchStudentStatistics,
   Student
-} from './service';
+} from './api';
 
 // Hook to fetch all students
 export const useStudents = () => {
   return useQuery({
     queryKey: ['students'],
     queryFn: fetchStudents
-  });
-};
-
-// Hook to fetch students by school
-export const useStudentsBySchool = (schoolId: string) => {
-  return useQuery({
-    queryKey: ['students', 'school', schoolId],
-    queryFn: () => fetchStudentsBySchool(schoolId),
-    enabled: !!schoolId
   });
 };
 
@@ -43,11 +32,8 @@ export const useCreateStudent = () => {
   
   return useMutation({
     mutationFn: (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>) => createStudent(student),
-    onSuccess: (newStudent) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      if (newStudent.school_id) {
-        queryClient.invalidateQueries({ queryKey: ['students', 'school', newStudent.school_id] });
-      }
     }
   });
 };
@@ -58,12 +44,9 @@ export const useUpdateStudent = (id: string) => {
   
   return useMutation({
     mutationFn: (updates: Partial<Student>) => updateStudent(id, updates),
-    onSuccess: (updatedStudent) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['student', id] });
-      if (updatedStudent.school_id) {
-        queryClient.invalidateQueries({ queryKey: ['students', 'school', updatedStudent.school_id] });
-      }
     }
   });
 };
@@ -77,13 +60,5 @@ export const useDeleteStudent = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
     }
-  });
-};
-
-// Hook to fetch student statistics
-export const useStudentStatistics = () => {
-  return useQuery({
-    queryKey: ['student-statistics'],
-    queryFn: fetchStudentStatistics
   });
 };
