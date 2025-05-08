@@ -45,7 +45,9 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {overviewData ? formatCurrency(overviewData.totalRevenueMonth) : 'Carregando...'}
+              {!isOverviewLoading ? 
+                formatCurrency(overviewData?.totalRevenueMonth || 0) : 
+                <span className="text-muted-foreground">Carregando...</span>}
             </div>
           </CardContent>
         </Card>
@@ -58,7 +60,9 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {overviewData ? formatCurrency(overviewData.totalRevenueMonth * 0.1) : 'Carregando...'}
+              {!isOverviewLoading ? 
+                formatCurrency((overviewData?.totalRevenueMonth || 0) * 0.1) : 
+                <span className="text-muted-foreground">Carregando...</span>}
             </div>
           </CardContent>
         </Card>
@@ -71,7 +75,9 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {overviewData ? overviewData.totalActiveSchools : 'Carregando...'}
+              {!isOverviewLoading ? 
+                overviewData?.totalActiveSchools || 0 : 
+                <span className="text-muted-foreground">Carregando...</span>}
             </div>
           </CardContent>
         </Card>
@@ -88,11 +94,15 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {!isTrendLoading && monthlyTrendData ? (
+              {isTrendLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                </div>
+              ) : monthlyTrendData && monthlyTrendData.length > 0 ? (
                 <FinancialTrendChart data={monthlyTrendData} />
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                  <p className="text-muted-foreground">Nenhum dado de tendência disponível</p>
                 </div>
               )}
             </div>
@@ -108,11 +118,15 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {!isRevenueLoading && revenueByPlanData ? (
+              {isRevenueLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                </div>
+              ) : revenueByPlanData && revenueByPlanData.length > 0 ? (
                 <RevenueByPlanChart data={revenueByPlanData} />
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                  <p className="text-muted-foreground">Nenhum dado de receita por plano disponível</p>
                 </div>
               )}
             </div>
@@ -128,11 +142,15 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
-              {!isOverviewLoading && overviewData?.monthlyData ? (
+              {isOverviewLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                </div>
+              ) : overviewData?.monthlyData && overviewData.monthlyData.length > 0 ? (
                 <FinancialOverviewChart data={overviewData.monthlyData} />
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+                  <p className="text-muted-foreground">Nenhum dado de visão geral disponível</p>
                 </div>
               )}
             </div>

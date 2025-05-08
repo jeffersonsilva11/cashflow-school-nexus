@@ -2,7 +2,6 @@
 import { RevenueByPlanItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
-import { getMockRevenueByPlanData } from "./mock";
 
 export const generateRevenueByPlanReport = async (): Promise<RevenueByPlanItemData[]> => {
   try {
@@ -13,19 +12,25 @@ export const generateRevenueByPlanReport = async (): Promise<RevenueByPlanItemDa
       return report.data;
     }
     
-    // Tentar buscar dados reais do banco
+    // Try to get real data from the database
     const { data: revByPlan, error } = await supabase
       .from('revenue_by_plan')
       .select('*')
       .order('revenue', { ascending: false })
       .limit(5);
       
-    if (error || !revByPlan || revByPlan.length === 0) {
-      console.error("Error or no data for revenue by plan:", error);
-      return getMockRevenueByPlanData();
+    if (error) {
+      console.error("Error fetching revenue by plan data:", error);
+      return []; // Return empty array instead of mock data
+    }
+      
+    // If no data found, return empty array
+    if (!revByPlan || revByPlan.length === 0) {
+      console.info("No revenue by plan data found in database");
+      return [];
     }
     
-    // Converter para o formato necessário, adicionando os campos name e value que são exigidos
+    // Convert to the format needed, adding name and value fields
     return revByPlan.map(item => ({
       name: item.plan_name,
       value: item.revenue,
@@ -35,6 +40,6 @@ export const generateRevenueByPlanReport = async (): Promise<RevenueByPlanItemDa
     }));
   } catch (error) {
     console.error("Error in generateRevenueByPlanReport:", error);
-    return getMockRevenueByPlanData();
+    return []; // Return empty array instead of mock data
   }
 };

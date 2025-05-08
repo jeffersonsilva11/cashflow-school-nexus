@@ -2,7 +2,6 @@
 import { MonthlyTrendItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
-import { getMockMonthlyTrendData } from "./mock";
 
 export const generateMonthlyTrendReport = async (): Promise<MonthlyTrendItemData[]> => {
   try {
@@ -13,25 +12,31 @@ export const generateMonthlyTrendReport = async (): Promise<MonthlyTrendItemData
       return report.data;
     }
     
-    // Tentar buscar dados reais do banco
+    // Try to get real data from the database
     const { data: monthlyData, error } = await supabase
       .from('monthly_trends')
       .select('*')
       .order('year', { ascending: true })
       .order('month', { ascending: true });
       
-    if (error || !monthlyData || monthlyData.length === 0) {
-      console.error("Error or no data for monthly trends:", error);
-      return getMockMonthlyTrendData();
+    if (error) {
+      console.error("Error fetching monthly trends data:", error);
+      return []; // Return empty array instead of mock data
+    }
+      
+    // If no data found, return empty array
+    if (!monthlyData || monthlyData.length === 0) {
+      console.info("No monthly trend data found in database");
+      return [];
     }
     
-    // Converter para o formato necessário
+    // Convert to the format necessary
     return monthlyData.map(item => ({
       month: `${item.month} ${item.year}`,
       revenue: item.revenue
     }));
   } catch (error) {
     console.error("Error in generateMonthlyTrendReport:", error);
-    return getMockMonthlyTrendData();
+    return []; // Return empty array instead of mock data
   }
 };

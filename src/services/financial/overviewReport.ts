@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FinancialReportOverviewData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
-import { getMockOverviewData } from "./mock";
 
 export const generateFinancialOverviewReport = async (): Promise<FinancialReportOverviewData> => {
   try {
@@ -38,45 +37,105 @@ export const generateFinancialOverviewReport = async (): Promise<FinancialReport
       .gte('transaction_date', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
       .eq('status', 'completed');
       
-    // Se houver erro nas consultas, use dados mockados
+    // If there are database errors, return empty/zero values instead of mock data
     if (schoolsError || subsError || invoicesError || transError) {
       console.error("Error generating financial overview:", 
         schoolsError || subsError || invoicesError || transError);
-      return getMockOverviewData();
+      
+      return {
+        totalRevenueMonth: 0,
+        totalActiveSchools: 0,
+        totalActiveSubscriptions: 0,
+        totalPendingPayments: 0,
+        averageRevenuePerSchool: 0,
+        growthRate: 0,
+        monthlyData: []
+      };
     }
     
-    // Calcular receita total das transações
+    // Calculate total revenue from transactions
     const totalRevenue = recentTransactions?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
     
-    // Calcular média de receita por escola
+    // Calculate average revenue per school
     const avgRevenue = activeSchools && activeSchools.count > 0 ? 
       totalRevenue / activeSchools.count : 0;
     
-    // Gerar dados de meses
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    // Get monthly data from database or return empty array
+    const { data: monthlyData, error: monthlyError } = await supabase
+      .from('transactions')
+      .select('amount, transaction_date')
+      .eq('status', 'completed')
+      .order('transaction_date', { ascending: true });
     
-    const monthlyData = months.map((month, idx) => ({
-      month,
-      revenue: Math.random() * 50000 + 30000 // Dado mockado para exemplo
-    }));
+    // Format monthly data
+    const formattedMonthlyData = !monthlyError && monthlyData ? 
+      formatMonthlyData(monthlyData) : [];
     
-    // Extração segura do valor sum da resposta
+    // Extract pending amount safely
     const pendingAmount = pendingInvoices?.sum ? 
       (typeof pendingInvoices.sum === 'number' ? pendingInvoices.sum : 0) : 0;
     
-    // Retornar relatório gerado
+    // Return report with actual data
     return {
       totalRevenueMonth: totalRevenue,
       totalActiveSchools: activeSchools?.count || 0,
       totalActiveSubscriptions: activeSubscriptions?.count || 0,
       totalPendingPayments: pendingAmount,
       averageRevenuePerSchool: avgRevenue,
-      growthRate: 8.5, // Exemplo fixo
-      monthlyData
+      growthRate: calculateGrowthRate(), // We'll implement this function below
+      monthlyData: formattedMonthlyData
     };
   } catch (error) {
     console.error("Error in generateFinancialOverviewReport:", error);
-    return getMockOverviewData();
+    
+    // Return empty data instead of mock data
+    return {
+      totalRevenueMonth: 0,
+      totalActiveSchools: 0,
+      totalActiveSubscriptions: 0,
+      totalPendingPayments: 0,
+      averageRevenuePerSchool: 0,
+      growthRate: 0,
+      monthlyData: []
+    };
   }
 };
 
+// Helper function to format monthly data
+function formatMonthlyData(data: any[]): { month: string, revenue: number }[] {
+  if (!data || data.length === 0) {
+    return [];
+  }
+  
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const monthlyRevenue = new Map<string, number>();
+  
+  // Group transactions by month
+  data.forEach(item => {
+    if (!item.transaction_date || !item.amount) return;
+    
+    const date = new Date(item.transaction_date);
+    const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
+    
+    const currentAmount = monthlyRevenue.get(monthKey) || 0;
+    monthlyRevenue.set(monthKey, currentAmount + item.amount);
+  });
+  
+  // Convert map to array and sort by date
+  return Array.from(monthlyRevenue.entries())
+    .map(([month, revenue]) => ({ month, revenue }))
+    .sort((a, b) => {
+      const [aMonth, aYear] = a.month.split(' ');
+      const [bMonth, bYear] = b.month.split(' ');
+      
+      if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
+      return months.indexOf(aMonth) - months.indexOf(bMonth);
+    });
+}
+
+// Simple function to calculate growth rate - could be enhanced with real calculations
+function calculateGrowthRate(): number {
+  // In a real implementation, you would compare current period to previous period
+  // For now, return 0 instead of a hard-coded growth rate
+  return 0;
+}

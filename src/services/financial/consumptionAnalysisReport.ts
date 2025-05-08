@@ -1,11 +1,10 @@
 
 import { ConsumptionAnalysisItemData } from "../financialReportTypes";
 import { supabase } from "@/integrations/supabase/client";
-import { getMockConsumptionAnalysisData } from "./mock";
 
 export const generateConsumptionAnalysisReport = async (): Promise<ConsumptionAnalysisItemData[]> => {
   try {
-    // Tentar buscar dados reais do banco
+    // Try to get real data from the database
     const { data: consumptionData, error } = await supabase
       .from('consumption_analysis')
       .select(`
@@ -15,12 +14,18 @@ export const generateConsumptionAnalysisReport = async (): Promise<ConsumptionAn
       .order('amount', { ascending: false })
       .limit(10);
       
-    if (error || !consumptionData || consumptionData.length === 0) {
-      console.error("Error or no data for consumption analysis:", error);
-      return getMockConsumptionAnalysisData();
+    if (error) {
+      console.error("Error fetching consumption analysis data:", error);
+      return []; // Return empty array instead of mock data
+    }
+      
+    // If no data found, return empty array
+    if (!consumptionData || consumptionData.length === 0) {
+      console.info("No consumption analysis data found in database");
+      return [];
     }
     
-    // Converter para o formato necessário
+    // Convert to the format necessary
     return consumptionData.map(item => ({
       schoolId: item.school_id,
       schoolName: item.school?.name || "Escola não especificada",
@@ -32,6 +37,6 @@ export const generateConsumptionAnalysisReport = async (): Promise<ConsumptionAn
     }));
   } catch (error) {
     console.error("Error in generateConsumptionAnalysisReport:", error);
-    return getMockConsumptionAnalysisData();
+    return []; // Return empty array instead of mock data
   }
 };

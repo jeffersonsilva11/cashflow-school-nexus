@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   FileBarChart, 
@@ -133,6 +132,11 @@ export default function FinancialReports() {
     );
   }
 
+  const hasNoRevenueData = !revenueByPlan || revenueByPlan.length === 0;
+  const hasNoMonthlyData = !monthlyTrend || monthlyTrend.length === 0;
+  const hasNoOverviewData = !overviewData?.monthlyData || overviewData.monthlyData.length === 0;
+  const hasNoSchoolsData = !schools || schools.length === 0;
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex justify-between items-center">
@@ -203,10 +207,12 @@ export default function FinancialReports() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(financialOverview?.totalRevenueMonth || 0)}
                 </div>
-                <div className="flex items-center text-xs text-green-600 mt-1">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  <span>{financialOverview?.growthRate || 0}% em relação ao período anterior</span>
-                </div>
+                {financialOverview?.growthRate ? (
+                  <div className="flex items-center text-xs text-green-600 mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    <span>{financialOverview.growthRate}% em relação ao período anterior</span>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
             
@@ -270,7 +276,13 @@ export default function FinancialReports() {
                 <CardDescription>Evolução da receita no período</CardDescription>
               </CardHeader>
               <CardContent>
-                <FinancialTrendChart data={monthlyTrend || []} />
+                {hasNoMonthlyData ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Nenhum dado de tendência disponível</p>
+                  </div>
+                ) : (
+                  <FinancialTrendChart data={monthlyTrendData || []} />
+                )}
               </CardContent>
             </Card>
             
@@ -280,17 +292,25 @@ export default function FinancialReports() {
                 <CardDescription>Receita por tipo de plano</CardDescription>
               </CardHeader>
               <CardContent>
-                <RevenueByPlanChart data={revenueByPlan || []} />
-                <div className="mt-4 space-y-3">
-                  {revenueByPlan && revenueByPlan.map((item) => (
-                    <div key={item.plan} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <span className="font-medium">{item.plan}</span>
-                      </div>
-                      <div className="font-medium">{formatCurrency(item.revenue)}</div>
+                {hasNoRevenueData ? (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Nenhum dado de receita por plano disponível</p>
+                  </div>
+                ) : (
+                  <>
+                    <RevenueByPlanChart data={revenueByPlanData || []} />
+                    <div className="mt-4 space-y-3">
+                      {revenueByPlanData && revenueByPlanData.map((item) => (
+                        <div key={item.plan} className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <span className="font-medium">{item.plan}</span>
+                          </div>
+                          <div className="font-medium">{formatCurrency(item.revenue)}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -323,7 +343,16 @@ export default function FinancialReports() {
               <CardDescription>Análise detalhada do uso do sistema por cada escola</CardDescription>
             </CardHeader>
             <CardContent>
-              <SchoolUsageReport schools={filteredSchools} />
+              {hasNoSchoolsData ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <p className="text-muted-foreground">Nenhuma escola encontrada</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Adicione escolas ao sistema para visualizar os dados de uso
+                  </p>
+                </div>
+              ) : (
+                <SchoolUsageReport schools={filteredSchools} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

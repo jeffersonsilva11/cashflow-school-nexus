@@ -1,6 +1,5 @@
 
 import { fetchTransactionTrendsReport, fetchUserBehaviorReport, fetchProductCategoryReport } from './api';
-import { getMockTransactionTrendsData, getMockUserBehaviorData, getMockProductCategoryData } from './mock';
 
 // Tipos de dados para os relatórios analíticos
 export type TransactionTrendData = {
@@ -34,11 +33,12 @@ export const generateTransactionTrendsReport = async (): Promise<TransactionTren
       })) as TransactionTrendData[];
     }
     
-    // Se não houver relatório no banco, usar dados mockados
-    return getMockTransactionTrendsData();
+    // Se não houver relatório no banco, retornar array vazio
+    console.info("No transaction trends report data found");
+    return [];
   } catch (error) {
     console.error("Error generating transaction trends report:", error);
-    return getMockTransactionTrendsData();
+    return [];
   }
 };
 
@@ -55,11 +55,12 @@ export const generateUserBehaviorReport = async (): Promise<UserBehaviorData[]> 
       })) as UserBehaviorData[];
     }
     
-    // Se não houver relatório no banco, usar dados mockados
-    return getMockUserBehaviorData();
+    // Se não houver relatório no banco, retornar array vazio
+    console.info("No user behavior report data found");
+    return [];
   } catch (error) {
     console.error("Error generating user behavior report:", error);
-    return getMockUserBehaviorData();
+    return [];
   }
 };
 
@@ -77,10 +78,11 @@ export const generateProductCategoryReport = async (): Promise<ProductCategoryDa
       })) as ProductCategoryData[];
     }
     
-    // Se não houver relatório no banco, usar dados mockados
-    return getMockProductCategoryData();
+    // Se não houver relatório no banco, retornar array vazio
+    console.info("No product category report data found");
+    return [];
   } catch (error) {
     console.error("Error generating product category report:", error);
-    return getMockProductCategoryData();
+    return [];
   }
 };

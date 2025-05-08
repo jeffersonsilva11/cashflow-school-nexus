@@ -10,6 +10,15 @@ type FinancialTrendChartProps = {
 };
 
 export function FinancialTrendChart({ data }: FinancialTrendChartProps) {
+  // Handle empty data case
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <span className="text-muted-foreground">Nenhum dado disponível</span>
+      </div>
+    );
+  }
+
   const formatYAxis = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
@@ -32,14 +41,6 @@ export function FinancialTrendChart({ data }: FinancialTrendChartProps) {
     }
     return null;
   };
-
-  if (!data || data.length === 0) {
-    return (
-      <div className="w-full h-[300px] flex items-center justify-center">
-        <span className="text-muted-foreground">Nenhum dado disponível</span>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full h-[300px]">

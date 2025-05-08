@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -43,6 +44,7 @@ import StudentParentBinding from './pages/StudentParentBinding';
 import StudentForm from './pages/StudentForm';
 import AuditLogs from './pages/AuditLogs';
 import Users from './pages/Users';
+import SecurityCompliance from './pages/SecurityCompliance';
 
 function App() {
   return (
@@ -114,7 +116,7 @@ function App() {
               {/* System Routes */}
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
-              <Route path="/security-compliance" element={<ProtectedRoute><AccessDenied /></ProtectedRoute>} />
+              <Route path="/security-compliance" element={<ProtectedRoute><SecurityCompliance /></ProtectedRoute>} />
 
               {/* Settings Routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
