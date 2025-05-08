@@ -14,7 +14,8 @@ import {
   FileBarChart,
   Database,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  UserRound
 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
 
@@ -42,6 +43,12 @@ export const mainNavItems: NavItemType[] = [
     title: 'Estudantes',
     href: '/students',
     icon: Users,
+    permission: ['admin', 'school_admin', 'staff']
+  },
+  {
+    title: 'Responsáveis',
+    href: '/parents',
+    icon: UserRound,
     permission: ['admin', 'school_admin', 'staff']
   },
   {

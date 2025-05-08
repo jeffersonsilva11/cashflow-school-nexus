@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -37,6 +38,10 @@ import Reports from './pages/reports/Reports';
 import DataMigration from './pages/admin/DataMigration';
 import AccessDenied from './pages/AccessDenied';
 import MigrationStatus from '@/pages/admin/MigrationStatus';
+import Parents from './pages/Parents';
+import ParentDetails from './pages/ParentDetails';
+import StudentParentBinding from './pages/StudentParentBinding';
+import StudentForm from './pages/StudentForm';
 
 function App() {
   return (
@@ -65,6 +70,12 @@ function App() {
 
               {/* Students Routes */}
               <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+              <Route path="/students/new" element={<ProtectedRoute><StudentForm /></ProtectedRoute>} />
+              <Route path="/students/:studentId/parents" element={<ProtectedRoute><StudentParentBinding /></ProtectedRoute>} />
+
+              {/* Parents Routes */}
+              <Route path="/parents" element={<ProtectedRoute><Parents /></ProtectedRoute>} />
+              <Route path="/parents/:parentId" element={<ProtectedRoute><ParentDetails /></ProtectedRoute>} />
 
               {/* Vendors Routes */}
               <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
