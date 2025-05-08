@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, Menu, ChevronDown, LogOut } from 'lucide-react';
@@ -16,7 +17,8 @@ import { NavItem, NavGroup } from './NavComponents';
 import { 
   mainNavItems,
   financialNavItems,
-  reportsAndAdminItems
+  reportsAndAdminItems,
+  systemItems
 } from './NavigationItems';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -59,6 +61,7 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
   let filteredMainNavItems = mainNavItems;
   let filteredFinancialNavItems = financialNavItems;
   let filteredReportsAndAdminItems = reportsAndAdminItems;
+  let filteredSystemItems = systemItems;
   
   // Apply filtering only for non-admin users - ensure case-insensitive comparison
   if (!user || !user.role || user.role.toLowerCase() !== 'admin') {
@@ -66,6 +69,7 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
     filteredMainNavItems = mainNavItems.filter(item => hasPermission(item.permission));
     filteredFinancialNavItems = financialNavItems.filter(item => hasPermission(item.permission));
     filteredReportsAndAdminItems = reportsAndAdminItems.filter(item => hasPermission(item.permission));
+    filteredSystemItems = systemItems.filter(item => hasPermission(item.permission));
   } else {
     console.log('[Sidebar] Admin user detected, showing all menu items');
   }
@@ -134,8 +138,22 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, location }: SidebarProps) => {
           )}
           
           {filteredReportsAndAdminItems.length > 0 && (
-            <NavGroup title="Relatórios & Admin" sidebarOpen={sidebarOpen}>
+            <NavGroup title="Relatórios & Gestão" sidebarOpen={sidebarOpen}>
               {filteredReportsAndAdminItems.map((item) => (
+                <NavItem 
+                  key={item.href}
+                  to={item.href}
+                  icon={<item.icon size={20} />}
+                  label={item.title}
+                  active={location.pathname.startsWith(item.href)}
+                />
+              ))}
+            </NavGroup>
+          )}
+          
+          {filteredSystemItems.length > 0 && (
+            <NavGroup title="Sistema" sidebarOpen={sidebarOpen}>
+              {filteredSystemItems.map((item) => (
                 <NavItem 
                   key={item.href}
                   to={item.href}

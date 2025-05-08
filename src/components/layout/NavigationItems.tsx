@@ -15,7 +15,11 @@ import {
   Database,
   DollarSign,
   RefreshCw,
-  UserRound
+  UserRound,
+  Shield,
+  FileArchive,
+  MapPin,
+  Utensils
 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
 
@@ -56,6 +60,12 @@ export const mainNavItems: NavItemType[] = [
     href: '/devices',
     icon: CreditCard,
     permission: ['admin', 'school_admin']
+  },
+  {
+    title: 'Cantina',
+    href: '/canteen',
+    icon: Utensils,
+    permission: ['admin', 'school_admin', 'staff']
   },
   {
     title: 'Estabelecimentos',
@@ -103,6 +113,39 @@ export const reportsAndAdminItems: NavItemType[] = [
     title: 'Relatórios Financeiros',
     href: '/reports/financial',
     icon: FileBarChart,
+    permission: ['admin']
+  },
+  {
+    title: 'Mapa de Escolas',
+    href: '/schools/map',
+    icon: MapPin,
+    permission: ['admin', 'school_admin']
+  },
+  {
+    title: 'Convites',
+    href: '/schools/invites',
+    icon: FileText,
+    permission: ['admin', 'school_admin']
+  },
+];
+
+export const systemItems: NavItemType[] = [
+  {
+    title: 'Usuários',
+    href: '/users',
+    icon: User,
+    permission: ['admin', 'school_admin']
+  },
+  {
+    title: 'Logs de Auditoria',
+    href: '/audit-logs',
+    icon: FileArchive,
+    permission: ['admin']
+  },
+  {
+    title: 'Segurança & Compliance',
+    href: '/security-compliance',
+    icon: Shield,
     permission: ['admin']
   },
   {

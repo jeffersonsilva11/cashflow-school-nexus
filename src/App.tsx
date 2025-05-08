@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -42,6 +41,8 @@ import Parents from './pages/Parents';
 import ParentDetails from './pages/ParentDetails';
 import StudentParentBinding from './pages/StudentParentBinding';
 import StudentForm from './pages/StudentForm';
+import AuditLogs from './pages/AuditLogs';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -77,8 +78,9 @@ function App() {
               <Route path="/parents" element={<ProtectedRoute><Parents /></ProtectedRoute>} />
               <Route path="/parents/:parentId" element={<ProtectedRoute><ParentDetails /></ProtectedRoute>} />
 
-              {/* Vendors Routes */}
+              {/* Vendors/Canteen Routes */}
               <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
+              <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
 
               {/* Devices Routes */}
               <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
@@ -101,9 +103,6 @@ function App() {
               {/* Payments Route */}
               <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
 
-              {/* Canteen Route */}
-              <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
-
               {/* Reports Routes */}
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/reports/financial" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
@@ -111,6 +110,11 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin/data-migration" element={<ProtectedRoute><DataMigration /></ProtectedRoute>} />
               <Route path="/admin/migration-status" element={<MigrationStatus />} />
+
+              {/* System Routes */}
+              <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+              <Route path="/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
+              <Route path="/security-compliance" element={<ProtectedRoute><AccessDenied /></ProtectedRoute>} />
 
               {/* Settings Routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
