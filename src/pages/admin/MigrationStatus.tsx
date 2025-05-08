@@ -5,10 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, ChevronRight, CircleDashed, FileWarning, RefreshCw } from 'lucide-react';
-import { useMigrationTracker, MigrationEntity, MigrationStatus } from '@/hooks/use-migration-tracker';
+import { useMigrationTracker, type MigrationStatus as MigrationStatusType, MigrationEntity } from '@/hooks/use-migration-tracker';
 import { MigrationHelper } from '@/components/admin/MigrationHelper';
 
-const getStatusBadge = (status: MigrationStatus) => {
+const getStatusBadge = (status: MigrationStatusType) => {
   switch (status) {
     case 'completed':
       return <Badge variant="success" className="bg-green-500">Completed</Badge>;
@@ -21,7 +21,7 @@ const getStatusBadge = (status: MigrationStatus) => {
   }
 };
 
-const getStatusIcon = (status: MigrationStatus) => {
+const getStatusIcon = (status: MigrationStatusType) => {
   switch (status) {
     case 'completed':
       return <CheckCircle2 className="h-5 w-5 text-green-500" />;
