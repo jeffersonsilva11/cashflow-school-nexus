@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Utensils, ChartBar, FileBarChart, ArrowRightCircle } from 'lucide-react';
+import { Utensils, ChartBar, FileBarChart, ArrowRightCircle, Wallet, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Canteen() {
@@ -42,10 +42,16 @@ export default function Canteen() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate('/vendors')}>
+            <Utensils className="h-4 w-4 mr-2" />
             Gerenciar Estabelecimentos
           </Button>
-          <Button onClick={() => navigate('/canteen/sales')}>
-            Novo Pedido
+          <Button onClick={() => navigate('/canteen/terminals')}>
+            <CreditCard className="h-4 w-4 mr-2" />
+            Terminais de Pagamento
+          </Button>
+          <Button onClick={() => navigate('/canteen/recharges')}>
+            <Wallet className="h-4 w-4 mr-2" />
+            Recargas
           </Button>
         </div>
       </div>
@@ -87,7 +93,7 @@ export default function Canteen() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {selectedVendor ? 'Nessa cantina' : 'Em todas as cantinas'}
+              {selectedVendor === 'all' ? 'Em todas as cantinas' : 'Nessa cantina'}
             </p>
           </CardContent>
         </Card>

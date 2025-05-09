@@ -45,6 +45,9 @@ import StudentForm from './pages/StudentForm';
 import AuditLogs from './pages/AuditLogs';
 import Users from './pages/Users';
 import SecurityCompliance from './pages/SecurityCompliance';
+import CanteenTerminals from './pages/canteen/CanteenTerminals';
+import CanteenRecharges from './pages/canteen/CanteenRecharges';
+import StudentRecharge from './pages/canteen/StudentRecharge';
 
 function App() {
   return (
@@ -83,6 +86,9 @@ function App() {
               {/* Vendors/Canteen Routes */}
               <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
               <Route path="/canteen" element={<ProtectedRoute><Canteen /></ProtectedRoute>} />
+              <Route path="/canteen/terminals" element={<ProtectedRoute><CanteenTerminals /></ProtectedRoute>} />
+              <Route path="/canteen/recharges" element={<ProtectedRoute><CanteenRecharges /></ProtectedRoute>} />
+              <Route path="/canteen/recharges/:studentId" element={<ProtectedRoute><StudentRecharge /></ProtectedRoute>} />
 
               {/* Devices Routes */}
               <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />

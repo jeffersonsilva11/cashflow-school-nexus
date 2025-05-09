@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 // Basic data type definitions
@@ -114,6 +115,10 @@ export interface ConsumptionAnalysis {
   created_at?: string;
   updated_at?: string;
   school?: {
+    name: string;
+  };
+  vendor_id?: string;
+  vendor?: {
     name: string;
   };
 }

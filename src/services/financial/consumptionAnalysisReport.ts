@@ -1,111 +1,163 @@
 
 import { ConsumptionAnalysisItemData } from "../financialReportTypes";
+import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
 
 export const generateConsumptionAnalysisReport = async (vendorId?: string): Promise<ConsumptionAnalysisItemData[]> => {
   try {
-    // Construímos a query base
+    // Se não for especificado um vendorId, verificamos se existe um relatório geral
+    if (!vendorId) {
+      const report = await fetchFinancialReport('consumption_analysis');
+      
+      if (report && report.data) {
+        return report.data;
+      }
+    }
+    
     let query = supabase
-      .from('transactions')
+      .from('consumption_analysis')
       .select(`
-        id,
-        amount,
-        vendor:vendor_id (
-          id,
-          name,
-          type,
-          location,
-          school:school_id (
-            id,
-            name
-          )
-        ),
-        student:student_id (
-          id,
-          name,
-          school:school_id (
-            id,
-            name
-          )
-        )
+        *,
+        school:school_id (name)
       `)
-      .eq('type', 'purchase')
-      .eq('status', 'completed');
-
-    // Se um vendorId for especificado, filtramos por esse vendedor
+      .order('amount', { ascending: false })
+      .limit(20);
+      
+    // Se tiver um vendorId, filtramos por ele
     if (vendorId) {
       query = query.eq('vendor_id', vendorId);
     }
     
-    const { data: transactions, error } = await query;
-      
+    const { data, error } = await query;
+    
     if (error) {
       console.error("Error fetching consumption analysis data:", error);
       return [];
     }
-      
-    if (!transactions || transactions.length === 0) {
-      console.info("No consumption analysis data found");
+    
+    if (!data || data.length === 0) {
+      // Se não encontramos dados para o vendedor específico ou geral,
+      // vamos gerar dados simulados a partir das transações
+      return vendorId ? 
+        await generateConsumptionDataFromTransactions(vendorId) :
+        await generateConsumptionDataFromTransactions();
+    }
+    
+    return data.map(item => ({
+      schoolId: item.school_id,
+      schoolName: item.school?.name || 'Escola não informada',
+      productType: item.product_type,
+      amount: item.amount,
+      quantity: item.quantity,
+      studentCount: item.student_count,
+      averagePerStudent: item.average_per_student,
+      vendorId: item.vendor_id || '',
+      vendorName: item.vendor?.name || 'Cantina sem nome'
+    }));
+    
+  } catch (error) {
+    console.error("Error in generateConsumptionAnalysisReport:", error);
+    return [];
+  }
+};
+
+// Função para gerar dados de consumo a partir das transações quando não temos relatórios prontos
+const generateConsumptionDataFromTransactions = async (vendorId?: string): Promise<ConsumptionAnalysisItemData[]> => {
+  try {
+    let transactionQuery = supabase
+      .from('transactions')
+      .select(`
+        *,
+        student:student_id (school_id),
+        vendor:vendor_id (name, type)
+      `)
+      .eq('type', 'purchase')
+      .eq('status', 'completed');
+    
+    if (vendorId) {
+      transactionQuery = transactionQuery.eq('vendor_id', vendorId);
+    }
+    
+    const { data: transactions, error } = await transactionQuery;
+    
+    if (error || !transactions || transactions.length === 0) {
+      console.warn("No transactions found for consumption analysis");
       return [];
     }
     
-    // Agrupamos dados por escola e cantina
-    const schoolVendorMap: Record<string, {
-      schoolId: string,
-      schoolName: string,
-      vendorId: string,
-      vendorName: string,
-      productType: string,
-      amount: number,
-      quantity: number,
-      studentCount: Set<string>
-    }> = {};
+    // Vamos agrupar as transações por escola e calcular os valores
+    const schoolMap = new Map<string, {
+      totalAmount: number;
+      totalQuantity: number;
+      schoolId: string;
+      vendorId: string;
+      vendorName: string;
+    }>();
     
-    transactions.forEach(transaction => {
-      const schoolId = transaction.student?.school?.id || transaction.vendor?.school?.id || 'unknown';
-      const schoolName = transaction.student?.school?.name || transaction.vendor?.school?.name || 'Escola não especificada';
-      const vendorId = transaction.vendor?.id || 'unknown';
-      const vendorName = transaction.vendor?.name || 'Cantina não especificada';
-      const studentId = transaction.student?.id;
+    for (const tx of transactions) {
+      const schoolId = tx.student?.school_id;
+      if (!schoolId) continue;
       
-      // Chave composta para agrupar por escola e cantina
-      const key = `${schoolId}-${vendorId}`;
-      
-      if (!schoolVendorMap[key]) {
-        schoolVendorMap[key] = {
+      if (!schoolMap.has(schoolId)) {
+        schoolMap.set(schoolId, {
+          totalAmount: 0,
+          totalQuantity: 0,
           schoolId,
-          schoolName,
-          vendorId,
-          vendorName,
-          productType: transaction.vendor?.type === 'own' ? 'Cantina Própria' : 'Cantina Terceirizada',
-          amount: 0,
-          quantity: 0,
-          studentCount: new Set()
-        };
+          vendorId: tx.vendor_id,
+          vendorName: tx.vendor?.name || 'Cantina sem nome'
+        });
       }
       
-      schoolVendorMap[key].amount += Number(transaction.amount);
-      schoolVendorMap[key].quantity += 1;
+      const schoolData = schoolMap.get(schoolId)!;
+      schoolData.totalAmount += Number(tx.amount);
+      schoolData.totalQuantity += 1;
+    }
+    
+    // Agora vamos buscar as informações das escolas e alunos
+    const schoolIds = Array.from(schoolMap.keys());
+    
+    const { data: schools } = await supabase
+      .from('schools')
+      .select('id, name')
+      .in('id', schoolIds);
+    
+    const schoolNames = schools?.reduce((acc: Record<string, string>, school) => {
+      acc[school.id] = school.name;
+      return acc;
+    }, {}) || {};
+    
+    // E contar os alunos por escola
+    const studentCounts: Record<string, number> = {};
+    
+    for (const schoolId of schoolIds) {
+      const { count } = await supabase
+        .from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('school_id', schoolId)
+        .eq('active', true);
       
-      if (studentId) {
-        schoolVendorMap[key].studentCount.add(studentId);
-      }
+      studentCounts[schoolId] = count || 0;
+    }
+    
+    // Agora formatamos o resultado para o formato esperado
+    return Array.from(schoolMap.values()).map(data => {
+      const studentCount = studentCounts[data.schoolId] || 1;
+      
+      return {
+        schoolId: data.schoolId,
+        schoolName: schoolNames[data.schoolId] || 'Escola não informada',
+        productType: 'Diversos', // Agrupamos tudo como diversos neste caso
+        amount: data.totalAmount,
+        quantity: data.totalQuantity,
+        studentCount,
+        averagePerStudent: data.totalAmount / studentCount,
+        vendorId: data.vendorId,
+        vendorName: data.vendorName
+      };
     });
     
-    // Convertemos o mapa em um array no formato esperado
-    return Object.values(schoolVendorMap).map(item => ({
-      schoolId: item.schoolId,
-      schoolName: item.schoolName,
-      productType: item.productType,
-      amount: item.amount,
-      quantity: item.quantity,
-      studentCount: item.studentCount.size,
-      averagePerStudent: item.studentCount.size > 0 ? item.amount / item.studentCount.size : 0,
-      vendorId: item.vendorId,
-      vendorName: item.vendorName
-    }));
   } catch (error) {
-    console.error("Error in generateConsumptionAnalysisReport:", error);
+    console.error("Error generating consumption data from transactions:", error);
     return [];
   }
 };
