@@ -12,7 +12,7 @@ import { fetchVendors } from '@/services/vendorService';
 
 export default function CanteenTerminals() {
   const navigate = useNavigate();
-  const [selectedVendor, setSelectedVendor] = React.useState<string>('');
+  const [selectedVendor, setSelectedVendor] = React.useState<string>('all');
 
   const { data: vendors, isLoading: loadingVendors } = useQuery({
     queryKey: ['vendors'],
@@ -22,7 +22,7 @@ export default function CanteenTerminals() {
   const { data: terminals, isLoading: loadingTerminals } = useQuery({
     queryKey: ['terminals', selectedVendor],
     queryFn: () => paymentGatewayService.getTerminals({ 
-      vendorId: selectedVendor || undefined 
+      vendorId: selectedVendor === 'all' ? undefined : selectedVendor
     }),
     enabled: true,
   });
@@ -63,7 +63,7 @@ export default function CanteenTerminals() {
                   <SelectValue placeholder="Todas as cantinas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as cantinas</SelectItem>
+                  <SelectItem value="all">Todas as cantinas</SelectItem>
                   {vendors?.map(vendor => (
                     <SelectItem key={vendor.id} value={vendor.id}>
                       {vendor.name} ({vendor.type === 'own' ? 'Própria' : 'Terceirizada'})
