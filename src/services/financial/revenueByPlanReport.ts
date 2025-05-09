@@ -1,4 +1,3 @@
-
 import { RevenueByPlanItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +50,8 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       let totalRevenue = 0;
       
       sales?.forEach(sale => {
-        const category = productCategoryMap[sale.product_id] || 'Outros';
+        // Tratamos as vendas sem referência direta a produto específico
+        const category = 'Outros'; // Consideramos vendas sem produto como "Outros"
         if (!categoryRevenue[category]) {
           categoryRevenue[category] = 0;
         }

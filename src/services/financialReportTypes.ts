@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 
 // Basic data type definitions
@@ -36,6 +35,8 @@ export interface ConsumptionAnalysisItemData {
   quantity: number;
   studentCount: number;
   averagePerStudent: number;
+  vendorId: string;
+  vendorName: string;
 }
 
 // Composite data type
