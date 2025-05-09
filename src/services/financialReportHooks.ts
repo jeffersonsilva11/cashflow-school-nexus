@@ -22,26 +22,26 @@ export function useFinancialOverview() {
   });
 }
 
-export function useRevenueByPlan() {
+export function useRevenueByPlan(vendorId?: string) {
   return useQuery<RevenueByPlanItemData[], Error>({
-    queryKey: ['revenue-by-plan'],
-    queryFn: generateRevenueByPlanReport,
+    queryKey: ['revenue-by-plan', vendorId],
+    queryFn: () => generateRevenueByPlanReport(vendorId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-export function useMonthlyTrend() {
+export function useMonthlyTrend(vendorId?: string) {
   return useQuery<MonthlyTrendItemData[], Error>({
-    queryKey: ['monthly-trend'],
-    queryFn: () => generateMonthlyTrendReport(),
+    queryKey: ['monthly-trend', vendorId],
+    queryFn: () => generateMonthlyTrendReport(vendorId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-export function useConsumptionAnalysis() {
+export function useConsumptionAnalysis(vendorId?: string) {
   return useQuery<ConsumptionAnalysisItemData[], Error>({
-    queryKey: ['consumption-analysis'],
-    queryFn: generateConsumptionAnalysisReport,
+    queryKey: ['consumption-analysis', vendorId],
+    queryFn: () => generateConsumptionAnalysisReport(vendorId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

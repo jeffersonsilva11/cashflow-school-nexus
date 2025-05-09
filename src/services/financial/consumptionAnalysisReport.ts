@@ -2,41 +2,110 @@
 import { ConsumptionAnalysisItemData } from "../financialReportTypes";
 import { supabase } from "@/integrations/supabase/client";
 
-export const generateConsumptionAnalysisReport = async (): Promise<ConsumptionAnalysisItemData[]> => {
+export const generateConsumptionAnalysisReport = async (vendorId?: string): Promise<ConsumptionAnalysisItemData[]> => {
   try {
-    // Try to get real data from the database
-    const { data: consumptionData, error } = await supabase
-      .from('consumption_analysis')
+    // Construímos a query base
+    let query = supabase
+      .from('transactions')
       .select(`
-        *,
-        school:school_id (name)
+        id,
+        amount,
+        vendor:vendor_id (
+          id,
+          name,
+          type,
+          location,
+          school:school_id (
+            id,
+            name
+          )
+        ),
+        student:student_id (
+          id,
+          name,
+          school:school_id (
+            id,
+            name
+          )
+        )
       `)
-      .order('amount', { ascending: false })
-      .limit(10);
+      .eq('type', 'purchase')
+      .eq('status', 'completed');
+
+    // Se um vendorId for especificado, filtramos por esse vendedor
+    if (vendorId) {
+      query = query.eq('vendor_id', vendorId);
+    }
+    
+    const { data: transactions, error } = await query;
       
     if (error) {
       console.error("Error fetching consumption analysis data:", error);
-      return []; // Return empty array instead of mock data
+      return [];
     }
       
-    // If no data found, return empty array
-    if (!consumptionData || consumptionData.length === 0) {
-      console.info("No consumption analysis data found in database");
+    if (!transactions || transactions.length === 0) {
+      console.info("No consumption analysis data found");
       return [];
     }
     
-    // Convert to the format necessary
-    return consumptionData.map(item => ({
-      schoolId: item.school_id,
-      schoolName: item.school?.name || "Escola não especificada",
-      productType: item.product_type,
+    // Agrupamos dados por escola e cantina
+    const schoolVendorMap: Record<string, {
+      schoolId: string,
+      schoolName: string,
+      vendorId: string,
+      vendorName: string,
+      productType: string,
+      amount: number,
+      quantity: number,
+      studentCount: Set<string>
+    }> = {};
+    
+    transactions.forEach(transaction => {
+      const schoolId = transaction.student?.school?.id || transaction.vendor?.school?.id || 'unknown';
+      const schoolName = transaction.student?.school?.name || transaction.vendor?.school?.name || 'Escola não especificada';
+      const vendorId = transaction.vendor?.id || 'unknown';
+      const vendorName = transaction.vendor?.name || 'Cantina não especificada';
+      const studentId = transaction.student?.id;
+      
+      // Chave composta para agrupar por escola e cantina
+      const key = `${schoolId}-${vendorId}`;
+      
+      if (!schoolVendorMap[key]) {
+        schoolVendorMap[key] = {
+          schoolId,
+          schoolName,
+          vendorId,
+          vendorName,
+          productType: transaction.vendor?.type === 'own' ? 'Cantina Própria' : 'Cantina Terceirizada',
+          amount: 0,
+          quantity: 0,
+          studentCount: new Set()
+        };
+      }
+      
+      schoolVendorMap[key].amount += Number(transaction.amount);
+      schoolVendorMap[key].quantity += 1;
+      
+      if (studentId) {
+        schoolVendorMap[key].studentCount.add(studentId);
+      }
+    });
+    
+    // Convertemos o mapa em um array no formato esperado
+    return Object.values(schoolVendorMap).map(item => ({
+      schoolId: item.schoolId,
+      schoolName: item.schoolName,
+      productType: item.productType,
       amount: item.amount,
       quantity: item.quantity,
-      studentCount: item.student_count,
-      averagePerStudent: item.average_per_student
+      studentCount: item.studentCount.size,
+      averagePerStudent: item.studentCount.size > 0 ? item.amount / item.studentCount.size : 0,
+      vendorId: item.vendorId,
+      vendorName: item.vendorName
     }));
   } catch (error) {
     console.error("Error in generateConsumptionAnalysisReport:", error);
-    return []; // Return empty array instead of mock data
+    return [];
   }
 };
