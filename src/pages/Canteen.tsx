@@ -13,7 +13,7 @@ import { Utensils, ChartBar, FileBarChart, ArrowRightCircle } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 
 export default function Canteen() {
-  const [selectedVendor, setSelectedVendor] = useState<string>('');
+  const [selectedVendor, setSelectedVendor] = useState<string>('all');
   const navigate = useNavigate();
 
   // Consulta para buscar todos os estabelecimentos (cantinas)
@@ -23,8 +23,8 @@ export default function Canteen() {
   });
 
   // Buscamos dados de tendências e análise de consumo para o vendedor selecionado
-  const { data: monthlyTrendData, isLoading: loadingTrend } = useMonthlyTrend(selectedVendor);
-  const { data: consumptionData, isLoading: loadingConsumption } = useConsumptionAnalysis(selectedVendor);
+  const { data: monthlyTrendData, isLoading: loadingTrend } = useMonthlyTrend(selectedVendor === 'all' ? undefined : selectedVendor);
+  const { data: consumptionData, isLoading: loadingConsumption } = useConsumptionAnalysis(selectedVendor === 'all' ? undefined : selectedVendor);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -61,7 +61,7 @@ export default function Canteen() {
             <SelectValue placeholder="Selecione uma cantina" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as cantinas</SelectItem>
+            <SelectItem value="all">Todas as cantinas</SelectItem>
             {vendors?.map(vendor => (
               <SelectItem key={vendor.id} value={vendor.id}>
                 {vendor.name} ({vendor.type === 'own' ? 'Própria' : 'Terceirizada'})
@@ -147,7 +147,7 @@ export default function Canteen() {
             <CardHeader>
               <CardTitle>Tendências de Vendas</CardTitle>
               <CardDescription>
-                Vendas mensais {selectedVendor ? 'da cantina selecionada' : 'de todas as cantinas'}
+                Vendas mensais {selectedVendor === 'all' ? 'de todas as cantinas' : 'da cantina selecionada'}
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-2">
@@ -178,7 +178,7 @@ export default function Canteen() {
             <CardHeader>
               <CardTitle>Análise de Consumo</CardTitle>
               <CardDescription>
-                Estatísticas de consumo por escola {selectedVendor ? 'na cantina selecionada' : ''}
+                Estatísticas de consumo por escola {selectedVendor === 'all' ? '' : 'na cantina selecionada'}
               </CardDescription>
             </CardHeader>
             <CardContent>
