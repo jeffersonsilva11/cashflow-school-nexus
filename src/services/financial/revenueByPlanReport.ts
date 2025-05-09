@@ -46,12 +46,11 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
     
     // Para vendedores específicos, consultamos os produtos e suas vendas
     if (vendorId) {
-      // Buscamos todos os produtos desse vendedor
+      // Buscamos todos os produtos desse vendedor sem joins aninhados
       const { data: products, error: productsError } = await supabase
         .from('vendor_products')
         .select('id, name, category')
-        .eq('vendor_id', vendorId)
-        .returns<VendorProductRecord[]>();
+        .eq('vendor_id', vendorId);
         
       if (productsError || !products || products.length === 0) {
         console.error("Error fetching vendor products:", productsError);
@@ -64,8 +63,7 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
         .select('*')
         .eq('vendor_id', vendorId)
         .eq('status', 'completed')
-        .eq('type', 'purchase')
-        .returns<TransactionRecord[]>();
+        .eq('type', 'purchase');
         
       if (salesError) {
         console.error("Error fetching vendor sales:", salesError);
@@ -74,7 +72,7 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       
       // Agrupamos vendas por categoria de produto
       const categoryRevenue: Record<string, number> = {};
-      const productCategoryMap = products.reduce((map: Record<string, string>, product) => {
+      const productCategories = products.reduce((map: Record<string, string>, product) => {
         map[product.id] = product.category || 'Sem categoria';
         return map;
       }, {});
@@ -109,8 +107,7 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       .from('revenue_by_plan')
       .select('*')
       .order('revenue', { ascending: false })
-      .limit(5)
-      .returns<RevenuePlanRecord[]>();
+      .limit(5);
       
     if (error) {
       console.error("Error fetching revenue by plan data:", error);
