@@ -30,7 +30,7 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       // Buscamos todas as transações desse vendedor (vendas)
       const { data: sales, error: salesError } = await supabase
         .from('transactions')
-        .select('*, product:product_id (id, category)')
+        .select('*')
         .eq('vendor_id', vendorId)
         .eq('status', 'completed')
         .eq('type', 'purchase');
@@ -51,11 +51,9 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       let totalRevenue = 0;
       
       sales?.forEach(sale => {
-        // Para vendas sem produto específico, usamos "Outros"
-        let category = 'Outros';
-        if (sale.product && sale.product.id) {
-          category = productCategoryMap[sale.product.id] || 'Outros';
-        }
+        // Usamos "Outros" como categoria padrão para todas as vendas
+        // já que não temos a relação product_id na tabela transactions
+        const category = 'Outros';
           
         if (!categoryRevenue[category]) {
           categoryRevenue[category] = 0;

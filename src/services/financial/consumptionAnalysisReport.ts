@@ -18,8 +18,7 @@ export const generateConsumptionAnalysisReport = async (vendorId?: string): Prom
       .from('consumption_analysis')
       .select(`
         *,
-        school:school_id (name),
-        vendor:vendor_id (name)
+        school:school_id (name)
       `)
       .order('amount', { ascending: false })
       .limit(20);
@@ -52,8 +51,8 @@ export const generateConsumptionAnalysisReport = async (vendorId?: string): Prom
       quantity: item.quantity,
       studentCount: item.student_count,
       averagePerStudent: item.average_per_student,
-      vendorId: item.vendor_id || '',
-      vendorName: item.vendor?.name || 'Cantina sem nome'
+      vendorId: vendorId || '', // Use o vendorId fornecido ou vazio
+      vendorName: vendorId ? 'Cantina específica' : 'Cantina sem nome'
     }));
     
   } catch (error) {
