@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchStudentById } from '@/services/studentService';
 import { fetchStudentBalance, addStudentBalance } from '@/services/studentBalanceService';
-import { fetchStudentTransactions } from '@/services/transactionService';
+import { fetchStudentTransactions } from '@/services/studentTransactionService';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
