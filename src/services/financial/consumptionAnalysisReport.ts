@@ -3,6 +3,44 @@ import { ConsumptionAnalysisItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define explicit interfaces to avoid recursive type inference
+interface ConsumptionAnalysisRecord {
+  id: string;
+  school_id: string;
+  product_type: string;
+  amount: number;
+  quantity: number;
+  student_count: number;
+  average_per_student: number;
+  report_date: string;
+  created_at: string;
+  updated_at: string;
+  school?: {
+    name: string;
+  };
+}
+
+interface TransactionRecord {
+  id: string;
+  amount: number;
+  vendor_id: string;
+  student_id: string;
+  status: string;
+  type: string;
+  student?: {
+    school_id: string;
+  };
+  vendor?: {
+    name: string;
+    type: string;
+  };
+}
+
+interface SchoolRecord {
+  id: string;
+  name: string;
+}
+
 export const generateConsumptionAnalysisReport = async (vendorId?: string): Promise<ConsumptionAnalysisItemData[]> => {
   try {
     // Se não for especificado um vendorId, verificamos se existe um relatório geral
@@ -28,7 +66,8 @@ export const generateConsumptionAnalysisReport = async (vendorId?: string): Prom
       query = query.eq('vendor_id', vendorId);
     }
     
-    const { data, error } = await query;
+    // Use returns<T>() to explicitly specify the return type
+    const { data, error } = await query.returns<ConsumptionAnalysisRecord[]>();
     
     if (error) {
       console.error("Error fetching consumption analysis data:", error);
@@ -78,7 +117,8 @@ const generateConsumptionDataFromTransactions = async (vendorId?: string): Promi
       transactionQuery = transactionQuery.eq('vendor_id', vendorId);
     }
     
-    const { data: transactions, error } = await transactionQuery;
+    // Use returns<T>() to explicitly specify the return type
+    const { data: transactions, error } = await transactionQuery.returns<TransactionRecord[]>();
     
     if (error || !transactions || transactions.length === 0) {
       console.warn("No transactions found for consumption analysis");
@@ -119,7 +159,8 @@ const generateConsumptionDataFromTransactions = async (vendorId?: string): Promi
     const { data: schools } = await supabase
       .from('schools')
       .select('id, name')
-      .in('id', schoolIds);
+      .in('id', schoolIds)
+      .returns<SchoolRecord[]>();
     
     const schoolNames = schools?.reduce((acc: Record<string, string>, school) => {
       acc[school.id] = school.name;

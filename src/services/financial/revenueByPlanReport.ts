@@ -3,6 +3,36 @@ import { RevenueByPlanItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define explicit interfaces to avoid recursive type inference
+interface RevenuePlanRecord {
+  id: string;
+  plan_name: string;
+  plan_id?: string;
+  revenue: number;
+  percentage: number;
+  school_count: number;
+  report_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface VendorProductRecord {
+  id: string;
+  name: string;
+  category: string;
+  vendor_id: string;
+}
+
+interface TransactionRecord {
+  id: string;
+  amount: number;
+  type: string;
+  status: string;
+  vendor_id: string;
+  student_id: string;
+  created_at: string;
+}
+
 export const generateRevenueByPlanReport = async (vendorId?: string): Promise<RevenueByPlanItemData[]> => {
   try {
     // Se não for especificado um vendorId, verificamos se existe um relatório geral
@@ -20,7 +50,8 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       const { data: products, error: productsError } = await supabase
         .from('vendor_products')
         .select('id, name, category')
-        .eq('vendor_id', vendorId);
+        .eq('vendor_id', vendorId)
+        .returns<VendorProductRecord[]>();
         
       if (productsError || !products || products.length === 0) {
         console.error("Error fetching vendor products:", productsError);
@@ -33,7 +64,8 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
         .select('*')
         .eq('vendor_id', vendorId)
         .eq('status', 'completed')
-        .eq('type', 'purchase');
+        .eq('type', 'purchase')
+        .returns<TransactionRecord[]>();
         
       if (salesError) {
         console.error("Error fetching vendor sales:", salesError);
@@ -77,7 +109,8 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       .from('revenue_by_plan')
       .select('*')
       .order('revenue', { ascending: false })
-      .limit(5);
+      .limit(5)
+      .returns<RevenuePlanRecord[]>();
       
     if (error) {
       console.error("Error fetching revenue by plan data:", error);
