@@ -30,7 +30,7 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       // Buscamos todas as transações desse vendedor (vendas)
       const { data: sales, error: salesError } = await supabase
         .from('transactions')
-        .select('*')
+        .select('*, product:product_id (id, category)')
         .eq('vendor_id', vendorId)
         .eq('status', 'completed')
         .eq('type', 'purchase');
@@ -52,9 +52,10 @@ export const generateRevenueByPlanReport = async (vendorId?: string): Promise<Re
       
       sales?.forEach(sale => {
         // Para vendas sem produto específico, usamos "Outros"
-        const category = sale.product_id ? 
-          productCategoryMap[sale.product_id] || 'Outros' : 
-          'Outros';
+        let category = 'Outros';
+        if (sale.product && sale.product.id) {
+          category = productCategoryMap[sale.product.id] || 'Outros';
+        }
           
         if (!categoryRevenue[category]) {
           categoryRevenue[category] = 0;

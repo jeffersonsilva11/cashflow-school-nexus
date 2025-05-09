@@ -18,7 +18,8 @@ export const generateConsumptionAnalysisReport = async (vendorId?: string): Prom
       .from('consumption_analysis')
       .select(`
         *,
-        school:school_id (name)
+        school:school_id (name),
+        vendor:vendor_id (name)
       `)
       .order('amount', { ascending: false })
       .limit(20);
@@ -103,7 +104,7 @@ const generateConsumptionDataFromTransactions = async (vendorId?: string): Promi
           totalAmount: 0,
           totalQuantity: 0,
           schoolId,
-          vendorId: tx.vendor_id,
+          vendorId: tx.vendor_id || '',
           vendorName: tx.vendor?.name || 'Cantina sem nome'
         });
       }
