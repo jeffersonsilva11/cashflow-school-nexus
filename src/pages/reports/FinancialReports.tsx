@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   FileBarChart, 
@@ -134,7 +135,7 @@ export default function FinancialReports() {
 
   const hasNoRevenueData = !revenueByPlan || revenueByPlan.length === 0;
   const hasNoMonthlyData = !monthlyTrend || monthlyTrend.length === 0;
-  const hasNoOverviewData = !overviewData?.monthlyData || overviewData.monthlyData.length === 0;
+  const hasNoOverviewData = !financialOverview?.monthlyData || financialOverview.monthlyData.length === 0;
   const hasNoSchoolsData = !schools || schools.length === 0;
 
   return (
@@ -281,7 +282,7 @@ export default function FinancialReports() {
                     <p className="text-muted-foreground">Nenhum dado de tendência disponível</p>
                   </div>
                 ) : (
-                  <FinancialTrendChart data={monthlyTrendData || []} />
+                  <FinancialTrendChart data={monthlyTrend || []} />
                 )}
               </CardContent>
             </Card>
@@ -298,9 +299,9 @@ export default function FinancialReports() {
                   </div>
                 ) : (
                   <>
-                    <RevenueByPlanChart data={revenueByPlanData || []} />
+                    <RevenueByPlanChart data={revenueByPlan || []} />
                     <div className="mt-4 space-y-3">
-                      {revenueByPlanData && revenueByPlanData.map((item) => (
+                      {revenueByPlan && revenueByPlan.map((item) => (
                         <div key={item.plan} className="flex items-center justify-between">
                           <div className="flex items-center">
                             <span className="font-medium">{item.plan}</span>
