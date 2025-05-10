@@ -12,9 +12,7 @@ import {
   ChartPieIcon,
   BarChart3,
   FileBarChart,
-  Database,
   DollarSign,
-  RefreshCw,
   UserRound,
   Shield,
   FileArchive,
@@ -153,17 +151,5 @@ export const systemItems: NavItemType[] = [
     href: '/settings',
     icon: Settings,
     permission: ['admin', 'school_admin']
-  },
-  {
-    title: 'Migração de Dados',
-    href: '/admin/data-migration',
-    icon: Database,
-    permission: ['admin']
-  },
-  {
-    title: 'Status da Migração',
-    href: '/admin/migration-status',
-    icon: RefreshCw,
-    permission: ['admin']
   }
 ];

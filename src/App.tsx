@@ -35,9 +35,7 @@ import Billing from './pages/financial/Billing';
 import Invoices from './pages/financial/Invoices';
 import Transactions from './pages/Transactions';
 import Reports from './pages/reports/Reports';
-import DataMigration from './pages/admin/DataMigration';
 import AccessDenied from './pages/AccessDenied';
-import MigrationStatus from '@/pages/admin/MigrationStatus';
 import Parents from './pages/Parents';
 import ParentDetails from './pages/ParentDetails';
 import StudentParentBinding from './pages/StudentParentBinding';
@@ -114,10 +112,6 @@ function App() {
               {/* Reports Routes */}
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/reports/financial" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/data-migration" element={<ProtectedRoute><DataMigration /></ProtectedRoute>} />
-              <Route path="/admin/migration-status" element={<MigrationStatus />} />
 
               {/* System Routes */}
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
