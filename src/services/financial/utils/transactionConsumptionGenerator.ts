@@ -1,7 +1,13 @@
 
 import { ConsumptionAnalysisItemData } from "../../financialReportTypes";
 import { supabase } from "@/integrations/supabase/client";
-import { TransactionRecord, SchoolRecord, StudentRecord, VendorRecord } from "../types/consumptionTypes";
+import { 
+  TransactionRecord, 
+  SchoolRecord, 
+  StudentRecord, 
+  VendorRecord,
+  ConsumptionAnalysisItemOutput
+} from "../types/consumptionTypes";
 
 /**
  * Generates consumption analysis data from transactions when no report data is available
@@ -207,7 +213,8 @@ function formatConsumptionResults(
   schoolNames: Record<string, string>,
   studentCounts: Record<string, number>
 ): ConsumptionAnalysisItemData[] {
-  return Object.values(schoolTransactionsMap).map(data => {
+  // Use explicit intermediate type to avoid circular references
+  const formattedItems: ConsumptionAnalysisItemOutput[] = Object.values(schoolTransactionsMap).map(data => {
     const studentCount = studentCounts[data.schoolId] || 1;
     
     return {
@@ -222,4 +229,7 @@ function formatConsumptionResults(
       vendorName: data.vendorName
     };
   });
+  
+  // Cast to expected return type after formatting
+  return formattedItems as ConsumptionAnalysisItemData[];
 }

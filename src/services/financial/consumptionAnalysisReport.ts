@@ -2,7 +2,10 @@
 import { ConsumptionAnalysisItemData } from "../financialReportTypes";
 import { fetchFinancialReport } from "./api";
 import { supabase } from "@/integrations/supabase/client";
-import { ConsumptionAnalysisRecord } from "./types/consumptionTypes";
+import { 
+  ConsumptionAnalysisRecord, 
+  ConsumptionAnalysisItemOutput 
+} from "./types/consumptionTypes";
 import { generateConsumptionDataFromTransactions } from "./utils/transactionConsumptionGenerator";
 
 /**
@@ -98,7 +101,8 @@ function formatConsumptionReport(
   schoolsData: Record<string, string>,
   vendorId?: string
 ): ConsumptionAnalysisItemData[] {
-  return consumptionData.map(item => ({
+  // Use explicit intermediate type to avoid circular references
+  const formattedItems: ConsumptionAnalysisItemOutput[] = consumptionData.map(item => ({
     schoolId: item.school_id,
     schoolName: schoolsData[item.school_id] || 'Escola não informada',
     productType: item.product_type,
@@ -109,4 +113,7 @@ function formatConsumptionReport(
     vendorId: vendorId || '',
     vendorName: vendorId ? 'Cantina específica' : 'Cantina sem nome'
   }));
+  
+  // Cast to expected return type after formatting
+  return formattedItems as ConsumptionAnalysisItemData[];
 }

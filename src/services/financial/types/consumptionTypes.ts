@@ -12,6 +12,7 @@ export interface ConsumptionAnalysisRecord {
   report_date: string;
   created_at: string;
   updated_at: string;
+  vendor_id?: string;
 }
 
 export interface TransactionRecord {
@@ -38,4 +39,17 @@ export interface VendorRecord {
 export interface StudentRecord {
   id: string;
   school_id: string;
+}
+
+// Explicitly define the output format to avoid circular type dependencies
+export interface ConsumptionAnalysisItemOutput {
+  schoolId: string;
+  schoolName: string;
+  productType: string;
+  amount: number;
+  quantity: number;
+  studentCount: number;
+  averagePerStudent: number;
+  vendorId: string;
+  vendorName: string;
 }
