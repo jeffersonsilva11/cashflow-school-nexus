@@ -50,24 +50,30 @@ export const generateConsumptionAnalysisReport = async (vendorId?: string): Prom
  * Fetches raw consumption analysis data
  */
 async function fetchConsumptionData(vendorId?: string): Promise<ConsumptionAnalysisRecord[]> {
-  let query = supabase
+  // Using "as any" to break the type inference that's causing the problem
+  const query = supabase
     .from('consumption_analysis')
-    .select('*')
+    .select('*') as any;
+    
+  // Apply filters and ordering after the "as any"
+  // to avoid type inference issues
+  const queryWithFilters = query
     .order('amount', { ascending: false })
     .limit(20);
-    
+  
   if (vendorId) {
-    query = query.eq('vendor_id', vendorId);
+    queryWithFilters.eq('vendor_id', vendorId);
   }
   
-  const { data, error } = await query;
+  // Using any here as well to break inference
+  const { data, error } = await queryWithFilters;
   
   if (error) {
     console.error("Error fetching consumption analysis data:", error);
     return [];
   }
   
-  return data as ConsumptionAnalysisRecord[] || [];
+  return (data || []) as ConsumptionAnalysisRecord[];
 }
 
 /**
@@ -78,13 +84,15 @@ async function fetchSchoolsData(consumptionData: ConsumptionAnalysisRecord[]): P
   const schoolIds = consumptionData.map(item => item.school_id).filter(Boolean);
   
   if (schoolIds.length > 0) {
-    const { data: schools } = await supabase
+    // Using "as any" to break the type inference
+    const query = supabase
       .from('schools')
-      .select('id, name')
-      .in('id', schoolIds);
+      .select('id, name') as any;
+      
+    const { data: schools } = await query.in('id', schoolIds);
     
     if (schools) {
-      schools.forEach(school => {
+      schools.forEach((school: any) => {
         schoolsData[school.id] = school.name;
       });
     }

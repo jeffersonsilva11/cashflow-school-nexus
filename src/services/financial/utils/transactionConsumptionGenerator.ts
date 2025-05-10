@@ -18,9 +18,12 @@ export const generateConsumptionDataFromTransactions = async (vendorId?: string)
     let transactionsRaw: TransactionRecord[] = [];
     
     {
+      // Use "as any" to break type inference issues
       let query = supabase
         .from('transactions')
-        .select('*')
+        .select('*') as any;
+      
+      query = query
         .eq('type', 'purchase')
         .eq('status', 'completed');
       
@@ -80,13 +83,15 @@ async function fetchStudentSchoolMap(studentIds: string[]): Promise<Record<strin
   const studentSchoolMap: Record<string, string> = {};
   
   if (studentIds.length > 0) {
-    const { data: students } = await supabase
+    // Use "as any" to break type inference
+    const query = supabase
       .from('students')
-      .select('id, school_id')
-      .in('id', studentIds);
+      .select('id, school_id') as any;
+    
+    const { data: students } = await query.in('id', studentIds);
     
     if (students) {
-      students.forEach(student => {
+      students.forEach((student: any) => {
         if (student.id && student.school_id) {
           studentSchoolMap[student.id] = student.school_id;
         }
@@ -102,13 +107,15 @@ async function fetchVendorMap(vendorIds: string[]): Promise<Record<string, Vendo
   const vendorMap: Record<string, VendorRecord> = {};
   
   if (vendorIds.length > 0) {
-    const { data: vendors } = await supabase
+    // Use "as any" to break type inference
+    const query = supabase
       .from('vendors')
-      .select('id, name, type')
-      .in('id', vendorIds);
+      .select('id, name, type') as any;
+    
+    const { data: vendors } = await query.in('id', vendorIds);
     
     if (vendors) {
-      vendors.forEach(vendor => {
+      vendors.forEach((vendor: any) => {
         vendorMap[vendor.id] = vendor as VendorRecord;
       });
     }
@@ -169,13 +176,15 @@ async function fetchSchoolNames(schoolIds: string[]): Promise<Record<string, str
   const schoolNames: Record<string, string> = {};
   
   if (schoolIds.length > 0) {
-    const { data: schools } = await supabase
+    // Use "as any" to break type inference
+    const query = supabase
       .from('schools')
-      .select('id, name')
-      .in('id', schoolIds);
+      .select('id, name') as any;
+    
+    const { data: schools } = await query.in('id', schoolIds);
     
     if (schools) {
-      schools.forEach(school => {
+      schools.forEach((school: any) => {
         schoolNames[school.id] = school.name;
       });
     }
@@ -189,11 +198,16 @@ async function countStudentsBySchool(schoolIds: string[]): Promise<Record<string
   const studentCounts: Record<string, number> = {};
   
   for (const schoolId of schoolIds) {
-    const { count } = await supabase
+    // Use "as any" to break type inference
+    const query = supabase
       .from('students')
-      .select('id', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true }) as any;
+      
+    const countQuery = query
       .eq('school_id', schoolId)
       .eq('active', true);
+    
+    const { count } = await countQuery;
     
     studentCounts[schoolId] = count || 0;
   }
