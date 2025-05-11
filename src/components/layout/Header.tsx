@@ -3,17 +3,8 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from '@/components/auth/UserMenu';
-import { Bell, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { MessageDropdown } from '@/components/messages/MessageDropdown';
 
 interface HeaderProps {
   pathname: string;
@@ -46,6 +37,8 @@ const Header: React.FC<HeaderProps> = ({ pathname }) => {
       case 'reports': return 'Relatórios';
       case 'settings': return 'Configurações';
       case 'support': return 'Suporte';
+      case 'notifications': return 'Notificações';
+      case 'messages': return 'Mensagens';
       default: return 'Dashboard';
     }
   };
@@ -62,61 +55,10 @@ const Header: React.FC<HeaderProps> = ({ pathname }) => {
         {user && (
           <div className="flex items-center gap-2">
             {/* Dropdown de notificações */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <Badge className="h-5 w-5 absolute -top-1 -right-1 flex items-center justify-center text-[10px] bg-red-500">
-                    3
-                  </Badge>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="max-h-[300px] overflow-y-auto">
-                  <DropdownMenuItem className="flex flex-col items-start p-3 cursor-pointer">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-medium text-sm">Nova inscrição</span>
-                      <Badge variant="outline" className="text-[10px]">Agora</Badge>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      A Escola Maria Eduarda realizou uma nova inscrição no plano Premium.
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex flex-col items-start p-3 cursor-pointer">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-medium text-sm">Dispositivo com pouca bateria</span>
-                      <Badge variant="outline" className="text-[10px]">20m</Badge>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      O dispositivo DEV-00123 está com menos de 10% de bateria.
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex flex-col items-start p-3 cursor-pointer">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-medium text-sm">Falha na transação</span>
-                      <Badge variant="outline" className="text-[10px]">2h</Badge>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Houve uma falha na transação #TRX-1234 para o aluno João Silva.
-                    </span>
-                  </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex justify-center text-primary">
-                  Ver todas as notificações
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NotificationDropdown />
             
-            {/* Botão de mensagens */}
-            <Button variant="ghost" size="icon" className="relative">
-              <MessageSquare className="h-5 w-5" />
-              <Badge className="h-5 w-5 absolute -top-1 -right-1 flex items-center justify-center text-[10px] bg-green-500">
-                2
-              </Badge>
-            </Button>
+            {/* Dropdown de mensagens */}
+            <MessageDropdown />
             
             {/* Menu do usuário */}
             <UserMenu />

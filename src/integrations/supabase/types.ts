@@ -538,6 +538,69 @@ export type Database = {
           },
         ]
       }
+      message_threads: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string
+          participants: Json
+          thread_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string
+          participants: Json
+          thread_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string
+          participants?: Json
+          thread_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+          thread_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+          thread_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+          thread_id?: string
+        }
+        Relationships: []
+      }
       monthly_trends: {
         Row: {
           commission: number
@@ -568,6 +631,78 @@ export type Database = {
           transaction_count?: number
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          device_alerts: boolean
+          id: string
+          school_alerts: boolean
+          system_alerts: boolean
+          transaction_alerts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_alerts?: boolean
+          id?: string
+          school_alerts?: boolean
+          system_alerts?: boolean
+          transaction_alerts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_alerts?: boolean
+          id?: string
+          school_alerts?: boolean
+          system_alerts?: boolean
+          transaction_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          recipient_id: string
+          related_resource_id: string | null
+          related_resource_type: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          recipient_id: string
+          related_resource_id?: string | null
+          related_resource_type?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          recipient_id?: string
+          related_resource_id?: string | null
+          related_resource_type?: string | null
+          title?: string
+          type?: string
         }
         Relationships: []
       }

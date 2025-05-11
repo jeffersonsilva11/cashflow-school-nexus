@@ -17,7 +17,9 @@ import {
   Shield,
   FileArchive,
   MapPin,
-  Utensils
+  Utensils,
+  Bell,
+  MessageSquare
 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
 
@@ -70,6 +72,18 @@ export const mainNavItems: NavItemType[] = [
     href: '/vendors',
     icon: Store,
     permission: ['admin', 'school_admin']
+  },
+  {
+    title: 'Notificações',
+    href: '/notifications',
+    icon: Bell,
+    permission: ['admin', 'school_admin', 'staff']
+  },
+  {
+    title: 'Mensagens',
+    href: '/messages',
+    icon: MessageSquare,
+    permission: ['admin', 'school_admin', 'staff']
   },
 ];
 

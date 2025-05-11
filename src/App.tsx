@@ -46,6 +46,9 @@ import SecurityCompliance from './pages/SecurityCompliance';
 import CanteenTerminals from './pages/canteen/CanteenTerminals';
 import CanteenRecharges from './pages/canteen/CanteenRecharges';
 import StudentRecharge from './pages/canteen/StudentRecharge';
+import Notifications from './pages/Notifications';
+import Messages from './pages/Messages';
+import NotificationSettings from './pages/settings/NotificationSettings';
 
 function App() {
   return (
@@ -113,6 +116,11 @@ function App() {
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/reports/financial" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
 
+              {/* Notifications & Messages Routes */}
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+              <Route path="/messages/:threadId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+
               {/* System Routes */}
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
@@ -121,6 +129,7 @@ function App() {
               {/* Settings Routes */}
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/security" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
+              <Route path="/settings/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
             </Route>
           </Routes>
         </AuthProvider>
