@@ -25,9 +25,9 @@ export function parseParticipants(participantsJson: any): MessageParticipant[] {
     }
   }
   
-  // Map to our expected MessageParticipant format
+  // Make sure we're always returning a valid array with expected properties
   return participantsArray.map(p => ({
-    userId: p.user_id || p.userId,
+    userId: p.user_id || p.userId || '',
     name: p.name || 'Usuário',
     avatar: p.avatar || undefined,
     role: p.role || 'user',

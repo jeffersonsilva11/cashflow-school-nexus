@@ -32,9 +32,13 @@ export const useMessageThreads = () => {
         return [];
       }
       
+      // Ensure data is an array and handle empty results
+      const threadData = Array.isArray(data) ? data : [];
+      if (threadData.length === 0) return [];
+      
       // For each thread, get unread message count
       const threadsWithUnreadCount = await Promise.all(
-        data.map(async (thread) => {
+        threadData.map(async (thread) => {
           const { count, error: countError } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -52,7 +56,7 @@ export const useMessageThreads = () => {
           
           let lastMessage = undefined;
           
-          if (!lastMessageError && lastMessages.length > 0) {
+          if (!lastMessageError && Array.isArray(lastMessages) && lastMessages.length > 0) {
             // Parse JSON participants safely
             const participantsArray = parseParticipants(thread.participants);
             
@@ -73,14 +77,14 @@ export const useMessageThreads = () => {
           
           return {
             id: thread.id,
-            title: thread.title,
+            title: thread.title || '',
             createdBy: thread.created_by,
             createdAt: thread.created_at,
             updatedAt: thread.updated_at,
             lastMessageAt: thread.last_message_at,
             participants,
-            threadType: thread.thread_type,
-            unreadCount: countError ? 0 : count || 0,
+            threadType: thread.thread_type || 'direct',
+            unreadCount: countError ? 0 : (count || 0),
             lastMessage,
           } as MessageThread;
         })
@@ -113,11 +117,14 @@ export const useCreateMessageThread = () => {
     }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
       
+      // Make sure participants is always an array
+      const participantsArray = Array.isArray(participants) ? participants : [];
+      
       // Make sure current user is in participants
-      const currentUserInParticipants = participants.some(p => p.userId === user.id);
+      const currentUserInParticipants = participantsArray.some(p => p.userId === user.id);
       
       if (!currentUserInParticipants) {
-        participants.push({
+        participantsArray.push({
           userId: user.id,
           name: user.name || 'Eu',
           role: user.role || 'user',
@@ -125,11 +132,11 @@ export const useCreateMessageThread = () => {
       }
       
       // Map participants to a format the database expects (snake_case keys)
-      const dbParticipants = participants.map(p => ({
+      const dbParticipants = participantsArray.map(p => ({
         user_id: p.userId,
-        name: p.name,
+        name: p.name || 'Usuário',
         avatar: p.avatar || null,
-        role: p.role,
+        role: p.role || 'user',
         school_id: p.schoolId || null
       }));
       
@@ -205,7 +212,7 @@ export const useUnreadMessagesCount = () => {
         return 0;
       }
       
-      if (!threads.length) return 0;
+      if (!threads || !threads.length) return 0;
       
       const threadIds = threads.map(t => t.id);
       
