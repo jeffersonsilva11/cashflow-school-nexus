@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { MessageThread } from "@/types/message";
+import { MessageThread, MessageParticipant } from "@/types/message";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
