@@ -50,16 +50,14 @@ export const useMessageThreads = () => {
           let lastMessage = undefined;
           
           if (!lastMessageError && lastMessages.length > 0) {
-            // Convert participants from JSON to array if needed
-            const participantsArray = Array.isArray(thread.participants) 
-              ? thread.participants 
-              : typeof thread.participants === 'object' 
-                ? [thread.participants] 
-                : [];
+            // Parse JSON participants safely
+            const participantsArray = parseParticipants(thread.participants);
             
-            // Find sender info in participants - safely handle potential type issues
-            const sender = participantsArray.find((p: any) => p.user_id === lastMessages[0].sender_id 
-              || p.userId === lastMessages[0].sender_id);
+            // Find sender info in participants with safe access
+            const sender = participantsArray.find(p => 
+              p.userId === lastMessages[0].sender_id || 
+              p.user_id === lastMessages[0].sender_id
+            );
             
             lastMessage = {
               content: lastMessages[0].content,
@@ -69,15 +67,7 @@ export const useMessageThreads = () => {
           }
           
           // Convert participants from JSON to proper MessageParticipant[] format
-          const participants: MessageParticipant[] = Array.isArray(thread.participants)
-            ? thread.participants.map((p: any) => ({
-                userId: p.user_id || p.userId,
-                name: p.name || 'Usuário',
-                avatar: p.avatar,
-                role: p.role || 'user',
-                schoolId: p.school_id || p.schoolId
-              }))
-            : [];
+          const participants: MessageParticipant[] = parseParticipants(thread.participants);
           
           return {
             id: thread.id,
@@ -99,6 +89,38 @@ export const useMessageThreads = () => {
     enabled: !!user?.id,
   });
 };
+
+// Helper function to safely parse participants from JSON
+function parseParticipants(participantsJson: any): MessageParticipant[] {
+  // Handle different formats that might come from the database
+  if (!participantsJson) return [];
+  
+  let participantsArray: any[] = [];
+  
+  if (Array.isArray(participantsJson)) {
+    participantsArray = participantsJson;
+  } else if (typeof participantsJson === 'object') {
+    participantsArray = [participantsJson];
+  } else {
+    try {
+      // Try to parse if it's a JSON string
+      const parsed = JSON.parse(String(participantsJson));
+      participantsArray = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+      console.error('Error parsing participants:', e);
+      return [];
+    }
+  }
+  
+  // Map to our expected MessageParticipant format
+  return participantsArray.map(p => ({
+    userId: p.user_id || p.userId,
+    name: p.name || 'Usuário',
+    avatar: p.avatar || undefined,
+    role: p.role || 'user',
+    schoolId: p.school_id || p.schoolId
+  }));
+}
 
 // Fetch messages for a specific thread
 export const useThreadMessages = (threadId?: string) => {
@@ -143,18 +165,16 @@ export const useThreadMessages = (threadId?: string) => {
         })) as Message[];
       }
       
-      // Convert participants from JSON to array if needed
-      const participantsArray = Array.isArray(threadData.participants) 
-        ? threadData.participants 
-        : typeof threadData.participants === 'object' 
-          ? [threadData.participants] 
-          : [];
+      // Parse JSON participants safely
+      const participantsArray = parseParticipants(threadData.participants);
       
       // Map messages with sender information
       return data.map(message => {
-        // Find sender safely with type handling
-        const sender = participantsArray.find((p: any) => p.user_id === message.sender_id 
-          || p.userId === message.sender_id);
+        // Find sender safely with proper typing
+        const sender = participantsArray.find(p => 
+          p.userId === message.sender_id || 
+          p.user_id === message.sender_id
+        );
         
         return {
           id: message.id,
