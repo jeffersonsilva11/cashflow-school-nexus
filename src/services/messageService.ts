@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Message, MessageThread, MessageParticipant } from "@/types/message";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -55,8 +54,7 @@ export const useMessageThreads = () => {
             
             // Find sender info in participants with safe access
             const sender = participantsArray.find(p => 
-              p.userId === lastMessages[0].sender_id || 
-              p.user_id === lastMessages[0].sender_id
+              p.userId === lastMessages[0].sender_id
             );
             
             lastMessage = {
@@ -172,8 +170,7 @@ export const useThreadMessages = (threadId?: string) => {
       return data.map(message => {
         // Find sender safely with proper typing
         const sender = participantsArray.find(p => 
-          p.userId === message.sender_id || 
-          p.user_id === message.sender_id
+          p.userId === message.sender_id
         );
         
         return {
