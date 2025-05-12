@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message } from '@/types/message';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useThreadMessages, useSendMessage, useMarkThreadMessagesAsRead } from '@/services/messageService';
+import { useThreadMessages, useSendMessage, useMarkThreadMessagesAsRead } from '@/services/messages';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface MessageThreadProps {

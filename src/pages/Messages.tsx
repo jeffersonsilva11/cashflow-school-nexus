@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useMessageThreads, useThreadMessages, useMarkThreadMessagesAsRead } from '@/services/messageService';
+import { useMessageThreads, useMarkThreadMessagesAsRead } from '@/services/messages';
 import { MessageThread } from '@/types/message';
 
 const Messages = () => {

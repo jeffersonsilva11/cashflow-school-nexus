@@ -14,7 +14,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useMessageThreads, useUnreadMessagesCount } from '@/services/messageService';
+import { useMessageThreads, useUnreadMessagesCount } from '@/services/messages';
 import { Link } from 'react-router-dom';
 
 export const MessageDropdown = () => {
