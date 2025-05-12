@@ -23,13 +23,13 @@ const Notifications = () => {
     });
   };
   
-  const getFilteredNotifications = (type?: NotificationType) => {
+  const getFilteredNotifications = (type?: string) => {
     if (!type || type === 'all') return notifications;
-    return notifications.filter(notification => notification.type === type);
+    return notifications.filter(notification => notification.type === type as NotificationType);
   };
   
-  const getUnreadCount = (type?: NotificationType) => {
-    const filtered = getFilteredNotifications(type as NotificationType);
+  const getUnreadCount = (type?: string) => {
+    const filtered = getFilteredNotifications(type);
     return filtered.filter(notification => !notification.isRead).length;
   };
   
@@ -38,7 +38,7 @@ const Notifications = () => {
   // Filter notifications based on active tab
   const filteredNotifications = activeTab === 'preferences' 
     ? [] 
-    : getFilteredNotifications(activeTab === 'all' ? undefined : activeTab as NotificationType);
+    : getFilteredNotifications(activeTab);
   
   return (
     <div>
@@ -54,8 +54,8 @@ const Notifications = () => {
           <TabsList>
             <TabsTrigger value="all" className="relative">
               Todas
-              {getUnreadCount() > 0 && (
-                <Badge className="ml-2 h-5 px-1 bg-red-500">{getUnreadCount()}</Badge>
+              {getUnreadCount('all') > 0 && (
+                <Badge className="ml-2 h-5 px-1 bg-red-500">{getUnreadCount('all')}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="device_alert" className="relative">
@@ -164,7 +164,7 @@ const Notifications = () => {
                 </div>
                 <div className="bg-muted rounded-md p-4">
                   <div className="text-muted-foreground text-sm">Não Lidas</div>
-                  <div className="text-2xl font-bold mt-1">{getUnreadCount()}</div>
+                  <div className="text-2xl font-bold mt-1">{getUnreadCount('all')}</div>
                 </div>
                 <div className="bg-muted rounded-md p-4">
                   <div className="text-muted-foreground text-sm">Alertas de Dispositivo</div>

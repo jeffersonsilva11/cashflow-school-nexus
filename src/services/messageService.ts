@@ -50,15 +50,34 @@ export const useMessageThreads = () => {
           let lastMessage = undefined;
           
           if (!lastMessageError && lastMessages.length > 0) {
-            // Find sender info in participants
-            const sender = thread.participants.find(p => p.user_id === lastMessages[0].sender_id);
+            // Convert participants from JSON to array if needed
+            const participantsArray = Array.isArray(thread.participants) 
+              ? thread.participants 
+              : typeof thread.participants === 'object' 
+                ? [thread.participants] 
+                : [];
+            
+            // Find sender info in participants - safely handle potential type issues
+            const sender = participantsArray.find((p: any) => p.user_id === lastMessages[0].sender_id 
+              || p.userId === lastMessages[0].sender_id);
             
             lastMessage = {
               content: lastMessages[0].content,
               senderId: lastMessages[0].sender_id,
-              senderName: sender ? sender.name : 'Usuário',
+              senderName: sender ? (sender.name || 'Usuário') : 'Usuário',
             };
           }
+          
+          // Convert participants from JSON to proper MessageParticipant[] format
+          const participants: MessageParticipant[] = Array.isArray(thread.participants)
+            ? thread.participants.map((p: any) => ({
+                userId: p.user_id || p.userId,
+                name: p.name || 'Usuário',
+                avatar: p.avatar,
+                role: p.role || 'user',
+                schoolId: p.school_id || p.schoolId
+              }))
+            : [];
           
           return {
             id: thread.id,
@@ -67,15 +86,15 @@ export const useMessageThreads = () => {
             createdAt: thread.created_at,
             updatedAt: thread.updated_at,
             lastMessageAt: thread.last_message_at,
-            participants: thread.participants,
+            participants,
             threadType: thread.thread_type,
             unreadCount: countError ? 0 : count || 0,
             lastMessage,
-          };
+          } as MessageThread;
         })
       );
       
-      return threadsWithUnreadCount as MessageThread[];
+      return threadsWithUnreadCount;
     },
     enabled: !!user?.id,
   });
@@ -124,9 +143,18 @@ export const useThreadMessages = (threadId?: string) => {
         })) as Message[];
       }
       
+      // Convert participants from JSON to array if needed
+      const participantsArray = Array.isArray(threadData.participants) 
+        ? threadData.participants 
+        : typeof threadData.participants === 'object' 
+          ? [threadData.participants] 
+          : [];
+      
       // Map messages with sender information
       return data.map(message => {
-        const sender = threadData.participants.find(p => p.user_id === message.sender_id);
+        // Find sender safely with type handling
+        const sender = participantsArray.find((p: any) => p.user_id === message.sender_id 
+          || p.userId === message.sender_id);
         
         return {
           id: message.id,
@@ -136,8 +164,8 @@ export const useThreadMessages = (threadId?: string) => {
           isRead: message.is_read,
           createdAt: message.created_at,
           attachments: message.attachments,
-          senderName: sender?.name || 'Usuário',
-          senderAvatar: sender?.avatar,
+          senderName: sender ? (sender.name || 'Usuário') : 'Usuário',
+          senderAvatar: sender ? (sender.avatar || undefined) : undefined,
         };
       }) as Message[];
     },
@@ -216,13 +244,22 @@ export const useCreateMessageThread = () => {
         });
       }
       
+      // Map participants to a format the database expects (snake_case keys)
+      const dbParticipants = participants.map(p => ({
+        user_id: p.userId,
+        name: p.name,
+        avatar: p.avatar || null,
+        role: p.role,
+        school_id: p.schoolId || null
+      }));
+      
       // Create thread
       const { data: threadData, error: threadError } = await supabase
         .from('message_threads')
         .insert({
           title,
           created_by: user.id,
-          participants,
+          participants: dbParticipants,
           thread_type: threadType,
         })
         .select()
@@ -354,12 +391,12 @@ export const createMockMessageThread = async () => {
         created_by: userData.user.id,
         participants: [
           {
-            userId: userData.user.id,
+            user_id: userData.user.id,
             name: 'Eu',
             role: 'admin',
           },
           {
-            userId: '00000000-0000-0000-0000-000000000000', // fake user
+            user_id: '00000000-0000-0000-0000-000000000000', // fake user
             name: 'Escola Exemplo',
             role: 'school_admin',
           }

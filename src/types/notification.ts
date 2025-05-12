@@ -26,6 +26,6 @@ export interface NotificationPreferences {
 }
 
 export interface NotificationFilters {
-  type?: NotificationType;
+  type?: NotificationType | 'all';
   onlyUnread?: boolean;
 }
