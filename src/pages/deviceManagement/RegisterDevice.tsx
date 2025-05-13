@@ -138,9 +138,9 @@ export default function RegisterDevice() {
                     <SelectValue placeholder="Selecione a escola (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma escola</SelectItem>
+                    <SelectItem value="none">Nenhuma escola</SelectItem>
                     {isLoadingSchools ? (
-                      <SelectItem value="" disabled>Carregando escolas...</SelectItem>
+                      <SelectItem value="loading" disabled>Carregando escolas...</SelectItem>
                     ) : (
                       schools.map(school => (
                         <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
