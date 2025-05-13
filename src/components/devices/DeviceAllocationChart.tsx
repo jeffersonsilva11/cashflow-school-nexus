@@ -1,12 +1,25 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Loader2 } from 'lucide-react';
 
 interface DeviceAllocationChartProps {
-  data: Array<{ name: string; value: number }>;
+  data: Array<{ name: string; value: number; }>;
+  isLoading?: boolean;
 }
 
-export const DeviceAllocationChart: React.FC<DeviceAllocationChartProps> = ({ data }) => {
+export const DeviceAllocationChart: React.FC<DeviceAllocationChartProps> = ({ data, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className="w-full h-[300px] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="w-full h-[300px]">
       <ResponsiveContainer width="100%" height="100%">

@@ -8,7 +8,7 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { RecentBatchesSection } from './RecentBatchesSection';
 import { DeviceStatsCards } from './DeviceStatsCards';
 import { UnallocatedDevicesTable } from './UnallocatedDevicesTable';
@@ -19,17 +19,28 @@ import {
   useUnallocatedDevices
 } from '@/services/deviceStatsService';
 import { DeviceAllocationChart } from './DeviceAllocationChart';
+import { useToast } from '@/components/ui/use-toast';
 
 export const CardsDevicesTab: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: deviceStats, isLoading: statsLoading } = useDeviceStats();
   const { data: deviceAllocation, isLoading: allocationLoading } = useDeviceAllocation();
   const { data: recentBatches, isLoading: batchesLoading } = useRecentBatches();
   const { data: unallocatedDevices, isLoading: unallocatedLoading } = useUnallocatedDevices();
   
+  const handleNewBatch = () => {
+    navigate('/deviceBatches?action=new');
+    toast({
+      title: "Novo lote",
+      description: "Redirecionando para criar um novo lote de dispositivos",
+    });
+  };
+  
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Statistics Cards */}
-      <div className="grid col-span-3 gap-6 md:grid-cols-4">
+      <div className="grid col-span-3 gap-6">
         <DeviceStatsCards 
           active={deviceStats?.active || 0} 
           inactive={deviceStats?.inactive || 0}
@@ -84,18 +95,13 @@ export const CardsDevicesTab: React.FC = () => {
       </Card>
       
       {/* Recent Batches Section */}
-      <Card className="col-span-3">
-        <CardHeader>
-          <CardTitle>Lotes Recentes</CardTitle>
-          <CardDescription>Últimos lotes de dispositivos registrados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RecentBatchesSection 
-            batches={recentBatches || []} 
-            isLoading={batchesLoading}
-          />
-        </CardContent>
-      </Card>
+      <div className="col-span-3">
+        <RecentBatchesSection 
+          batches={recentBatches || []}
+          onNewBatch={handleNewBatch}
+          isLoading={batchesLoading}
+        />
+      </div>
       
       {/* Unallocated Devices */}
       <Card className="col-span-3">
