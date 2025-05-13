@@ -18,6 +18,8 @@ export type Device = {
   last_used_at?: string;
   created_at?: string;
   updated_at?: string;
+  replacement_device_id?: string;
+  replacement_reason?: string;
 };
 
 // Fetch all devices

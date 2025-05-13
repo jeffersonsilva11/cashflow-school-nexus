@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -26,8 +25,11 @@ export interface UnallocatedDevice {
   id: string;
   serial_number: string;
   device_type: string;
+  status: string;
   batch_id: string;
   created_at: string;
+  school: { name: string } | null;
+  student: { name: string } | null;
 }
 
 // Get device statistics 
@@ -124,14 +126,17 @@ export async function fetchUnallocatedDevices(): Promise<UnallocatedDevice[]> {
   try {
     const { data, error } = await supabase
       .from('devices')
-      .select('id, serial_number, device_type, batch_id, created_at')
-      .is('school_id', null)
+      .select(`
+        id, serial_number, device_type, status, batch_id, created_at,
+        school:school_id (name),
+        student:student_id (name)
+      `)
       .is('student_id', null)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    return data;
+    return data as UnallocatedDevice[];
   } catch (error) {
     console.error("Error fetching unallocated devices:", error);
     return [];

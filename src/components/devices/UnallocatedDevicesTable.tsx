@@ -33,7 +33,7 @@ export const UnallocatedDevicesTable = ({
   devices, 
   isLoading = false 
 }: UnallocatedDevicesTableProps) => {
-  const unallocatedDevices = devices.filter(d => !d.student_id);
+  const unallocatedDevices = devices.filter(d => !d.student);
   
   return (
     <div>

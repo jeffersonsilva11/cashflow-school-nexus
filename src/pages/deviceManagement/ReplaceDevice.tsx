@@ -13,9 +13,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from '@/components/ui/label';
-import { AlertCircle, CreditCard, SwapHorizontal } from 'lucide-react';
+import { AlertCircle, CreditCard, ArrowLeftRight } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function ReplaceDevice() {
   const navigate = useNavigate();
@@ -61,7 +61,6 @@ export default function ReplaceDevice() {
           id: deviceId,
           updates: {
             status: 'replaced',
-            replacement_device_id: newDevice.id,
             replacement_reason: 'Substituição manual'
           }
         }, {
@@ -112,7 +111,7 @@ export default function ReplaceDevice() {
         <Card>
           <CardHeader className="bg-muted/40">
             <CardTitle className="flex items-center gap-2">
-              <SwapHorizontal size={20} />
+              <ArrowLeftRight size={20} />
               <span>Informações da Substituição</span>
             </CardTitle>
             <CardDescription>
