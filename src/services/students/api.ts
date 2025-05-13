@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Student {
@@ -34,6 +35,30 @@ export const fetchStudents = async (): Promise<Student[]> => {
     return data as Student[];
   } catch (error) {
     console.error("Error in fetchStudents:", error);
+    throw error;
+  }
+};
+
+// Fetch students by school ID
+export const fetchStudentsBySchool = async (schoolId: string): Promise<Student[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('students')
+      .select(`
+        *,
+        school:school_id (name)
+      `)
+      .eq('school_id', schoolId)
+      .order('name');
+    
+    if (error) {
+      console.error(`Error fetching students for school ${schoolId}:`, error);
+      throw error;
+    }
+    
+    return data as Student[];
+  } catch (error) {
+    console.error(`Error in fetchStudentsBySchool for ${schoolId}:`, error);
     throw error;
   }
 };
@@ -119,6 +144,81 @@ export const deleteStudent = async (id: string): Promise<void> => {
     }
   } catch (error) {
     console.error(`Error in deleteStudent for ${id}:`, error);
+    throw error;
+  }
+};
+
+// Link student to parent/guardian
+export const linkStudentToParent = async (studentId: string, parentId: string, relationship?: string, isPrimary: boolean = false): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('parent_student')
+      .insert({
+        student_id: studentId,
+        parent_id: parentId,
+        relationship,
+        is_primary: isPrimary
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error linking student ${studentId} to parent ${parentId}:`, error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Error in linkStudentToParent:`, error);
+    throw error;
+  }
+};
+
+// Unlink student from parent/guardian
+export const unlinkStudentFromParent = async (studentId: string, parentId: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('parent_student')
+      .delete()
+      .match({
+        student_id: studentId,
+        parent_id: parentId
+      });
+    
+    if (error) {
+      console.error(`Error unlinking student ${studentId} from parent ${parentId}:`, error);
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Error in unlinkStudentFromParent:`, error);
+    throw error;
+  }
+};
+
+// Fetch parents linked to a student
+export const fetchParentsByStudent = async (studentId: string): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('parent_student')
+      .select(`
+        parent:parent_id (*),
+        relationship,
+        is_primary
+      `)
+      .eq('student_id', studentId);
+    
+    if (error) {
+      console.error(`Error fetching parents for student ${studentId}:`, error);
+      throw error;
+    }
+    
+    return data.map(item => ({
+      ...item.parent,
+      relationship: item.relationship,
+      is_primary: item.is_primary
+    }));
+  } catch (error) {
+    console.error(`Error in fetchParentsByStudent:`, error);
     throw error;
   }
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -20,7 +21,7 @@ export default function BindToStudents() {
     toast({
       title: "Dispositivo selecionado",
       description: `Dispositivo ${device.serial_number} selecionado.`,
-      variant: "default"  // Changed from "warning" to "default"
+      variant: "default"
     });
     
     // The rest of the handler would be here
