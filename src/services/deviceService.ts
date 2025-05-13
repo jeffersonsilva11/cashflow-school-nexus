@@ -118,6 +118,112 @@ export async function deleteDevice(id: string) {
   }
 }
 
+// Fetch devices by batch ID
+export async function fetchDevicesByBatch(batchId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select(`
+        *,
+        student:student_id (name),
+        school:school_id (name)
+      `)
+      .eq('batch_id', batchId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as (Device & { 
+      student: { name: string } | null,
+      school: { name: string } | null
+    })[];
+  } catch (error) {
+    console.error(`Error fetching devices for batch ${batchId}:`, error);
+    throw error;
+  }
+}
+
+// Fetch devices by school ID
+export async function fetchDevicesBySchool(schoolId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select(`
+        *,
+        student:student_id (name)
+      `)
+      .eq('school_id', schoolId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as (Device & { 
+      student: { name: string } | null
+    })[];
+  } catch (error) {
+    console.error(`Error fetching devices for school ${schoolId}:`, error);
+    throw error;
+  }
+}
+
+// Fetch devices by student ID
+export async function fetchDevicesByStudent(studentId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Device[];
+  } catch (error) {
+    console.error(`Error fetching devices for student ${studentId}:`, error);
+    throw error;
+  }
+}
+
+// Assign device to student
+export async function assignDeviceToStudent(deviceId: string, studentId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .update({
+        student_id: studentId,
+        assigned_at: new Date().toISOString(),
+        status: 'assigned'
+      })
+      .eq('id', deviceId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Device;
+  } catch (error) {
+    console.error(`Error assigning device ${deviceId} to student ${studentId}:`, error);
+    throw error;
+  }
+}
+
+// Unassign device from student
+export async function unassignDevice(deviceId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .update({
+        student_id: null,
+        status: 'unassigned'
+      })
+      .eq('id', deviceId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Device;
+  } catch (error) {
+    console.error(`Error unassigning device ${deviceId}:`, error);
+    throw error;
+  }
+}
+
 // Get device statistics
 export async function fetchDeviceStatistics() {
   try {
@@ -157,7 +263,7 @@ export async function fetchDeviceStatistics() {
   }
 }
 
-// React Query hooks
+// React Query hooks for devices
 export function useDevices() {
   return useQuery({
     queryKey: ['devices'],
@@ -170,6 +276,30 @@ export function useDevice(id: string | undefined) {
     queryKey: ['device', id],
     queryFn: () => fetchDeviceById(id as string),
     enabled: !!id,
+  });
+}
+
+export function useDevicesByBatch(batchId: string | undefined) {
+  return useQuery({
+    queryKey: ['devices', 'batch', batchId],
+    queryFn: () => fetchDevicesByBatch(batchId as string),
+    enabled: !!batchId,
+  });
+}
+
+export function useDevicesBySchool(schoolId: string | undefined) {
+  return useQuery({
+    queryKey: ['devices', 'school', schoolId],
+    queryFn: () => fetchDevicesBySchool(schoolId as string),
+    enabled: !!schoolId,
+  });
+}
+
+export function useDevicesByStudent(studentId: string | undefined) {
+  return useQuery({
+    queryKey: ['devices', 'student', studentId],
+    queryFn: () => fetchDevicesByStudent(studentId as string),
+    enabled: !!studentId,
   });
 }
 
@@ -236,6 +366,48 @@ export function useDeleteDevice() {
       toast({ 
         title: "Erro ao remover dispositivo", 
         description: error.message || "Ocorreu um erro ao remover o dispositivo",
+        variant: "destructive" 
+      });
+    }
+  });
+}
+
+export function useAssignDeviceToStudent() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ deviceId, studentId }: { deviceId: string, studentId: string }) => 
+      assignDeviceToStudent(deviceId, studentId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['device', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['devices', 'student', data.student_id] });
+      toast({ title: "Dispositivo vinculado ao estudante com sucesso" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erro ao vincular dispositivo ao estudante", 
+        description: error.message || "Ocorreu um erro ao vincular o dispositivo",
+        variant: "destructive" 
+      });
+    }
+  });
+}
+
+export function useUnassignDevice() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: unassignDevice,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['device', data.id] });
+      toast({ title: "Dispositivo desvinculado com sucesso" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erro ao desvincular dispositivo", 
+        description: error.message || "Ocorreu um erro ao desvincular o dispositivo",
         variant: "destructive" 
       });
     }

@@ -49,6 +49,11 @@ import StudentRecharge from './pages/canteen/StudentRecharge';
 import Notifications from './pages/Notifications';
 import Messages from './pages/Messages';
 import NotificationSettings from './pages/settings/NotificationSettings';
+import RegisterDevice from './pages/deviceManagement/RegisterDevice';
+import BindToStudents from './pages/deviceManagement/BindToStudents';
+import AllocateToSchool from './pages/deviceManagement/AllocateToSchool';
+import ReplaceDevice from './pages/deviceManagement/ReplaceDevice';
+import EditDevice from './pages/deviceManagement/EditDevice';
 
 function App() {
   return (
@@ -94,6 +99,13 @@ function App() {
               {/* Devices Routes */}
               <Route path="/devices" element={<ProtectedRoute><Devices /></ProtectedRoute>} />
               <Route path="/devices/:deviceId" element={<ProtectedRoute><DeviceDetails /></ProtectedRoute>} />
+              
+              {/* Device Management Routes */}
+              <Route path="/deviceManagement/RegisterDevice" element={<ProtectedRoute><RegisterDevice /></ProtectedRoute>} />
+              <Route path="/deviceManagement/BindToStudents" element={<ProtectedRoute><BindToStudents /></ProtectedRoute>} />
+              <Route path="/deviceManagement/AllocateToSchool" element={<ProtectedRoute><AllocateToSchool /></ProtectedRoute>} />
+              <Route path="/deviceManagement/ReplaceDevice" element={<ProtectedRoute><ReplaceDevice /></ProtectedRoute>} />
+              <Route path="/deviceManagement/EditDevice" element={<ProtectedRoute><EditDevice /></ProtectedRoute>} />
               
               {/* Tablets Routes */}
               <Route path="/tablets" element={<ProtectedRoute><Tablets /></ProtectedRoute>} />

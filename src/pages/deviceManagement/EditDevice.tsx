@@ -1,552 +1,226 @@
 
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { ArrowLeft, Save, CreditCard, Lock, Check } from 'lucide-react';
-import { toast } from 'sonner';
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDevice, useUpdateDevice } from '@/services/deviceService';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-
-// Esquema de formulário para edição de dispositivo
-const formSchema = z.object({
-  status: z.string(),
-  type: z.string(),
-  model: z.string().optional(),
-  serial: z.string(),
-  uid: z.string(),
-  batchId: z.string(),
-  enablePayments: z.boolean().default(true),
-  enableAccess: z.boolean().default(true),
-  enableIdentification: z.boolean().default(true),
-  dailyLimit: z.number().min(0).optional(),
-  restrictedProducts: z.array(z.string()).default([]),
-  notes: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-// Dados mockados para produtos restritos
-const mockRestrictedProducts = [
-  { id: 'PROD001', name: 'Refrigerantes' },
-  { id: 'PROD002', name: 'Doces' },
-  { id: 'PROD003', name: 'Salgadinhos' },
-  { id: 'PROD004', name: 'Chocolates' },
-  { id: 'PROD005', name: 'Bebidas Energéticas' },
-];
-
-// Dados mockados para lotes
-const mockBatches = [
-  { id: 'LOT-2023-05A', name: 'Lote Maio 2023 - Cartões' },
-  { id: 'LOT-2023-06B', name: 'Lote Junho 2023 - Pulseiras' },
-  { id: 'LOT-2023-08C', name: 'Lote Agosto 2023 - Cartões Premium' },
-];
+} from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
+import { AlertCircle, CreditCard, PencilLine } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EditDevice() {
   const navigate = useNavigate();
-  const { deviceId } = useParams<{ deviceId: string }>();
-  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const deviceId = searchParams.get('deviceId');
   
-  // Dados mockados para o dispositivo específico
-  const deviceData = {
-    id: deviceId || 'CARD-2023-8742',
-    serial: 'CARD-2023-8742',
-    uid: '04:A2:E9:12:5F',
-    type: 'card',
-    status: 'active',
-    batch: 'LOT-2023-05A',
-    batchName: 'Lote Maio 2023 - Cartões',
-    activationDate: '2023-05-20',
-    model: 'Modelo Padrão',
-    school: {
-      id: 'SCH001',
-      name: 'Colégio São Paulo'
-    },
-    student: {
-      id: 'STD00498',
-      name: 'Maria Silva',
-      grade: '9º Ano B',
-      photo: 'https://i.pravatar.cc/150?img=5'
-    },
-    settings: {
-      enabledFeatures: ['payments', 'access', 'identification'],
-      dailyLimit: 50.0,
-      restrictedProducts: ['PROD001', 'PROD002']
-    },
-  };
-
-  // Configurar o formulário com valores iniciais do dispositivo
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      status: deviceData.status,
-      type: deviceData.type,
-      model: deviceData.model,
-      serial: deviceData.serial,
-      uid: deviceData.uid,
-      batchId: deviceData.batch,
-      enablePayments: deviceData.settings.enabledFeatures.includes('payments'),
-      enableAccess: deviceData.settings.enabledFeatures.includes('access'),
-      enableIdentification: deviceData.settings.enabledFeatures.includes('identification'),
-      dailyLimit: deviceData.settings.dailyLimit,
-      restrictedProducts: deviceData.settings.restrictedProducts,
-      notes: '',
-    },
+  const [formData, setFormData] = useState({
+    serial_number: '',
+    device_type: '',
+    status: '',
+    device_model: '',
+    batch_id: '',
   });
-
-  const onSubmit = (data: FormValues) => {
-    console.log("Dados atualizados:", data);
-    
-    toast.success("Dispositivo atualizado com sucesso!", {
-      description: `O dispositivo ${data.serial} foi atualizado.`,
-    });
-    
-    setTimeout(() => {
-      navigate(`/devices/${deviceId}`);
-    }, 1500);
+  
+  const { data: device, isLoading, error } = useDevice(deviceId || undefined);
+  const { mutate: updateDevice, isPending } = useUpdateDevice();
+  
+  useEffect(() => {
+    if (device) {
+      setFormData({
+        serial_number: device.serial_number,
+        device_type: device.device_type,
+        status: device.status,
+        device_model: device.device_model || '',
+        batch_id: device.batch_id || '',
+      });
+    }
+  }, [device]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  // Função para bloquear o dispositivo
-  const handleBlockDevice = () => {
-    toast.success("Dispositivo bloqueado com sucesso!", {
-      description: `O dispositivo ${deviceData.serial} foi bloqueado.`,
-    });
-    
-    setTimeout(() => {
-      navigate(`/devices/${deviceId}`);
-    }, 1500);
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => navigate(`/devices/${deviceId}`)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Editar Dispositivo</h1>
-            <p className="text-muted-foreground">Edite as informações e configurações do dispositivo</p>
-          </div>
-        </div>
-        <div>
-          <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="gap-1 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800">
-                <Lock className="h-4 w-4" />
-                Bloquear Dispositivo
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Bloquear Dispositivo</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta ação irá bloquear o dispositivo, impedindo seu uso para qualquer função. 
-                  O estudante não poderá realizar pagamentos, controle de acesso ou identificação com este dispositivo.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="py-4">
-                <div className="flex items-center gap-3 p-3 rounded-md bg-gray-50">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{deviceData.serial}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Vinculado a: {deviceData.student.name}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <label className="text-sm font-medium">Motivo do bloqueio:</label>
-                  <select className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="lost">Perda relatada</option>
-                    <option value="stolen">Roubo/furto</option>
-                    <option value="damaged">Dano físico</option>
-                    <option value="malfunction">Mau funcionamento</option>
-                    <option value="preventive">Bloqueio preventivo</option>
-                    <option value="other">Outro</option>
-                  </select>
-                </div>
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleBlockDevice} className="bg-red-600 hover:bg-red-700">
-                  Bloquear Dispositivo
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!deviceId) return;
+    
+    updateDevice({
+      id: deviceId,
+      updates: formData
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Dispositivo atualizado",
+          description: "As informações do dispositivo foram atualizadas com sucesso."
+        });
+        navigate(`/devices/${deviceId}`);
+      }
+    });
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <span className="ml-3">Carregando informações do dispositivo...</span>
       </div>
+    );
+  }
+  
+  if (error || !device) {
+    return (
+      <Alert variant="destructive" className="max-w-2xl mx-auto my-8">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro</AlertTitle>
+        <AlertDescription>
+          Não foi possível carregar as informações do dispositivo. Por favor, tente novamente mais tarde.
+        </AlertDescription>
+        <Button onClick={() => navigate(-1)} variant="outline" className="mt-4">
+          Voltar
+        </Button>
+      </Alert>
+    );
+  }
+  
+  return (
+    <div className="container py-8 max-w-3xl">
+      <h1 className="text-3xl font-bold mb-2">Editar Dispositivo</h1>
+      <p className="text-muted-foreground mb-6">
+        Atualize as informações do dispositivo {device.serial_number}.
+      </p>
       
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações Básicas</CardTitle>
-              <CardDescription>Edite as informações básicas do dispositivo</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="serial"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número de Série</FormLabel>
-                      <FormControl>
-                        <Input {...field} readOnly />
-                      </FormControl>
-                      <FormDescription>
-                        O número de série não pode ser alterado
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="uid"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UID NFC</FormLabel>
-                      <FormControl>
-                        <Input {...field} readOnly />
-                      </FormControl>
-                      <FormDescription>
-                        O UID do dispositivo NFC não pode ser alterado
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="transit">Em Trânsito</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Status atual do dispositivo
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Dispositivo</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="card">Cartão</SelectItem>
-                          <SelectItem value="wristband">Pulseira</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Modelo</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Modelo do dispositivo (opcional)" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="batchId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lote</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um lote" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {mockBatches.map((batch) => (
-                            <SelectItem key={batch.id} value={batch.id}>
-                              {batch.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Lote ao qual este dispositivo pertence
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+      <Card>
+        <CardHeader className="bg-muted/40">
+          <CardTitle className="flex items-center gap-2">
+            <PencilLine size={20} />
+            <span>Informações do Dispositivo</span>
+          </CardTitle>
+          <CardDescription>
+            Edite as informações do dispositivo conforme necessário.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="serial_number">
+                  Número de Série <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="serial_number"
+                  name="serial_number"
+                  value={formData.serial_number}
+                  onChange={handleChange}
+                  required
                 />
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Uso</CardTitle>
-              <CardDescription>Edite as configurações de uso do dispositivo</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-medium text-lg mb-4">Recursos Habilitados</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="enablePayments"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 bg-white p-4 border rounded-md">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Pagamentos</FormLabel>
-                          <FormDescription>
-                            Permite que o dispositivo seja usado para transações financeiras
-                          </FormDescription>
-                        </div>
-                      </FormItem>
+              
+              <div className="space-y-2">
+                <Label htmlFor="device_type">
+                  Tipo de Dispositivo <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.device_type}
+                  onValueChange={(value) => handleSelectChange('device_type', value)}
+                  required
+                >
+                  <SelectTrigger id="device_type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="card">Cartão NFC</SelectItem>
+                    <SelectItem value="wristband">Pulseira NFC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">
+                  Status <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleSelectChange('status', value)}
+                  required
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                    {device.student_id && (
+                      <SelectItem value="assigned">Alocado</SelectItem>
                     )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="enableAccess"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 bg-white p-4 border rounded-md">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Controle de Acesso</FormLabel>
-                          <FormDescription>
-                            Permite que o dispositivo seja usado para entrada/saída da escola
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="enableIdentification"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 bg-white p-4 border rounded-md">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Identificação</FormLabel>
-                          <FormDescription>
-                            Permite que o dispositivo seja usado para identificação do aluno
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
               
-              {form.watch('enablePayments') && (
-                <>
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-medium text-lg mb-4">Configurações de Pagamento</h3>
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="dailyLimit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Limite Diário (R$)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="5"
-                                {...field}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value);
-                                  field.onChange(isNaN(val) ? 0 : val);
-                                }}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Valor máximo que pode ser gasto por dia
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="space-y-2">
-                        <FormLabel>Produtos Restritos</FormLabel>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                              {mockRestrictedProducts.map((product) => (
-                                <div key={product.id} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`product-${product.id}`}
-                                    onCheckedChange={(checked) => {
-                                      const currentProducts = form.getValues('restrictedProducts');
-                                      if (checked) {
-                                        form.setValue('restrictedProducts', [...currentProducts, product.id]);
-                                      } else {
-                                        form.setValue(
-                                          'restrictedProducts',
-                                          currentProducts.filter(id => id !== product.id)
-                                        );
-                                      }
-                                    }}
-                                    checked={form.getValues('restrictedProducts').includes(product.id)}
-                                  />
-                                  <label
-                                    htmlFor={`product-${product.id}`}
-                                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                  >
-                                    {product.name}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <FormDescription>
-                          Produtos que não poderão ser comprados com este dispositivo
-                        </FormDescription>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              <Separator />
-              
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
-                    <FormControl>
-                      <textarea
-                        className="min-h-[80px] w-full rounded-md border border-input p-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        {...field}
-                        placeholder="Observações adicionais sobre este dispositivo (opcional)"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <div className="space-y-2">
+                <Label htmlFor="device_model">Modelo do Dispositivo</Label>
+                <Input
+                  id="device_model"
+                  name="device_model"
+                  value={formData.device_model}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="batch_id">ID do Lote</Label>
+              <Input
+                id="batch_id"
+                name="batch_id"
+                value={formData.batch_id}
+                onChange={handleChange}
               />
-            </CardContent>
-          </Card>
-          
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" type="button" onClick={() => navigate(`/devices/${deviceId}`)}>
+            </div>
+            
+            {device.student_id && (
+              <div className="border rounded-md p-4 bg-amber-50 border-amber-200">
+                <p className="text-amber-800 flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  <span>Este dispositivo está vinculado a um estudante. Algumas alterações podem afetar a vinculação.</span>
+                </p>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-between bg-muted/30">
+            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
               Cancelar
             </Button>
-            <Button type="submit" className="gap-2">
-              <Save className="h-4 w-4" />
-              Salvar Alterações
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
-          </div>
+          </CardFooter>
         </form>
-      </Form>
+      </Card>
     </div>
   );
 }
